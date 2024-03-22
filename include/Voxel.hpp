@@ -5,9 +5,12 @@
 struct Face {
     std::vector<glm::vec3> vertices;
     std::vector<unsigned short> indicesTriangles;
+    std::vector<glm::vec2> uv;
+    int faceId;
 
     GLuint vertexbuffer;
     GLuint elementbuffer;
+    GLuint uvbuffer;
 };
 
 class Voxel {
@@ -18,5 +21,5 @@ class Voxel {
         Voxel(glm::vec3 position);
         void buildVoxel();
         void loadVoxel();
-        void drawVoxel();
+        void drawVoxel(GLuint programID);
 };

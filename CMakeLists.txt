@@ -46,6 +46,8 @@ add_executable(main
     src/Window.cpp
     src/Voxel.cpp
     src/Shader.cpp
+    src/Texture.cpp
+    src/stb_image.cpp
     )
 
 # Include directories for our project

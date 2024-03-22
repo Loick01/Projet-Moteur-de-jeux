@@ -91,7 +91,7 @@ int main(){
     GLuint ViewMatrix = glGetUniformLocation(programID,"View");
     GLuint ProjectionMatrix = glGetUniformLocation(programID,"Projection");
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_TRIANGLES);
 
     // Setup ImGui binding
     ImGui::CreateContext();
@@ -99,6 +99,45 @@ int main(){
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
     ImGui::StyleColorsDark();
+
+    // Chargement des textures
+    GLint nxGrass = loadTexture2DFromFilePath("../Textures/Grass/nx_grass.png");
+    GLint pxGrass = loadTexture2DFromFilePath("../Textures/Grass/px_grass.png");
+    GLint nyGrass = loadTexture2DFromFilePath("../Textures/Grass/ny_grass.png");
+    GLint pyGrass = loadTexture2DFromFilePath("../Textures/Grass/py_grass.png");
+    GLint nzGrass = loadTexture2DFromFilePath("../Textures/Grass/nz_grass.png");
+    GLint pzGrass = loadTexture2DFromFilePath("../Textures/Grass/pz_grass.png");
+
+    if (nxGrass != -1) {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, nxGrass);
+        glUniform1i(glGetUniformLocation(programID, "nxTexture"), GL_TEXTURE0);
+	}
+    if (pxGrass != -1) {
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, pxGrass);
+        glUniform1i(glGetUniformLocation(programID, "pxTexture"), 1);
+	}
+    if (nyGrass != -1) {
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, nyGrass);
+        glUniform1i(glGetUniformLocation(programID, "nyTexture"), 2);
+	}
+    if (pyGrass != -1) {
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, pyGrass);
+        glUniform1i(glGetUniformLocation(programID, "pyTexture"), 3);
+	}
+    if (nzGrass != -1) {
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, nzGrass);
+        glUniform1i(glGetUniformLocation(programID, "nzTexture"), 4);
+	}
+    if (pzGrass != -1) {
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_2D, pzGrass);
+        glUniform1i(glGetUniformLocation(programID, "pzTexture"), 5);
+	}
 
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -121,7 +160,7 @@ int main(){
         glUniformMatrix4fv(ViewMatrix,1,GL_FALSE,&View[0][0]);
         glUniformMatrix4fv(ProjectionMatrix,1,GL_FALSE,&Projection[0][0]);
 
-        vox->drawVoxel();
+        vox->drawVoxel(programID);
 
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();

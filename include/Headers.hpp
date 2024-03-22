@@ -24,3 +24,5 @@
 #include <Window.hpp>
 #include <Voxel.hpp>
 #include <Shader.hpp>
+#include <stb_image.h>
+#include <Texture.h>
