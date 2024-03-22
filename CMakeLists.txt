@@ -43,6 +43,7 @@ target_sources(imgui PUBLIC
 # Executable definition
 add_executable(main
     src/main.cpp
+    src/Window.cpp
     )
 
 # Include directories for our project
