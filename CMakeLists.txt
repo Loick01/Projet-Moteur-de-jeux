@@ -44,6 +44,8 @@ target_sources(imgui PUBLIC
 add_executable(main
     src/main.cpp
     src/Window.cpp
+    src/Voxel.cpp
+    src/Shader.cpp
     )
 
 # Include directories for our project

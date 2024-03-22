@@ -3,28 +3,95 @@
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
 
+float deltaTime = 0.0f;	
+float lastFrame = 0.0f;
+
+// Caméra
+glm::vec3 camera_position  = glm::vec3(0.0f, 5.0f, 5.0f);
+glm::vec3 camera_target = camera_position * -1.0f;
+glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);;
+
+glm::vec3 center = glm::vec3(0.0f,0.0f,0.0f);
+
+int speedCam = 15;
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){ 
     glViewport(0,0,width,height);
 }
 
 void processInput(GLFWwindow* window){ 
+    float camera_speed = (float)speedCam * deltaTime;
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){ // Touche échap
         glfwSetWindowShouldClose(window,true);
+    }
+
+     // Avancer/Reculer la caméra
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
+        camera_position += (camera_speed / 10.f) * camera_target;
+    }
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS){
+        camera_position -= (camera_speed / 10.f) * camera_target;
+    }
+    // Monter/Descendre la caméra
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
+        camera_position += (camera_speed / 5.f) * camera_up;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+        camera_position -= (camera_speed / 5.f) * camera_up;
+    }
+    // Déplacer vers la droite/gauche la caméra
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
+        camera_position += (camera_speed / 5.f) * glm::normalize(glm::cross(camera_target,camera_up));;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
+        camera_position -= (camera_speed / 5.f) * glm::normalize(glm::cross(camera_target,camera_up));;
     }
 }
 
 int main(){
-    glfwInit();
+    if( !glfwInit()){
+        fprintf( stderr, "Failed to initialize GLFW\n" );
+        getchar();
+        return -1;
+    }
+
+    glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     Window window_object(3, 3, SCREEN_WIDTH, SCREEN_HEIGHT, "Projet Moteur de jeux");
     window_object.setup_GLFW();
     GLFWwindow* window = window_object.get_window();
+    glfwMakeContextCurrent(window);
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // On définit le callback à appeler lors du redimensionnement de la fenêtre
-    glClearColor(0.09f,0.27f,0.22f,1.0f); 
+    glClearColor(0.05f, 0.06f, 0.22f, 1.0f);
+
+    // Enable depth test
+    glEnable(GL_DEPTH_TEST);
+    // Accept fragment if it closer to the camera than the former one
+    glDepthFunc(GL_LESS);
+
+    GLuint VertexArrayID;
+    glGenVertexArrays(1, &VertexArrayID);
+    glBindVertexArray(VertexArrayID);
+
+    GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
+
+    // Construit un seul voxel (de taille 1)
+    Voxel *vox = new Voxel(glm::vec3(-0.5f,-0.5f,-0.5f)); 
+    vox->loadVoxel();
+
+    glUseProgram(programID);
+
+    GLuint ModelMatrix = glGetUniformLocation(programID,"Model");
+    GLuint ViewMatrix = glGetUniformLocation(programID,"View");
+    GLuint ProjectionMatrix = glGetUniformLocation(programID,"Projection");
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // Setup ImGui binding
     ImGui::CreateContext();
@@ -35,23 +102,41 @@ int main(){
 
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
-        glClear(GL_COLOR_BUFFER_BIT);
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         processInput(window);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glUseProgram(programID);
+
+        glm::mat4 Model = glm::mat4(1.0f);
+        glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,1000.0f);
+        camera_target = glm::normalize(center - camera_position); // Utiliser center pour calculer camera_target (donc la caméra est centrée sur la racine de mon graphe de scène)
+        glm::mat4 View = glm::lookAt(camera_position, camera_position + camera_target, camera_up);
+
+        glUniformMatrix4fv(ModelMatrix,1,GL_FALSE,&Model[0][0]);
+        glUniformMatrix4fv(ViewMatrix,1,GL_FALSE,&View[0][0]);
+        glUniformMatrix4fv(ProjectionMatrix,1,GL_FALSE,&Projection[0][0]);
+
+        vox->drawVoxel();
 
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.75f)); // changer la couleur du fond de la fenêtre imgui
-        // Create your ImGui window here
-        ImGui::Begin("Panneau de contrôle");
+        float fps = ImGui::GetIO().Framerate;
 
-        ImGui::PopStyleColor(); // Restaurer la couleur de fond par défaut après la fin de la fenêtre important!!!!
+        ImGui::NewFrame();
+        ImGui::Begin("Panneau de contrôle");
+        ImGui::Text("FPS : %.2f", fps);
+
+        ImGui::Spacing();
+
+        ImGui::SliderInt("Vitesse caméra", &speedCam, 5, 30);
 
         ImGui::End();
-
-
-
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

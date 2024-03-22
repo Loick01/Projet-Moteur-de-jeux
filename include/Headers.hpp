@@ -22,3 +22,5 @@
 #include "../external/glm/gtc/type_ptr.hpp"
 
 #include <Window.hpp>
+#include <Voxel.hpp>
+#include <Shader.hpp>
