@@ -84,23 +84,21 @@ int main(){
 
     GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
 
-    // Construit un seul voxel (de taille 1)
+    // Construit un plan de voxel
 
     std::vector<Voxel*> listeVoxel;
-    int longueurPlan = 20;
-    int hauteurPlan = 20;
-    for (int i = 0 ; i <= hauteurPlan ; i++){
-        for (int j = 0 ; j <= longueurPlan ; j++){
-            Voxel *vox = new Voxel(glm::vec3(longueurPlan/2*(-1.f) + i*1.f,-0.5f,hauteurPlan/2*(-1.f) + j*1.f)); 
-            vox->loadVoxel();
-            listeVoxel.push_back(vox);
+    int longueurPlan = 15;
+    int largeurPlan = 15;
+    int hauteurPlan = 1;
+    for (int i = 0 ; i < largeurPlan ; i++){
+        for (int j = 0 ; j < longueurPlan ; j++){
+            for (int k = 0 ; k < hauteurPlan ; k++){
+                Voxel *vox = new Voxel(glm::vec3(longueurPlan/2*(-1.f) + i*1.f,hauteurPlan/2*(-1.f) + k*1.f,largeurPlan/2*(-1.f) + j*1.f)); 
+                vox->loadVoxel();
+                listeVoxel.push_back(vox);
+            }
         }
     }
-
-    /*
-    Voxel *vox = new Voxel(glm::vec3(-0.5f,-0.5f,-0.5f)); 
-    vox->loadVoxel();
-    */
 
     glUseProgram(programID);
 

@@ -6,10 +6,10 @@ Voxel::Voxel(glm::vec3 position){
 }
 
 void Voxel::buildVoxel(){
-    //std::cout << "Construction des faces du voxel\n";
+    std::cout << "Construction des faces du voxel\n";
 
     float size = 1.0f; // Voxel de taille 1
-    int resolution = 8; // Nombre de ligne et de colonne sur la face d'un voxel
+    int resolution = 1; // Nombre de ligne et de colonne sur la face d'un voxel
     float step = size / resolution;
 
     for (int i = 0 ; i < 6 ; i++){
@@ -34,7 +34,7 @@ void Voxel::buildVoxel(){
                     y = this->backBottomLeftCorner[1] + (float)w * step;
                     z = this->backBottomLeftCorner[2] + (float)h * step; 
                 }
-                f->uv.push_back(glm::vec2((float)(h/((float)(resolution+1))),(float)(w/((float)(resolution+1)))));
+                f->uv.push_back(glm::vec2(h/(float)resolution,w/(float)resolution));
                 f->vertices.push_back(glm::vec3(x,y,z));
             }
         }
@@ -83,7 +83,7 @@ void Voxel::loadVoxel(){
 void Voxel::drawVoxel(GLuint programID){
     for (int i = 0; i < 6 ; i++){
 
-		glUniform1i(glGetUniformLocation(programID, "objectID"),i);
+		glUniform1i(glGetUniformLocation(programID, "objectID"),this->facesVoxel[i]->faceId);
 		
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, this->facesVoxel[i]->vertexbuffer);
