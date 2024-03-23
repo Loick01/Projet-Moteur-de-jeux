@@ -6,10 +6,10 @@ Voxel::Voxel(glm::vec3 position){
 }
 
 void Voxel::buildVoxel(){
-    std::cout << "Construction des faces du voxel\n";
+    //std::cout << "Construction des faces du voxel\n";
 
     float size = 1.0f; // Voxel de taille 1
-    int resolution = 16; // Nombre de ligne et de colonne sur la face d'un voxel
+    int resolution = 8; // Nombre de ligne et de colonne sur la face d'un voxel
     float step = size / resolution;
 
     for (int i = 0 ; i < 6 ; i++){
@@ -42,12 +42,21 @@ void Voxel::buildVoxel(){
         for (int h = 0; h < resolution ; h++) {
             for (int w = 0; w < resolution ; w++) {
                 unsigned short index = h * (resolution + 1) + w;
-                f->indicesTriangles.push_back(index);
-                f->indicesTriangles.push_back(index + 1);
-                f->indicesTriangles.push_back(index + resolution + 1);
-                f->indicesTriangles.push_back(index + 1);
-                f->indicesTriangles.push_back(index + resolution + 2);
-                f->indicesTriangles.push_back(index + resolution + 1);
+                if (i == 1 || i == 2 || i == 4){ // Face impaire
+                    f->indicesTriangles.push_back(index);
+                    f->indicesTriangles.push_back(index + resolution + 1);
+                    f->indicesTriangles.push_back(index + 1);
+                    f->indicesTriangles.push_back(index + 1);
+                    f->indicesTriangles.push_back(index + resolution + 1);
+                    f->indicesTriangles.push_back(index + resolution + 2);
+                }else if (i == 0 || i == 3 ||i == 5){ // Face paire
+                    f->indicesTriangles.push_back(index + resolution + 1);
+                    f->indicesTriangles.push_back(index);
+                    f->indicesTriangles.push_back(index + resolution + 2);
+                    f->indicesTriangles.push_back(index + resolution + 2);
+                    f->indicesTriangles.push_back(index);
+                    f->indicesTriangles.push_back(index + 1);
+                }
             }
         }
 

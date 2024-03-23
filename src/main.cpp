@@ -9,7 +9,8 @@ float lastFrame = 0.0f;
 // Caméra
 glm::vec3 camera_position  = glm::vec3(0.0f, 5.0f, 5.0f);
 glm::vec3 camera_target = camera_position * -1.0f;
-glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);;
+glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
+bool cameraLibre = false;
 
 glm::vec3 center = glm::vec3(0.0f,0.0f,0.0f);
 
@@ -75,6 +76,8 @@ int main(){
     // Accept fragment if it closer to the camera than the former one
     glDepthFunc(GL_LESS);
 
+    glEnable(GL_CULL_FACE); // Attention à la construction des triangles
+
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
@@ -82,8 +85,22 @@ int main(){
     GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
 
     // Construit un seul voxel (de taille 1)
+
+    std::vector<Voxel*> listeVoxel;
+    int longueurPlan = 20;
+    int hauteurPlan = 20;
+    for (int i = 0 ; i <= hauteurPlan ; i++){
+        for (int j = 0 ; j <= longueurPlan ; j++){
+            Voxel *vox = new Voxel(glm::vec3(longueurPlan/2*(-1.f) + i*1.f,-0.5f,hauteurPlan/2*(-1.f) + j*1.f)); 
+            vox->loadVoxel();
+            listeVoxel.push_back(vox);
+        }
+    }
+
+    /*
     Voxel *vox = new Voxel(glm::vec3(-0.5f,-0.5f,-0.5f)); 
     vox->loadVoxel();
+    */
 
     glUseProgram(programID);
 
@@ -153,14 +170,19 @@ int main(){
 
         glm::mat4 Model = glm::mat4(1.0f);
         glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,1000.0f);
-        camera_target = glm::normalize(center - camera_position); // Utiliser center pour calculer camera_target (donc la caméra est centrée sur la racine de mon graphe de scène)
+        if (!cameraLibre){
+            camera_target = -1.0f * camera_position;
+        }
         glm::mat4 View = glm::lookAt(camera_position, camera_position + camera_target, camera_up);
 
         glUniformMatrix4fv(ModelMatrix,1,GL_FALSE,&Model[0][0]);
         glUniformMatrix4fv(ViewMatrix,1,GL_FALSE,&View[0][0]);
         glUniformMatrix4fv(ProjectionMatrix,1,GL_FALSE,&Projection[0][0]);
 
-        vox->drawVoxel(programID);
+        for (int i = 0 ; i < listeVoxel.size() ; i++){
+            listeVoxel[i]->drawVoxel(programID);
+        }
+        //vox->drawVoxel(programID);
 
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -173,7 +195,11 @@ int main(){
 
         ImGui::Spacing();
 
-        ImGui::SliderInt("Vitesse caméra", &speedCam, 5, 30);
+        ImGui::SliderInt("Vitesse caméra", &speedCam, 5, 50);
+
+        ImGui::Spacing();
+        
+        ImGui::Checkbox("Caméra libre", &cameraLibre);
 
         ImGui::End();
 
