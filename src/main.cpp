@@ -11,25 +11,20 @@ glm::vec3 camera_position  = glm::vec3(0.0f, 5.0f, 5.0f);
 glm::vec3 camera_target = camera_position * -1.0f;
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
 bool cameraLibre = false;
+bool cameraPerso = false;
+int speedCam = 15;
 
 int planeWidth = 16; // De 1 à 32
 int planeLength = 16; // De 1 à 32
 int planeHeight = 1; // De 1 à 8
 std::vector<Voxel*> listeVoxel;
-
-glm::vec3 deplacement = glm::vec3(0,1,0);
-
-
-int speedCam = 15;
-Voxel *caractere = new Voxel(glm::vec3(0,2,0));
-
-float jumpSpeed=0;
+Personnage *personnage;
 
 void buildPlanVoxel(){
     // Construit un plan de voxel
     listeVoxel.clear();
-    for (int i = 0 ; i < planeLength ; i++){
-        for (int j = 0 ; j < planeWidth ; j++){
+    for (int i = 0 ; i < planeWidth ; i++){
+        for (int j = 0 ; j < planeLength ; j++){
             for (int k = 0 ; k < planeHeight ; k++){
                 Voxel *vox = new Voxel(glm::vec3(planeWidth/2*(-1.f) + i*1.f,planeHeight/2*(-1.f) + k*1.f,planeLength/2*(-1.f) + j*1.f)); 
                 vox->loadVoxel();
@@ -52,10 +47,10 @@ void processInput(GLFWwindow* window){
 
      // Avancer/Reculer la caméra
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
-        camera_position += (camera_speed / 10.f) * camera_target;
+        camera_position += (camera_speed / 15.f) * camera_target;
     }
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS){
-        camera_position -= (camera_speed / 10.f) * camera_target;
+        camera_position -= (camera_speed / 15.f) * camera_target;
     }
     // Monter/Descendre la caméra
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
@@ -71,23 +66,30 @@ void processInput(GLFWwindow* window){
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
         camera_position -= (camera_speed / 5.f) * glm::normalize(glm::cross(camera_target,camera_up));;
     }
-    // caractere deplacement
+    
+    // Déplacement du personnage
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS){
-        deplacement+=glm::vec3(0.f,0.f,-0.1f);
+        personnage->move(glm::vec3(0.f,0.f,-0.1f));
+        personnage->loadPerso();
     }
     if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){
-        deplacement+=glm::vec3(-0.1f,0.f,0.f);
+        personnage->move(glm::vec3(-0.1f,0.f,0.f));
+        personnage->loadPerso();
     }
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
-        deplacement+=glm::vec3(0.f,0.f,0.1f);
+        personnage->move(glm::vec3(0.f,0.f,0.1f));
+        personnage->loadPerso();
     }
     if (glfwGetKey(window, GLFW_KEY_SEMICOLON) == GLFW_PRESS){
-        deplacement+=glm::vec3(0.1f,0.f,0.f);
+        personnage->move(glm::vec3(0.1f,0.f,0.f));
+        personnage->loadPerso();
     }
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
-        if(caractere->backBottomLeftCorner[1]<=1.f){
-            jumpSpeed=0.23;
-            deplacement+=glm::vec3(0.f,jumpSpeed,0.f);
+        if(personnage->getRepresentant()->getPoint()[1] <= 1.0f){
+            // On initie le saut du personnage
+            personnage->setJumpSpeed(0.23);
+            personnage->move(glm::vec3(0.f,personnage->getJumpSpeed(),0.f));
+            personnage->loadPerso();
         }
     }
 }
@@ -127,11 +129,8 @@ int main(){
     GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
 
     buildPlanVoxel();
-    caractere->loadVoxel();
-
-    for(int i=0;i<6;i++){
-        caractere->facesVoxel[i]->faceId=9;
-    }
+    personnage = new Personnage(glm::vec3(0.0f,2.0f,0.0f));
+    personnage->loadPerso();
 
     glUseProgram(programID);
 
@@ -202,8 +201,11 @@ int main(){
 
         glm::mat4 Model = glm::mat4(1.0f);
         glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,1000.0f);
-        if (!cameraLibre){
-            //camera_target = -1.0f * camera_position;
+        if (!cameraLibre && !cameraPerso){
+            camera_target = -1.0f * camera_position;
+        }else if (cameraPerso){
+            camera_position = personnage->getRepresentant()->getPoint() + glm::vec3(0.5f,2.f,4.f);
+            camera_target = personnage->getRepresentant()->getPoint() + glm::vec3(0.5f,0.0f,-3.0f) - camera_position;
         }
         glm::mat4 View = glm::lookAt(camera_position, camera_position + camera_target, camera_up);
 
@@ -216,23 +218,14 @@ int main(){
         }
         //vox->drawVoxel(programID);
 
-        caractere=new Voxel(deplacement);
-        for(int i=0;i<6;i++){
-            caractere->facesVoxel[i]->faceId=9;
-        }
-        printf("position du bloc : %f %f %f\n",caractere->backBottomLeftCorner[0],caractere->backBottomLeftCorner[1],caractere->backBottomLeftCorner[2]);
-        caractere->loadVoxel();
-        caractere->drawVoxel(programID);
+        personnage->getRepresentant()->drawVoxel(programID);
         
-        if(caractere->backBottomLeftCorner[1]>=1.0f){
-            printf("jump speed %f\n",jumpSpeed);
-            deplacement+=glm::vec3(0.f,jumpSpeed,0.f);
-            jumpSpeed-=0.02;
-            
+        // Temporaire (ça simule la gravité)
+        if(personnage->getRepresentant()->getPoint()[1] >= 1.0f){
+            personnage->move(glm::vec3(0.f,personnage->getJumpSpeed(),0.f));
+            personnage->loadPerso();
+            personnage->updateJumpSpeed(-0.02);  
         }
-
-        camera_position = caractere->backBottomLeftCorner+glm::vec3(0.5f,2.5f,4.f);
-        camera_target = caractere->backBottomLeftCorner+glm::vec3(0.5f,0.0f,-2.0f) -camera_position; //+ glm::vec3(0.f,-0.1f,-0.2f);
 
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -250,6 +243,10 @@ int main(){
         ImGui::Spacing();
         
         ImGui::Checkbox("Caméra libre", &cameraLibre);
+
+        ImGui::Spacing();
+        
+        ImGui::Checkbox("Caméra personnage", &cameraPerso);
 
         ImGui::Spacing();
 

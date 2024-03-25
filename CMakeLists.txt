@@ -48,6 +48,7 @@ add_executable(main
     src/Shader.cpp
     src/Texture.cpp
     src/stb_image.cpp
+    src/Personnage.cpp
     )
 
 # Include directories for our project

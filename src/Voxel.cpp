@@ -44,7 +44,6 @@ void Voxel::buildVoxel(){
                     y = this->backBottomLeftCorner[1] + (float)h * step;
                     z = this->backBottomLeftCorner[2] + step * (1-w); 
                 }
-                f->uv.push_back(glm::vec2(w,1-h));
                 f->vertices.push_back(glm::vec3(x,y,z));
             }
         }
@@ -58,23 +57,6 @@ void Voxel::buildVoxel(){
                 f->indicesTriangles.push_back(index + resolution + 2);
                 f->indicesTriangles.push_back(index);
                 f->indicesTriangles.push_back(index + 1);
-                /*
-                if (i == 1 || i == 2 || i == 4){ // Face impaire
-                    f->indicesTriangles.push_back(index);
-                    f->indicesTriangles.push_back(index + resolution + 1);
-                    f->indicesTriangles.push_back(index + 1);
-                    f->indicesTriangles.push_back(index + 1);
-                    f->indicesTriangles.push_back(index + resolution + 1);
-                    f->indicesTriangles.push_back(index + resolution + 2);
-                }else if (i == 0 || i == 3 ||i == 5){ // Face paire
-                    f->indicesTriangles.push_back(index + resolution + 1);
-                    f->indicesTriangles.push_back(index);
-                    f->indicesTriangles.push_back(index + resolution + 2);
-                    f->indicesTriangles.push_back(index + resolution + 2);
-                    f->indicesTriangles.push_back(index);
-                    f->indicesTriangles.push_back(index + 1);
-                }
-                */
             }
         }
 
@@ -123,4 +105,16 @@ void Voxel::drawVoxel(GLuint programID){
 
         glDisableVertexAttribArray(0);
     }
+}
+
+std::vector<Face*> Voxel::getFacesVoxel(){
+    return this->facesVoxel;
+}
+
+glm::vec3 Voxel::getPoint(){
+    return this->backBottomLeftCorner;
+}
+
+void Voxel::updatePoint(glm::vec3 motion){
+    this->backBottomLeftCorner += motion;
 }

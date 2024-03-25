@@ -14,11 +14,6 @@ uniform sampler2D pzTexture;
 uniform int objectID;
 
 void main(){
-        /*
-        vec3 color = vec3(1.0, 1.0, 1.0);
-        FragColor = vec4(color, 1.0);
-        */
-
         if (objectID == 0){
                 vec3 color = texture(nyTexture, uv_coord).rgb;
                 FragColor = vec4(color, 1.0);
@@ -37,10 +32,13 @@ void main(){
         }else if (objectID == 5){
                 vec3 color = texture(pxTexture, uv_coord).rgb;
                 FragColor = vec4(color, 1.0);
-        }else{
-		vec3 color = vec3(1,0,0);
+        }else if (objectID == 10){ // Personnage
+		vec3 color = vec3(1.0,0.0,0.0);
                 FragColor = vec4(color, 1.0);
-	}
+	}else{ // Tous les objets devraient avoir un ID
+                vec3 color = vec3(1.0,1.0,1.0);
+                FragColor = vec4(color, 1.0);
+        }
 
                 
 }
