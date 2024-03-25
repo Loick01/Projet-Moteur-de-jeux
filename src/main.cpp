@@ -12,9 +12,26 @@ glm::vec3 camera_target = camera_position * -1.0f;
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
 bool cameraLibre = false;
 
-glm::vec3 center = glm::vec3(0.0f,0.0f,0.0f);
+int planeWidth = 16; // De 1 à 32
+int planeLength = 16; // De 1 à 32
+int planeHeight = 1; // De 1 à 8
+std::vector<Voxel*> listeVoxel;
 
 int speedCam = 15;
+
+void buildPlanVoxel(){
+    // Construit un plan de voxel
+    listeVoxel.clear();
+    for (int i = 0 ; i < planeLength ; i++){
+        for (int j = 0 ; j < planeWidth ; j++){
+            for (int k = 0 ; k < planeHeight ; k++){
+                Voxel *vox = new Voxel(glm::vec3(planeWidth/2*(-1.f) + i*1.f,planeHeight/2*(-1.f) + k*1.f,planeLength/2*(-1.f) + j*1.f)); 
+                vox->loadVoxel();
+                listeVoxel.push_back(vox);
+            }
+        }
+    }
+}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){ 
     glViewport(0,0,width,height);
@@ -84,20 +101,7 @@ int main(){
 
     GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
 
-    // Construit un plan de voxel
-    std::vector<Voxel*> listeVoxel;
-    int longueurPlan = 30;
-    int largeurPlan = 30;
-    int hauteurPlan =10;
-    for (int i = 0 ; i < largeurPlan ; i++){
-        for (int j = 0 ; j < longueurPlan ; j++){
-            for (int k = 0 ; k < hauteurPlan ; k++){
-                Voxel *vox = new Voxel(glm::vec3(longueurPlan/2*(-1.f) + i*1.f,hauteurPlan/2*(-1.f) + k*1.f,largeurPlan/2*(-1.f) + j*1.f)); 
-                vox->loadVoxel();
-                listeVoxel.push_back(vox);
-            }
-        }
-    }
+    buildPlanVoxel();
 
     glUseProgram(programID);
 
@@ -209,6 +213,24 @@ int main(){
             }
         }
 
+        ImGui::Spacing();
+
+        if (ImGui::SliderInt("Longueur", &planeWidth, 1, 32)){
+            buildPlanVoxel();
+        }
+
+        ImGui::Spacing();
+
+        if (ImGui::SliderInt("Largeur", &planeLength, 1, 32)){
+            buildPlanVoxel();
+        }
+
+        ImGui::Spacing();
+
+        if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
+            buildPlanVoxel();
+        }
+
         ImGui::End();
 
         ImGui::Render();
@@ -218,7 +240,15 @@ int main(){
         glfwPollEvents();
     }
 
-    glfwTerminate(); // Supprime et nettoie proprement les ressources GLFW allouées
+    glDeleteProgram(programID);
+    glDeleteVertexArrays(1, &VertexArrayID);
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
     return 0;
 
 
