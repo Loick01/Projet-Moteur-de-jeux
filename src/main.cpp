@@ -8,7 +8,7 @@ float lastFrame = 0.0f;
 
 // Caméra
 glm::vec3 camera_position  = glm::vec3(0.0f, 5.0f, 5.0f);
-glm::vec3 camera_target = camera_position * -1.0f;
+glm::vec3 camera_target;// = camera_position * -1.0f;
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
 bool cameraLibre = false;
 
@@ -24,6 +24,15 @@ int speedCam = 15;
 Voxel *caractere = new Voxel(glm::vec3(0,2,0));
 
 float jumpSpeed=0;
+
+double previousx=640;
+double previousy=360;
+double xpos;
+double ypos;
+
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
+    std::cout << "Position de la souris : (" << xpos << ", " << ypos << ")" << std::endl;
+}
 
 void buildPlanVoxel(){
     // Construit un plan de voxel
@@ -149,6 +158,15 @@ int main(){
     ImGui_ImplOpenGL3_Init("#version 330");
     ImGui::StyleColorsDark();
 
+    double phi=0;
+    double theta=0;
+
+    float x = cos(theta) * cos(phi);
+    float y = sin(theta) * cos(phi);
+    float z = sin(phi);
+        
+    camera_target = glm::normalize(glm::vec3(x,y,z)-camera_position);
+
     // Chargement des textures
     GLint nxGrass = loadTexture2DFromFilePath("../Textures/Grass/nx_grass.png");
     GLint pxGrass = loadTexture2DFromFilePath("../Textures/Grass/px_grass.png");
@@ -189,6 +207,8 @@ int main(){
 	}
 
     // Boucle de rendu
+    //glfwSetCursorPosCallback(window, cursor_position_callback);
+
     while(!glfwWindowShouldClose(window)){
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
@@ -199,6 +219,34 @@ int main(){
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(programID);
+
+        // Gestion des événements
+        glfwPollEvents();
+
+        // Récupération de la position de la souris
+        glfwGetCursorPos(window, &xpos, &ypos);
+
+        double deltaX = xpos - previousx;
+        double deltaY = ypos - previousy;
+
+        phi+=((deltaX*M_PI/8)/100);
+
+        //if(signeDeltaX == -1){
+        //    printf("deltax negatif\n");
+        //}
+
+        theta+=((deltaY*M_PI/8)/100);
+
+        float x = cos(theta) * cos(phi) + camera_position[0];
+        float y = sin(theta) * cos(phi) + camera_position[1];
+        float z = sin(phi) + camera_position[2];
+        
+        camera_target = glm::normalize(glm::vec3(x,y,z)-camera_position);
+
+        previousx=xpos;
+        previousy=ypos;
+
+        std::cout << "Position de la souris : (" << xpos << ", " << ypos << ")" << std::endl;
 
         glm::mat4 Model = glm::mat4(1.0f);
         glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,1000.0f);
@@ -220,7 +268,7 @@ int main(){
         for(int i=0;i<6;i++){
             caractere->facesVoxel[i]->faceId=9;
         }
-        printf("position du bloc : %f %f %f\n",caractere->backBottomLeftCorner[0],caractere->backBottomLeftCorner[1],caractere->backBottomLeftCorner[2]);
+        //printf("position du bloc : %f %f %f\n",caractere->backBottomLeftCorner[0],caractere->backBottomLeftCorner[1],caractere->backBottomLeftCorner[2]);
         caractere->loadVoxel();
         caractere->drawVoxel(programID);
         
@@ -231,8 +279,10 @@ int main(){
             
         }
 
-        camera_position = caractere->backBottomLeftCorner+glm::vec3(0.5f,2.5f,4.f);
-        camera_target = caractere->backBottomLeftCorner+glm::vec3(0.5f,0.0f,-2.0f) -camera_position; //+ glm::vec3(0.f,-0.1f,-0.2f);
+    
+
+        // camera_position = caractere->backBottomLeftCorner+glm::vec3(0.5f,2.5f,4.f);
+        // camera_target = caractere->backBottomLeftCorner+glm::vec3(0.5f,0.0f,-2.0f) -camera_position; //+ glm::vec3(0.f,-0.1f,-0.2f);
 
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -283,6 +333,7 @@ int main(){
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();
