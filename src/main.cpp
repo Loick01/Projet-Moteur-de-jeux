@@ -10,9 +10,15 @@ float lastFrame = 0.0f;
 glm::vec3 camera_position  = glm::vec3(0.0f, 5.0f, 5.0f);
 glm::vec3 camera_target = camera_position * -1.0f;
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
+bool cameraOrbitale = false;
 bool cameraLibre = false;
 bool cameraPerso = false;
 int speedCam = 15;
+double previousX = SCREEN_WIDTH / 2;
+double previousY = SCREEN_HEIGHT / 2;
+bool firstMouse = true;
+float phi = -90.0f;
+float theta = 0.0f;
 
 int planeWidth = 16; // De 1 à 32
 int planeLength = 16; // De 1 à 32
@@ -92,6 +98,29 @@ void processInput(GLFWwindow* window){
             personnage->loadPerso();
         }
     }
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos){
+    //std::cout << "Changement : " << xpos << ", " << ypos << "\n";
+    if (firstMouse){
+        previousX = xpos;
+        previousY = ypos;
+        firstMouse = false;
+    }
+
+    double deltaX = xpos - previousX;
+    double deltaY = previousY - ypos;
+
+    phi += deltaX*0.05f;
+    theta += deltaY*0.05f;
+
+    float x = cos(glm::radians(phi)) * cos(glm::radians(theta));
+    float y = sin(glm::radians(theta));
+    float z = sin(glm::radians(phi)) * cos(glm::radians(theta));
+    camera_target = glm::normalize(glm::vec3(x,y,z));
+
+    previousX=xpos;
+    previousY=ypos;
 }
 
 int main(){
@@ -187,6 +216,9 @@ int main(){
         glUniform1i(glGetUniformLocation(programID, "pzTexture"), 5);
 	}
 
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Pour masquer la souris sur la fenêtre
+
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
         float currentFrame = glfwGetTime();
@@ -201,12 +233,24 @@ int main(){
 
         glm::mat4 Model = glm::mat4(1.0f);
         glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,1000.0f);
-        if (!cameraLibre && !cameraPerso){
+
+        camera_position = personnage->getRepresentant()->getPoint() + glm::vec3(0.5f,2.f,4.f);
+        /* On verra plus tard pour faire les changements de caméra au cours de l'éxécution
+        if (cameraOrbitale){
+            //glfwSetCursorPosCallback(window, NULL); // On met en pause le callback
+            //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Pour remettre la souris si on l'avait enlevé
             camera_target = -1.0f * camera_position;
+        }else if (cameraLibre){
+            //glfwSetCursorPosCallback(window, NULL); // On met en pause le callback
+            //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Pour remettre la souris si on l'avait enlevé
         }else if (cameraPerso){
+            glfwSetCursorPosCallback(window, mouse_callback);
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Pour masquer la souris sur la fenêtre
             camera_position = personnage->getRepresentant()->getPoint() + glm::vec3(0.5f,2.f,4.f);
             camera_target = personnage->getRepresentant()->getPoint() + glm::vec3(0.5f,0.0f,-3.0f) - camera_position;
         }
+        */
+
         glm::mat4 View = glm::lookAt(camera_position, camera_position + camera_target, camera_up);
 
         glUniformMatrix4fv(ModelMatrix,1,GL_FALSE,&Model[0][0]);
@@ -239,6 +283,10 @@ int main(){
         ImGui::Spacing();
 
         ImGui::SliderInt("Vitesse caméra", &speedCam, 5, 50);
+
+        ImGui::Spacing();
+
+        ImGui::Checkbox("Caméra orbitale", &cameraOrbitale);
 
         ImGui::Spacing();
         
