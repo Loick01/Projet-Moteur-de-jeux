@@ -1,0 +1,162 @@
+[
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/cc  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include  -o CMakeFiles/glad.dir/external/glad/src/glad.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/src/glad.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/src/glad.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -std=gnu++11 -o CMakeFiles/imgui.dir/external/imgui-1.90.4/src/imgui.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/src/imgui.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/src/imgui.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -std=gnu++11 -o CMakeFiles/imgui.dir/external/imgui-1.90.4/src/imgui_demo.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/src/imgui_demo.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/src/imgui_demo.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -std=gnu++11 -o CMakeFiles/imgui.dir/external/imgui-1.90.4/src/imgui_draw.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/src/imgui_draw.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/src/imgui_draw.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -std=gnu++11 -o CMakeFiles/imgui.dir/external/imgui-1.90.4/src/imgui_tables.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/src/imgui_tables.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/src/imgui_tables.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -std=gnu++11 -o CMakeFiles/imgui.dir/external/imgui-1.90.4/src/imgui_widgets.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/src/imgui_widgets.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/src/imgui_widgets.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -std=gnu++11 -o CMakeFiles/imgui.dir/external/imgui-1.90.4/backends/imgui_impl_glfw.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends/imgui_impl_glfw.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends/imgui_impl_glfw.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -std=gnu++11 -o CMakeFiles/imgui.dir/external/imgui-1.90.4/backends/imgui_impl_opengl3.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends/imgui_impl_opengl3.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends/imgui_impl_opengl3.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -std=gnu++11 -o CMakeFiles/main.dir/src/main.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/src/main.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/src/main.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -std=gnu++11 -o CMakeFiles/main.dir/src/Window.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/src/Window.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/src/Window.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -std=gnu++11 -o CMakeFiles/main.dir/src/Voxel.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/src/Voxel.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/src/Voxel.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -std=gnu++11 -o CMakeFiles/main.dir/src/Shader.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/src/Shader.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/src/Shader.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -std=gnu++11 -o CMakeFiles/main.dir/src/Texture.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/src/Texture.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/src/Texture.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -std=gnu++11 -o CMakeFiles/main.dir/src/stb_image.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/src/stb_image.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/src/stb_image.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -std=gnu++11 -o CMakeFiles/main.dir/external/imgui-1.90.4/backends/imgui_impl_glfw.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends/imgui_impl_glfw.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends/imgui_impl_glfw.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build",
+  "command": "/usr/bin/c++  -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glad/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends -std=gnu++11 -o CMakeFiles/main.dir/external/imgui-1.90.4/backends/imgui_impl_opengl3.cpp.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends/imgui_impl_opengl3.cpp",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/imgui-1.90.4/backends/imgui_impl_opengl3.cpp"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/context.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/context.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/context.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/init.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/init.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/init.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/input.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/input.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/input.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/monitor.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/monitor.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/monitor.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/vulkan.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/vulkan.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/vulkan.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/window.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/window.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/window.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -o CMakeFiles/glfw.dir/x11_init.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/x11_init.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/x11_init.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -o CMakeFiles/glfw.dir/x11_monitor.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/x11_monitor.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/x11_monitor.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -o CMakeFiles/glfw.dir/x11_window.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/x11_window.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/x11_window.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -o CMakeFiles/glfw.dir/xkb_unicode.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/xkb_unicode.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/xkb_unicode.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -o CMakeFiles/glfw.dir/posix_time.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/posix_time.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/posix_time.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -o CMakeFiles/glfw.dir/posix_thread.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/posix_thread.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/posix_thread.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -o CMakeFiles/glfw.dir/glx_context.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/glx_context.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/glx_context.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/egl_context.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/egl_context.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/egl_context.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -Wdeclaration-after-statement -o CMakeFiles/glfw.dir/osmesa_context.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/osmesa_context.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/osmesa_context.c"
+},
+{
+  "directory": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src",
+  "command": "/usr/bin/cc -D_GLFW_USE_CONFIG_H -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/include -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src -I/home/e20230010831/Bureau/Projet-Moteur-de-jeux/build/external/glfw-3.3.9/src -fPIC -Wall -std=gnu99 -o CMakeFiles/glfw.dir/linux_joystick.c.o -c /home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/linux_joystick.c",
+  "file": "/home/e20230010831/Bureau/Projet-Moteur-de-jeux/external/glfw-3.3.9/src/linux_joystick.c"
+}
+]

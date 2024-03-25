@@ -37,7 +37,10 @@ void main(){
         }else if (objectID == 5){
                 vec3 color = texture(pxTexture, uv_coord).rgb;
                 FragColor = vec4(color, 1.0);
-        }
+        }else{
+		vec3 color = vec3(1,0,0);
+                FragColor = vec4(color, 1.0);
+	}
 
                 
 }

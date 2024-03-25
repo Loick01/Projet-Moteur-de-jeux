@@ -14,9 +14,9 @@ struct Face {
 
 class Voxel {
     private:
+    public:
         glm::vec3 backBottomLeftCorner;
         std::vector<Face*> facesVoxel; // Vecteur de 6 faces
-    public:
         Voxel(glm::vec3 position);
         void buildVoxel();
         void loadVoxel();
