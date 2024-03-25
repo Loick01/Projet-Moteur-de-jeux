@@ -10,7 +10,6 @@ struct Face {
 
     GLuint vertexbuffer;
     GLuint elementbuffer;
-    GLuint uvbuffer;
 };
 
 class Voxel {

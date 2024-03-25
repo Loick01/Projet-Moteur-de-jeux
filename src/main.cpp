@@ -85,11 +85,10 @@ int main(){
     GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
 
     // Construit un plan de voxel
-
     std::vector<Voxel*> listeVoxel;
-    int longueurPlan = 15;
-    int largeurPlan = 15;
-    int hauteurPlan = 1;
+    int longueurPlan = 30;
+    int largeurPlan = 30;
+    int hauteurPlan =10;
     for (int i = 0 ; i < largeurPlan ; i++){
         for (int j = 0 ; j < longueurPlan ; j++){
             for (int k = 0 ; k < hauteurPlan ; k++){
@@ -106,7 +105,8 @@ int main(){
     GLuint ViewMatrix = glGetUniformLocation(programID,"View");
     GLuint ProjectionMatrix = glGetUniformLocation(programID,"Projection");
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_TRIANGLES);
+    bool renduFilaire = false;
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // Setup ImGui binding
     ImGui::CreateContext();
@@ -198,6 +198,16 @@ int main(){
         ImGui::Spacing();
         
         ImGui::Checkbox("Caméra libre", &cameraLibre);
+
+        ImGui::Spacing();
+
+        if (ImGui::Checkbox("Rendu filaire", &renduFilaire)) {
+            if (renduFilaire) {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            } else {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
+        }
 
         ImGui::End();
 
