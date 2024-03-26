@@ -91,7 +91,7 @@ void processInput(GLFWwindow* window){
         personnage->loadPerso();
     }
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
-        if(personnage->getRepresentant()->getPoint()[1] <= 1.0f){
+        if(personnage->getRepresentant()->getPoint()[1] == 1.0f){
             // On initie le saut du personnage
             personnage->setJumpSpeed(0.23);
             personnage->move(glm::vec3(0.f,personnage->getJumpSpeed(),0.f));
@@ -265,10 +265,12 @@ int main(){
         personnage->getRepresentant()->drawVoxel(programID);
         
         // Temporaire (ça simule la gravité)
-        if(personnage->getRepresentant()->getPoint()[1] >= 1.0f){
+        if(personnage->getRepresentant()->getPoint()[1] > 1.0f){
             personnage->move(glm::vec3(0.f,personnage->getJumpSpeed(),0.f));
             personnage->loadPerso();
             personnage->updateJumpSpeed(-0.02);  
+        }else if (personnage->getRepresentant()->getPoint()[1] < 1.0f){
+            personnage->move(glm::vec3(0.f,1.0f - personnage->getRepresentant()->getPoint()[1],0.f)); // Le personnage retourne en 1.0
         }
 
         // Start the ImGui frame
