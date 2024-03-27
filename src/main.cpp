@@ -7,7 +7,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 // Caméra
-glm::vec3 camera_position  = glm::vec3(0.0f, 5.0f, 5.0f);
+glm::vec3 camera_position  = glm::vec3(0.0f, 1.0f, 1.0f);
 glm::vec3 camera_target = camera_position * -1.0f;
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
 bool cameraOrbitale = false;
@@ -20,11 +20,14 @@ bool firstMouse = true;
 float phi = -90.0f;
 float theta = 0.0f;
 
-int planeWidth = 16; // De 1 à 32
-int planeLength = 16; // De 1 à 32
-int planeHeight = 1; // De 1 à 8
+// Quand on mettra en place les chunks, ça pourrait même être des unsigned char (ainsi la map aurait au max une taille de 256 * 32 = 8192 blocs de côté, avec des chunks 32c32x32)
+short planeWidth = 16; // De 1 à 32
+short planeLength = 16; // De 1 à 32
+short planeHeight = 1; // De 1 à 8
+
+//Voxel* vox = new Voxel();
 std::vector<Voxel*> listeVoxel;
-Personnage *personnage;
+//Personnage *personnage;
 
 void buildPlanVoxel(){
     // Construit un plan de voxel
@@ -32,7 +35,7 @@ void buildPlanVoxel(){
     for (int i = 0 ; i < planeWidth ; i++){
         for (int j = 0 ; j < planeLength ; j++){
             for (int k = 0 ; k < planeHeight ; k++){
-                Voxel *vox = new Voxel(glm::vec3(planeWidth/2*(-1.f) + i*1.f,planeHeight/2*(-1.f) + k*1.f,planeLength/2*(-1.f) + j*1.f)); 
+                Voxel *vox = new Voxel(); 
                 vox->loadVoxel();
                 listeVoxel.push_back(vox);
             }
@@ -73,6 +76,7 @@ void processInput(GLFWwindow* window){
         camera_position -= (camera_speed / 5.f) * glm::normalize(glm::cross(camera_target,camera_up));;
     }
     
+    /*
     // Déplacement du personnage
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS){
         personnage->move(glm::vec3(0.f,0.f,-0.1f));
@@ -98,6 +102,7 @@ void processInput(GLFWwindow* window){
             personnage->loadPerso();
         }
     }
+    */
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos){
@@ -158,14 +163,25 @@ int main(){
     GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
 
     buildPlanVoxel();
+    /*
     personnage = new Personnage(glm::vec3(0.0f,2.0f,0.0f));
     personnage->loadPerso();
+    */
+
+    //vox->loadVoxel();
 
     glUseProgram(programID);
 
     GLuint ModelMatrix = glGetUniformLocation(programID,"Model");
     GLuint ViewMatrix = glGetUniformLocation(programID,"View");
     GLuint ProjectionMatrix = glGetUniformLocation(programID,"Projection");
+
+    GLuint planeWidthID = glGetUniformLocation(programID,"planeWidth");
+    GLuint planeLengthID = glGetUniformLocation(programID,"planeLength");
+    GLuint planeHeightID = glGetUniformLocation(programID,"planeHeight");
+    glUniform1ui(planeWidthID, planeWidth);
+    glUniform1ui(planeLengthID, planeLength);
+    glUniform1ui(planeHeightID, planeHeight);
 
     bool renduFilaire = false;
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -177,6 +193,7 @@ int main(){
     ImGui_ImplOpenGL3_Init("#version 330");
     ImGui::StyleColorsDark();
 
+    /*
     // Chargement des textures
     GLint nxGrass = loadTexture2DFromFilePath("../Textures/Grass/nx_grass.png");
     GLint pxGrass = loadTexture2DFromFilePath("../Textures/Grass/px_grass.png");
@@ -215,6 +232,7 @@ int main(){
 		glBindTexture(GL_TEXTURE_2D, pzGrass);
         glUniform1i(glGetUniformLocation(programID, "pzTexture"), 5);
 	}
+    */
 
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Pour masquer la souris sur la fenêtre
@@ -234,7 +252,7 @@ int main(){
         glm::mat4 Model = glm::mat4(1.0f);
         glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,1000.0f);
 
-        camera_position = personnage->getRepresentant()->getPoint() + glm::vec3(0.5f,2.f,4.f);
+        //camera_position = personnage->getRepresentant()->getPoint() + glm::vec3(0.5f,2.f,4.f);
         /* On verra plus tard pour faire les changements de caméra au cours de l'éxécution
         if (cameraOrbitale){
             //glfwSetCursorPosCallback(window, NULL); // On met en pause le callback
@@ -258,12 +276,14 @@ int main(){
         glUniformMatrix4fv(ProjectionMatrix,1,GL_FALSE,&Projection[0][0]);
 
         for (int i = 0 ; i < listeVoxel.size() ; i++){
-            listeVoxel[i]->drawVoxel(programID);
+            listeVoxel[i]->drawVoxel();
         }
-        //vox->drawVoxel(programID);
-
-        personnage->getRepresentant()->drawVoxel(programID);
         
+        //vox->drawVoxel();
+
+        //personnage->getRepresentant()->drawVoxel(programID);
+        
+        /*
         // Temporaire (ça simule la gravité)
         if(personnage->getRepresentant()->getPoint()[1] > 1.0f){
             personnage->move(glm::vec3(0.f,personnage->getJumpSpeed(),0.f));
@@ -272,6 +292,7 @@ int main(){
         }else if (personnage->getRepresentant()->getPoint()[1] < 1.0f){
             personnage->move(glm::vec3(0.f,1.0f - personnage->getRepresentant()->getPoint()[1],0.f)); // Le personnage retourne en 1.0
         }
+        */
 
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -310,21 +331,23 @@ int main(){
 
         ImGui::Spacing();
 
+        /*
         if (ImGui::SliderInt("Longueur", &planeWidth, 1, 32)){
-            buildPlanVoxel();
+            //buildPlanVoxel();
         }
 
         ImGui::Spacing();
 
         if (ImGui::SliderInt("Largeur", &planeLength, 1, 32)){
-            buildPlanVoxel();
+            //buildPlanVoxel();
         }
 
         ImGui::Spacing();
 
         if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
-            buildPlanVoxel();
+            //buildPlanVoxel();
         }
+        */
 
         ImGui::End();
 

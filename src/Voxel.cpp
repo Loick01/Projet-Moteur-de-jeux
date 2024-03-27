@@ -1,112 +1,79 @@
 #include <Voxel.hpp>
 
-Voxel::Voxel(glm::vec3 position){
-    this->backBottomLeftCorner = position;
-    this->buildVoxel();
-}
+Voxel::Voxel(){
+    // Face avant
+    this->vertices.push_back(glm::vec3(-0.5f, -0.5f,  0.5f)); // Bas gauche (0)
+    this->vertices.push_back(glm::vec3(0.5f, -0.5f,  0.5f)); // Bas droit (1)
+    this->vertices.push_back(glm::vec3(-0.5f, 0.5f,  0.5f)); // Haut gauche (2)
+    this->vertices.push_back(glm::vec3(0.5f, 0.5f,  0.5f)); // Haut droit (3)
+    // Face arrière
+    this->vertices.push_back(glm::vec3(-0.5f, -0.5f,  -0.5f)); // Bas gauche (4)
+    this->vertices.push_back(glm::vec3(0.5f, -0.5f,  -0.5f)); // Bas droit (5)
+    this->vertices.push_back(glm::vec3(-0.5f, 0.5f,  -0.5f)); // Haut gauche (6)
+    this->vertices.push_back(glm::vec3(0.5f, 0.5f,  -0.5f)); // Haut droit (7)
 
-void Voxel::buildVoxel(){
-    //std::cout << "Construction des faces du voxel\n";
+    // Définition des triangles
+    std::vector<unsigned short> indices = {
+        // Face avant
+        0, 1, 2,
+        2, 1, 3,
+        // Face arrière
+        5, 4, 7,
+        7, 4, 6,
+        // Face de gauche
+        4, 0, 6,
+        6, 0, 2,
+        // Face de droite
+        1, 5, 3,
+        3, 5, 7,
+        // Face dessous
+        4, 5, 0,
+        0, 5, 1,
+        // Face dessus
+        2, 3, 6,
+        6, 3, 7
 
-    float size = 1.0f; // Voxel de taille 1
-    int resolution = 1; // Nombre de ligne et de colonne sur la face d'un voxel
-    float step = size / resolution;
-
-    for (int i = 0 ; i < 6 ; i++){
-        Face *f = new Face;
-
-        f->faceId = i;
-
-        for (int h = 0; h < resolution + 1; h++) {
-            for (int w = 0; w < resolution + 1; w++) {
-                float x, y, z;
-                
-                int n = (i%2 == 0 ? 1 : -1);
-
-                if (i < 2){ // Faces bottom et top
-                    x = this->backBottomLeftCorner[0] + (float)w * step;
-                    y = this->backBottomLeftCorner[1] + i * size;
-                    z = this->backBottomLeftCorner[2] + i*step + ((float)h * step)*n; 
-                }else if (i == 2){ // Faces back
-                    x = this->backBottomLeftCorner[0] + step * (1-w);
-                    y = this->backBottomLeftCorner[1] + (float)h * step; 
-                    z = this->backBottomLeftCorner[2];
-                }else if (i == 3){ // Faces front
-                    x = this->backBottomLeftCorner[0] + (float)w * step;
-                    y = this->backBottomLeftCorner[1] + (float)h * step; 
-                    z = this->backBottomLeftCorner[2] + size;
-                }else if (i == 4){ // Face left
-                    x = this->backBottomLeftCorner[0] + (i-4) * size;
-                    y = this->backBottomLeftCorner[1] + (float)h * step;
-                    z = this->backBottomLeftCorner[2] + (float)w * step; 
-                }else if (i == 5){ // Face right
-                    x = this->backBottomLeftCorner[0] + (i-4) * size;
-                    y = this->backBottomLeftCorner[1] + (float)h * step;
-                    z = this->backBottomLeftCorner[2] + step * (1-w); 
-                }
-                f->vertices.push_back(glm::vec3(x,y,z));
-            }
-        }
-
-        for (int h = 0; h < resolution ; h++) {
-            for (int w = 0; w < resolution ; w++) {
-                unsigned short index = h * (resolution + 1) + w;
-                f->indicesTriangles.push_back(index + resolution + 1);
-                f->indicesTriangles.push_back(index);
-                f->indicesTriangles.push_back(index + resolution + 2);
-                f->indicesTriangles.push_back(index + resolution + 2);
-                f->indicesTriangles.push_back(index);
-                f->indicesTriangles.push_back(index + 1);
-            }
-        }
-
-        this->facesVoxel.push_back(f);
-    }
+    };
+    this->indices = indices;
 }
 
 void Voxel::loadVoxel(){
-    for (int i = 0; i < 6 ; i++){
-        glGenBuffers(1, &(this->facesVoxel[i]->vertexbuffer));
-        glBindBuffer(GL_ARRAY_BUFFER, this->facesVoxel[i]->vertexbuffer);
-        glBufferData(GL_ARRAY_BUFFER, (this->facesVoxel[i])->vertices.size() * sizeof(glm::vec3), &(this->facesVoxel[i]->vertices[0]), GL_STATIC_DRAW);
-        
-        glGenBuffers(1, &(this->facesVoxel[i]->elementbuffer));
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->facesVoxel[i]->elementbuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, (this->facesVoxel[i])->indicesTriangles.size()* sizeof(unsigned short), &(this->facesVoxel[i]->indicesTriangles[0]) , GL_STATIC_DRAW);
-    }
+    glGenBuffers(1, &(this->vertexbuffer));
+    glBindBuffer(GL_ARRAY_BUFFER, this->vertexbuffer);
+    glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(glm::vec3), &(this->vertices[0]), GL_STATIC_DRAW);
+    
+    glGenBuffers(1, &(this->elementbuffer));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->elementbuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(unsigned short), &(this->indices[0]) , GL_STATIC_DRAW);
 }
 
-void Voxel::drawVoxel(GLuint programID){
-    for (int i = 0; i < 6 ; i++){
+void Voxel::drawVoxel(){
+    //glUniform1i(glGetUniformLocation(programID, "objectID"),this->facesVoxel[i]->faceId);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, this->vertexbuffer);
+    glVertexAttribPointer(
+                    0,                  // attribute
+                    3,                  // size
+                    GL_FLOAT,           // type
+                    GL_FALSE,           // normalized?
+                    0,                  // stride
+                    (void*)0            // array buffer offset
+                    );
 
-		glUniform1i(glGetUniformLocation(programID, "objectID"),this->facesVoxel[i]->faceId);
-		
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, this->facesVoxel[i]->vertexbuffer);
-        glVertexAttribPointer(
-                        0,                  // attribute
-                        3,                  // size
-                        GL_FLOAT,           // type
-                        GL_FALSE,           // normalized?
-                        0,                  // stride
-                        (void*)0            // array buffer offset
-                        );
+    // Index buffer
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->elementbuffer);
 
-        // Index buffer
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->facesVoxel[i]->elementbuffer);
+    // Draw the triangles !
+    glDrawElements(
+                    GL_TRIANGLES,      // mode
+                    this->indices.size(), // count
+                    GL_UNSIGNED_SHORT,   // type
+                    (void*)0           // element array buffer offset
+                    );
 
-        // Draw the triangles !
-        glDrawElements(
-                        GL_TRIANGLES,      // mode
-                        this->facesVoxel[i]->indicesTriangles.size(), // count
-                        GL_UNSIGNED_SHORT,   // type
-                        (void*)0           // element array buffer offset
-                        );
-
-        glDisableVertexAttribArray(0);
-    }
+    glDisableVertexAttribArray(0);
 }
-
+/*
 std::vector<Face*> Voxel::getFacesVoxel(){
     return this->facesVoxel;
 }
@@ -118,3 +85,4 @@ glm::vec3 Voxel::getPoint(){
 void Voxel::updatePoint(glm::vec3 motion){
     this->backBottomLeftCorner += motion;
 }
+*/

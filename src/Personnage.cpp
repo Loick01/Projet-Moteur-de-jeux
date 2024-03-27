@@ -1,5 +1,6 @@
 #include <Personnage.hpp>
 
+/*
 Personnage::Personnage(glm::vec3 position){
     this->currentJumpSpeed = 0.0;
     this->deplacementPerso = glm::vec3(0.0f,0.0f,0.0f);
@@ -38,3 +39,4 @@ void Personnage::setJumpSpeed(float js){
 float Personnage::getJumpSpeed(){
     return this->currentJumpSpeed;
 }
+*/
