@@ -2,9 +2,8 @@
 
 out vec4 FragColor;
 
-//in vec2 uv_coord;
+in vec2 uv_coord;
 
-/*
 uniform sampler2D nxTexture;
 uniform sampler2D pxTexture;
 uniform sampler2D nyTexture;
@@ -13,7 +12,6 @@ uniform sampler2D nzTexture;
 uniform sampler2D pzTexture;
 
 uniform int objectID;
-*/
 
 void main(){
         /*
@@ -43,8 +41,7 @@ void main(){
                 FragColor = vec4(color, 1.0);
         }
         */
-        vec3 color = vec3(0.0,1.0,0.0);
-        FragColor = vec4(color, 1.0);
 
-                
+        vec3 color = texture(pyTexture, uv_coord).rgb;
+        FragColor = vec4(color, 1.0);
 }

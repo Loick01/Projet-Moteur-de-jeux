@@ -4,21 +4,17 @@
 
 class Voxel {
     private:
+        glm::vec3 backBottomLeftCorner;
         std::vector<glm::vec3> vertices;
         std::vector<unsigned short> indices;
-
+        //int faceId;
         GLuint vertexbuffer;
         GLuint elementbuffer;
-        
     public:
-        Voxel();
-        
-        //void buildVoxel();
+        Voxel(glm::vec3 position);
+        void buildVoxel();
         void loadVoxel();
         void drawVoxel();
-        /*
-        std::vector<Face*> getFacesVoxel();
         glm::vec3 getPoint();
         void updatePoint(glm::vec3 motion);
-        */
 };

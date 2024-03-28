@@ -1,40 +1,53 @@
 #include <Voxel.hpp>
 
-Voxel::Voxel(){
-    // Face avant
-    this->vertices.push_back(glm::vec3(-0.5f, -0.5f,  0.5f)); // Bas gauche (0)
-    this->vertices.push_back(glm::vec3(0.5f, -0.5f,  0.5f)); // Bas droit (1)
-    this->vertices.push_back(glm::vec3(-0.5f, 0.5f,  0.5f)); // Haut gauche (2)
-    this->vertices.push_back(glm::vec3(0.5f, 0.5f,  0.5f)); // Haut droit (3)
-    // Face arrière
-    this->vertices.push_back(glm::vec3(-0.5f, -0.5f,  -0.5f)); // Bas gauche (4)
-    this->vertices.push_back(glm::vec3(0.5f, -0.5f,  -0.5f)); // Bas droit (5)
-    this->vertices.push_back(glm::vec3(-0.5f, 0.5f,  -0.5f)); // Haut gauche (6)
-    this->vertices.push_back(glm::vec3(0.5f, 0.5f,  -0.5f)); // Haut droit (7)
+Voxel::Voxel(glm::vec3 position){
+    this->backBottomLeftCorner = position;
+    this->buildVoxel();
+}
 
-    // Définition des triangles
-    std::vector<unsigned short> indices = {
-        // Face avant
-        0, 1, 2,
-        2, 1, 3,
-        // Face arrière
-        5, 4, 7,
-        7, 4, 6,
-        // Face de gauche
-        4, 0, 6,
-        6, 0, 2,
-        // Face de droite
-        1, 5, 3,
-        3, 5, 7,
-        // Face dessous
-        4, 5, 0,
-        0, 5, 1,
-        // Face dessus
-        2, 3, 6,
-        6, 3, 7
+void Voxel::buildVoxel(){
+    //std::cout << "Construction des faces du voxel\n";
+    // Voxel de taille 1
 
-    };
-    this->indices = indices;
+    for (int i = 0 ; i < 6 ; i++){
+        for (int h = 0; h < 2 ; h++) {
+            for (int w = 0; w < 2; w++) {
+                float x, y, z;
+                int n = (i%2 == 0 ? 1 : -1);
+
+                if (i < 2){ // Faces bottom et top
+                    x = this->backBottomLeftCorner[0] + (float)w;
+                    y = this->backBottomLeftCorner[1] + i;
+                    z = this->backBottomLeftCorner[2] + i + (float)h * n; 
+                }else if (i == 2){ // Faces back
+                    x = this->backBottomLeftCorner[0] + (1-w);
+                    y = this->backBottomLeftCorner[1] + (float)h; 
+                    z = this->backBottomLeftCorner[2];
+                }else if (i == 3){ // Faces front
+                    x = this->backBottomLeftCorner[0] + (float)w;
+                    y = this->backBottomLeftCorner[1] + (float)h; 
+                    z = this->backBottomLeftCorner[2] + 1.0f;
+                }else if (i == 4){ // Face left
+                    x = this->backBottomLeftCorner[0] + (i-4);
+                    y = this->backBottomLeftCorner[1] + (float)h;
+                    z = this->backBottomLeftCorner[2] + (float)w; 
+                }else if (i == 5){ // Face right
+                    x = this->backBottomLeftCorner[0] + (i-4);
+                    y = this->backBottomLeftCorner[1] + (float)h;
+                    z = this->backBottomLeftCorner[2] + (1-w); 
+                }
+                this->vertices.push_back(glm::vec3(x,y,z));
+            }
+        }
+
+        short decalage = i*4;
+        this->indices.push_back(decalage + 2);
+        this->indices.push_back(decalage + 0);
+        this->indices.push_back(decalage + 3);
+        this->indices.push_back(decalage + 3);
+        this->indices.push_back(decalage + 0);
+        this->indices.push_back(decalage + 1);
+    }
 }
 
 void Voxel::loadVoxel(){
@@ -44,11 +57,12 @@ void Voxel::loadVoxel(){
     
     glGenBuffers(1, &(this->elementbuffer));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(unsigned short), &(this->indices[0]) , GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size()* sizeof(unsigned short), &(this->indices[0]) , GL_STATIC_DRAW);
 }
 
 void Voxel::drawVoxel(){
     //glUniform1i(glGetUniformLocation(programID, "objectID"),this->facesVoxel[i]->faceId);
+		
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, this->vertexbuffer);
     glVertexAttribPointer(
@@ -74,10 +88,6 @@ void Voxel::drawVoxel(){
     glDisableVertexAttribArray(0);
 }
 /*
-std::vector<Face*> Voxel::getFacesVoxel(){
-    return this->facesVoxel;
-}
-
 glm::vec3 Voxel::getPoint(){
     return this->backBottomLeftCorner;
 }
