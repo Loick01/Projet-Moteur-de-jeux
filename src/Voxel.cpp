@@ -1,13 +1,13 @@
 #include <Voxel.hpp>
 
-Voxel::Voxel(glm::vec3 position){
+Voxel::Voxel(glm::vec3 position, int numBlock){
     this->backBottomLeftCorner = position;
-    this->buildVoxel();
+    this->buildVoxel(numBlock);
 }
 
-void Voxel::buildVoxel(){
+void Voxel::buildVoxel(int numBlock){
     //std::cout << "Construction des faces du voxel\n";
-    // Voxel de taille 1
+    // Voxel de taille 1.0
 
     for (int i = 0 ; i < 6 ; i++){
         for (int h = 0; h < 2 ; h++) {
@@ -40,7 +40,7 @@ void Voxel::buildVoxel(){
             }
         }
 
-        short decalage = i*4;
+        short decalage = 24*numBlock + i*4; // 24 sommets par voxel
         this->indices.push_back(decalage + 2);
         this->indices.push_back(decalage + 0);
         this->indices.push_back(decalage + 3);
@@ -50,43 +50,13 @@ void Voxel::buildVoxel(){
     }
 }
 
-void Voxel::loadVoxel(){
-    glGenBuffers(1, &(this->vertexbuffer));
-    glBindBuffer(GL_ARRAY_BUFFER, this->vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(glm::vec3), &(this->vertices[0]), GL_STATIC_DRAW);
-    
-    glGenBuffers(1, &(this->elementbuffer));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size()* sizeof(unsigned short), &(this->indices[0]) , GL_STATIC_DRAW);
+std::vector<glm::vec3> Voxel::getVertices(){
+    return this->vertices;
+}
+std::vector<unsigned short> Voxel::getIndices(){
+    return this->indices;
 }
 
-void Voxel::drawVoxel(){
-    //glUniform1i(glGetUniformLocation(programID, "objectID"),this->facesVoxel[i]->faceId);
-		
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, this->vertexbuffer);
-    glVertexAttribPointer(
-                    0,                  // attribute
-                    3,                  // size
-                    GL_FLOAT,           // type
-                    GL_FALSE,           // normalized?
-                    0,                  // stride
-                    (void*)0            // array buffer offset
-                    );
-
-    // Index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->elementbuffer);
-
-    // Draw the triangles !
-    glDrawElements(
-                    GL_TRIANGLES,      // mode
-                    this->indices.size(), // count
-                    GL_UNSIGNED_SHORT,   // type
-                    (void*)0           // element array buffer offset
-                    );
-
-    glDisableVertexAttribArray(0);
-}
 /*
 glm::vec3 Voxel::getPoint(){
     return this->backBottomLeftCorner;

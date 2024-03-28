@@ -23,9 +23,9 @@ float theta = 0.0f;
 int planeWidth = 16; // De 1 à 32
 int planeLength = 16; // De 1 à 32
 int planeHeight = 1; // De 1 à 8
-std::vector<Voxel*> listeVoxel;
 //Personnage *personnage;
 
+/* Ca pourrait servir pour buildPlanChunks()
 void buildPlanVoxel(){
     // Construit un plan de voxel
     listeVoxel.clear();
@@ -38,7 +38,7 @@ void buildPlanVoxel(){
             }
         }
     }
-}
+}*/
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){ 
     glViewport(0,0,width,height);
@@ -159,14 +159,14 @@ int main(){
 
     GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
 
-    
-    buildPlanVoxel();
     /*
     personnage = new Personnage(glm::vec3(0.0f,2.0f,0.0f));
     personnage->loadPerso();
     */
     //Voxel *vox = new Voxel(glm::vec3(-0.5f,-0.5f,-0.5f)); 
     //vox->loadVoxel();
+    Chunk *chunky = new Chunk(glm::vec3(-16.0f,-0.5f,-16.0f));
+    chunky->loadChunk();
 
     glUseProgram(programID);
 
@@ -266,10 +266,14 @@ int main(){
         glUniformMatrix4fv(ViewMatrix,1,GL_FALSE,&View[0][0]);
         glUniformMatrix4fv(ProjectionMatrix,1,GL_FALSE,&Projection[0][0]);
 
+        /*
         for (int i = 0 ; i < listeVoxel.size() ; i++){
             listeVoxel[i]->drawVoxel();
         }
+        */
         //vox->drawVoxel();
+        chunky->drawChunk();
+
 
         //personnage->getRepresentant()->drawVoxel(programID);
         
@@ -321,6 +325,7 @@ int main(){
 
         ImGui::Spacing();
 
+        /*
         if (ImGui::SliderInt("Longueur", &planeWidth, 1, 32)){
             buildPlanVoxel();
         }
@@ -336,6 +341,7 @@ int main(){
         if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
             buildPlanVoxel();
         }
+        */
 
         ImGui::End();
 

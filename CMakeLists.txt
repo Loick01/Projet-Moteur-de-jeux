@@ -49,6 +49,7 @@ add_executable(main
     src/Texture.cpp
     src/stb_image.cpp
     src/Personnage.cpp
+    src/Chunk.cpp
     )
 
 # Include directories for our project
