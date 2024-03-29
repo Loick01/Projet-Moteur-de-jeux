@@ -40,7 +40,7 @@ void Voxel::buildVoxel(int numBlock){
             }
         }
 
-        short decalage = 24*numBlock + i*4; // 24 sommets par voxel
+        unsigned int decalage = 24*numBlock + i*4; // 24 sommets par voxel
         this->indices.push_back(decalage + 2);
         this->indices.push_back(decalage + 0);
         this->indices.push_back(decalage + 3);
@@ -53,7 +53,7 @@ void Voxel::buildVoxel(int numBlock){
 std::vector<glm::vec3> Voxel::getVertices(){
     return this->vertices;
 }
-std::vector<unsigned short> Voxel::getIndices(){
+std::vector<unsigned int> Voxel::getIndices(){
     return this->indices;
 }
 

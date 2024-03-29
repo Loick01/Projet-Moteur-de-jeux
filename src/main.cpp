@@ -20,25 +20,25 @@ bool firstMouse = true;
 float phi = -90.0f;
 float theta = 0.0f;
 
-int planeWidth = 16; // De 1 à 32
-int planeLength = 16; // De 1 à 32
-int planeHeight = 1; // De 1 à 8
+// Ces 3 tailles sont en nombre de chunk
+int planeWidth = 1; // De 1 à 32
+int planeLength = 1; // De 1 à 32
+int planeHeight = 1; // De 1 à 
 //Personnage *personnage;
 
-/* Ca pourrait servir pour buildPlanChunks()
-void buildPlanVoxel(){
-    // Construit un plan de voxel
-    listeVoxel.clear();
+std::vector<Chunk*> listeChunks;
+void buildPlanChunks(){
+    listeChunks.clear();
     for (int i = 0 ; i < planeWidth ; i++){
         for (int j = 0 ; j < planeLength ; j++){
             for (int k = 0 ; k < planeHeight ; k++){
-                Voxel *vox = new Voxel(glm::vec3(planeWidth/2*(-1.f) + i*1.f,planeHeight/2*(-1.f) + k*1.f,planeLength/2*(-1.f) + j*1.f)); 
-                vox->loadVoxel();
-                listeVoxel.push_back(vox);
+                Chunk *c = new Chunk(glm::vec3((planeWidth*32)/2*(-1.f) + i*32,(planeHeight*32)/2*(-1.f) + k*32,(planeLength*32)/2*(-1.f) + j*32)); 
+                c->loadChunk();
+                listeChunks.push_back(c);
             }
         }
     }
-}*/
+}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){ 
     glViewport(0,0,width,height);
@@ -165,8 +165,11 @@ int main(){
     */
     //Voxel *vox = new Voxel(glm::vec3(-0.5f,-0.5f,-0.5f)); 
     //vox->loadVoxel();
-    Chunk *chunky = new Chunk(glm::vec3(-16.0f,-0.5f,-16.0f));
+    /*
+    Chunk *chunky = new Chunk(glm::vec3(-16.0f,-16.0f,-16.0f));
     chunky->loadChunk();
+    */
+    buildPlanChunks();
 
     glUseProgram(programID);
 
@@ -272,8 +275,11 @@ int main(){
         }
         */
         //vox->drawVoxel();
-        chunky->drawChunk();
+        //chunky->drawChunk();
 
+        for (int i = 0 ; i < listeChunks.size() ; i++){
+            listeChunks[i]->drawChunk();
+        }
 
         //personnage->getRepresentant()->drawVoxel(programID);
         
@@ -325,23 +331,21 @@ int main(){
 
         ImGui::Spacing();
 
-        /*
         if (ImGui::SliderInt("Longueur", &planeWidth, 1, 32)){
-            buildPlanVoxel();
+            buildPlanChunks();
         }
 
         ImGui::Spacing();
 
         if (ImGui::SliderInt("Largeur", &planeLength, 1, 32)){
-            buildPlanVoxel();
+            buildPlanChunks();
         }
 
         ImGui::Spacing();
 
         if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
-            buildPlanVoxel();
+            buildPlanChunks();
         }
-        */
 
         ImGui::End();
 

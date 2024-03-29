@@ -5,10 +5,9 @@ Chunk::Chunk(glm::vec3 position){
     this->buildChunk();
 }
 
-// Petit problème : J'ai l'impression que les buffers sont limités en taille, parceque pour aucune raison, les voxels arrêtent de s'afficher sans raison à partir d'un moment (toujours le même)
 void Chunk::buildChunk(){
     this->listeVoxels.clear();
-    for (int k=0;k<8;k++){
+    for (int k=0;k<32;k++){
         for (int j=0;j<32;j++){
             for (int i=0;i<32;i++){
                 Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k*1024 + j*32 + i); 
@@ -22,7 +21,7 @@ void Chunk::loadChunk(){
     // Peut être faudrait il stocker les sommets et les indices directement dans la classe Chunk, au lieu de les récupérer pour chaque voxel
     for (int i = 0 ; i < this->listeVoxels.size() ; i++){
         std::vector<glm::vec3> verticesVoxel = listeVoxels[i]->getVertices();
-        std::vector<unsigned short> indicesVoxel = listeVoxels[i]->getIndices();
+        std::vector<unsigned int> indicesVoxel = listeVoxels[i]->getIndices();
         this->vertices.insert(this->vertices.end(), verticesVoxel.begin(), verticesVoxel.end());
         this->indices.insert(this->indices.end(), indicesVoxel.begin(), indicesVoxel.end());
     }
@@ -33,7 +32,7 @@ void Chunk::loadChunk(){
     
     glGenBuffers(1, &(this->elementbuffer));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size()* sizeof(unsigned short), &(this->indices[0]) , GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size()* sizeof(unsigned int), &(this->indices[0]) , GL_STATIC_DRAW);
 }
 
 void Chunk::drawChunk(){
@@ -55,7 +54,7 @@ void Chunk::drawChunk(){
     glDrawElements(
                     GL_TRIANGLES,      // mode
                     this->indices.size(), // count
-                    GL_UNSIGNED_SHORT,   // type
+                    GL_UNSIGNED_INT,   // type
                     (void*)0           // element array buffer offset
                     );
 

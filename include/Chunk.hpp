@@ -7,7 +7,7 @@ class Chunk{
     private:
         glm::vec3 position;
         std::vector<Voxel*> listeVoxels;
-        std::vector<unsigned short> indices;
+        std::vector<unsigned int> indices;
         std::vector<glm::vec3> vertices;
         GLuint vertexbuffer;
         GLuint elementbuffer;
