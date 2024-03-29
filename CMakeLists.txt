@@ -50,6 +50,7 @@ add_executable(main
     src/stb_image.cpp
     src/Personnage.cpp
     src/Chunk.cpp
+    src/Skybox.cpp
     )
 
 # Include directories for our project

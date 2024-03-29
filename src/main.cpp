@@ -10,10 +10,10 @@ float lastFrame = 0.0f;
 glm::vec3 camera_position  = glm::vec3(0.0f, 5.0f, 5.0f);
 glm::vec3 camera_target = camera_position * -1.0f;
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
-bool cameraOrbitale = true;
+bool cameraOrbitale = false;
 bool cameraLibre = false;
 bool cameraPerso = false;
-int speedCam = 15;
+int speedCam = 50;
 double previousX = SCREEN_WIDTH / 2;
 double previousY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
@@ -21,7 +21,7 @@ float phi = -90.0f;
 float theta = 0.0f;
 
 // Ces 3 tailles sont en nombre de chunk
-int planeWidth = 1; // De 1 à 32
+int planeWidth = 16; // De 1 à 32
 int planeLength = 1; // De 1 à 32
 int planeHeight = 1; // De 1 à 
 //Personnage *personnage;
@@ -53,10 +53,10 @@ void processInput(GLFWwindow* window){
 
      // Avancer/Reculer la caméra
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
-        camera_position += (camera_speed / 15.f) * camera_target;
+        camera_position += (camera_speed / 5.f) * camera_target;
     }
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS){
-        camera_position -= (camera_speed / 15.f) * camera_target;
+        camera_position -= (camera_speed / 5.f) * camera_target;
     }
     // Monter/Descendre la caméra
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
@@ -171,6 +171,9 @@ int main(){
     */
     buildPlanChunks();
 
+    Skybox *sky = new Skybox(1000.0f,glm::vec3(-500.0f,-500.0f,-500.0f));
+    sky->loadSkybox();
+
     glUseProgram(programID);
 
     GLuint ModelMatrix = glGetUniformLocation(programID,"Model");
@@ -194,6 +197,8 @@ int main(){
     GLint pyGrass = loadTexture2DFromFilePath("../Textures/Grass/py_grass.png");
     GLint nzGrass = loadTexture2DFromFilePath("../Textures/Grass/nz_grass.png");
     GLint pzGrass = loadTexture2DFromFilePath("../Textures/Grass/pz_grass.png");
+
+    GLint skyTexture = loadTexture2DFromFilePath("../Textures/Skybox/nx.png");
 
     if (nxGrass != -1) {
 		glActiveTexture(GL_TEXTURE0);
@@ -225,11 +230,14 @@ int main(){
 		glBindTexture(GL_TEXTURE_2D, pzGrass);
         glUniform1i(glGetUniformLocation(programID, "pzTexture"), 5);
 	}
+    if (skyTexture != -1) {
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_2D, skyTexture);
+        glUniform1i(glGetUniformLocation(programID, "skyTexture"), 6);
+	}
 
-    /*
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Pour masquer la souris sur la fenêtre
-    */
 
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -248,11 +256,12 @@ int main(){
 
         //camera_position = personnage->getRepresentant()->getPoint() + glm::vec3(0.5f,2.f,4.f);
         // On verra plus tard pour faire les changements de caméra au cours de l'éxécution
+        /*
         if (cameraOrbitale){
             //glfwSetCursorPosCallback(window, NULL); // On met en pause le callback
             //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Pour remettre la souris si on l'avait enlevé
             camera_target = -1.0f * camera_position;
-        }/*else if (cameraLibre){
+        }else if (cameraLibre){
             //glfwSetCursorPosCallback(window, NULL); // On met en pause le callback
             //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Pour remettre la souris si on l'avait enlevé
         }else if (cameraPerso){
@@ -280,6 +289,7 @@ int main(){
         for (int i = 0 ; i < listeChunks.size() ; i++){
             listeChunks[i]->drawChunk();
         }
+        sky->drawSkybox(programID);
 
         //personnage->getRepresentant()->drawVoxel(programID);
         

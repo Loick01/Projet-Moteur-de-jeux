@@ -11,6 +11,8 @@ uniform sampler2D pyTexture;
 uniform sampler2D nzTexture;
 uniform sampler2D pzTexture;
 
+uniform sampler2D skyTexture;
+
 uniform int objectID;
 
 void main(){
@@ -41,7 +43,11 @@ void main(){
                 FragColor = vec4(color, 1.0);
         }
         */
-
-        vec3 color = texture(pyTexture, uv_coord).rgb;
-        FragColor = vec4(color, 1.0);
+        if (objectID == 1){
+                vec3 color = texture(skyTexture, uv_coord).rgb;
+                FragColor = vec4(color, 1.0);
+        }else{
+                vec3 color = texture(pyTexture, uv_coord).rgb;
+                FragColor = vec4(color, 1.0);
+        }
 }

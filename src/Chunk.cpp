@@ -1,5 +1,7 @@
 #include <Chunk.hpp>
 
+#define CHUNK_SIZE 32
+
 Chunk::Chunk(glm::vec3 position){
     this->position = position;
     this->buildChunk();
@@ -7,11 +9,13 @@ Chunk::Chunk(glm::vec3 position){
 
 void Chunk::buildChunk(){
     this->listeVoxels.clear();
-    for (int k=0;k<32;k++){
-        for (int j=0;j<32;j++){
-            for (int i=0;i<32;i++){
-                Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k*1024 + j*32 + i); 
-                this->listeVoxels.push_back(vox);
+    for (int k=0;k<CHUNK_SIZE;k++){
+        for (int j=0;j<CHUNK_SIZE;j++){
+            for (int i=0;i<CHUNK_SIZE;i++){
+                if (i%2 == 0 && j % 3 == 0){
+                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k*CHUNK_SIZE*CHUNK_SIZE + j*CHUNK_SIZE + i); 
+                    this->listeVoxels.push_back(vox);
+                }
             }
         }
     }
