@@ -12,10 +12,8 @@ void Chunk::buildChunk(){
     for (int k=0;k<CHUNK_SIZE;k++){
         for (int j=0;j<CHUNK_SIZE;j++){
             for (int i=0;i<CHUNK_SIZE;i++){
-                if (i%2 == 0 && j % 3 == 0){
-                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k*CHUNK_SIZE*CHUNK_SIZE + j*CHUNK_SIZE + i); 
-                    this->listeVoxels.push_back(vox);
-                }
+                Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k*CHUNK_SIZE*CHUNK_SIZE + j*CHUNK_SIZE + i); 
+                this->listeVoxels.push_back(vox);
             }
         }
     }
