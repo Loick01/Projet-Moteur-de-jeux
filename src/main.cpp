@@ -28,12 +28,12 @@ int planeHeight = 1; // De 1 à
 //Personnage *personnage;
 
 std::vector<Chunk*> listeChunks;
-void buildPlanChunks(){
+void buildPlanChunks(GLubyte *texels, GLint widthTexture, GLint heightTexture){
     listeChunks.clear();
     for (int i = 0 ; i < planeWidth ; i++){
         for (int j = 0 ; j < planeLength ; j++){
             for (int k = 0 ; k < planeHeight ; k++){
-                Chunk *c = new Chunk(glm::vec3((planeWidth*32)/2*(-1.f) + i*32,(planeHeight*32)/2*(-1.f) + k*32,(planeLength*32)/2*(-1.f) + j*32)); 
+                Chunk *c = new Chunk(glm::vec3((planeWidth*32)/2*(-1.f) + i*32,(planeHeight*32)/2*(-1.f) + k*32,(planeLength*32)/2*(-1.f) + j*32), texels, widthTexture, heightTexture); 
                 c->loadChunk();
                 listeChunks.push_back(c);
             }
@@ -175,7 +175,20 @@ int main(){
     personnage = new Personnage(glm::vec3(0.0f,2.0f,0.0f));
     personnage->loadPerso();
     */
-    buildPlanChunks();
+
+    GLint heightmap = loadTexture2DFromFilePath("../Textures/heightmap.png");
+    GLint widthTexture, heightTexture;
+    GLubyte *texels;
+    if (heightmap != -1) { // Pour l'instant on lit cette texture dans le CPU au lieu des shaders
+		glBindTexture(GL_TEXTURE_2D, heightmap);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &widthTexture);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &heightTexture);
+        
+        texels = new GLubyte[widthTexture * heightTexture * 4]; // Je ne comprends pas pourquoi mais il faut multiplier par 4 la taille nécessaire
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_INT, texels);
+	}
+    buildPlanChunks(texels, widthTexture, heightTexture);
+
     /*
     Skybox *sky = new Skybox(1000.0f,glm::vec3(-500.0f,-500.0f,-500.0f));
     sky->loadSkybox();
@@ -197,7 +210,7 @@ int main(){
     ImGui_ImplOpenGL3_Init("#version 330");
     ImGui::StyleColorsDark();
 
-    // Chargement des textures
+    // Chargement des textures (temporaire)
     GLint nxGrass = loadTexture2DFromFilePath("../Textures/Grass/nx_grass.png");
     GLint pxGrass = loadTexture2DFromFilePath("../Textures/Grass/px_grass.png");
     GLint nyGrass = loadTexture2DFromFilePath("../Textures/Grass/ny_grass.png");
@@ -242,6 +255,7 @@ int main(){
 		glBindTexture(GL_TEXTURE_2D, skyTexture);
         glUniform1i(glGetUniformLocation(programID, "skyTexture"), 6);
 	}
+    
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
         float currentFrame = glfwGetTime();
@@ -340,19 +354,19 @@ int main(){
         ImGui::Spacing();
 
         if (ImGui::SliderInt("Longueur", &planeWidth, 1, 32)){
-            buildPlanChunks();
+            buildPlanChunks(texels, widthTexture, heightTexture);
         }
 
         ImGui::Spacing();
 
         if (ImGui::SliderInt("Largeur", &planeLength, 1, 32)){
-            buildPlanChunks();
+            buildPlanChunks(texels, widthTexture, heightTexture);
         }
 
         ImGui::Spacing();
 
         if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
-            buildPlanChunks();
+            buildPlanChunks(texels, widthTexture, heightTexture);
         }
 
         ImGui::End();

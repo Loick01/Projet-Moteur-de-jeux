@@ -3,6 +3,7 @@
 Voxel::Voxel(glm::vec3 position, int numBlock){
     this->backBottomLeftCorner = position;
     this->buildVoxel(numBlock);
+    this->isVisible = false;
 }
 
 void Voxel::buildVoxel(int numBlock){
@@ -66,3 +67,11 @@ void Voxel::updatePoint(glm::vec3 motion){
     this->backBottomLeftCorner += motion;
 }
 */
+
+void Voxel::setVisible(){
+    this->isVisible = true;
+}
+
+bool Voxel::getVisible(){
+    return this->isVisible;
+}

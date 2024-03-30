@@ -3,7 +3,6 @@
 layout(location = 0) in vec3 aPos;
 
 out vec2 uv_coord;
-out int vertexID;
 
 uniform mat4 Model;
 uniform mat4 View;
@@ -20,6 +19,5 @@ void main(){
         mat4 mvp = Projection * View * Model;
         gl_Position = mvp * vec4(aPos,1);
         uv_coord = texCoords[gl_VertexID%4];
-        vertexID = gl_VertexID;
 }
 

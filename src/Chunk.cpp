@@ -2,18 +2,29 @@
 
 #define CHUNK_SIZE 32
 
-Chunk::Chunk(glm::vec3 position){
+Chunk::Chunk(glm::vec3 position, GLubyte *texels, GLint widthTexture, GLint heightTexture){
     this->position = position;
-    this->buildChunk();
+    this->buildChunk(texels, widthTexture, heightTexture);
 }
 
-void Chunk::buildChunk(){
+void Chunk::buildChunk(GLubyte *texels, GLint widthTexture, GLint heightTexture){
     this->listeVoxels.clear();
+    short compteur = 0; // Dénombre les voxels qui seront envoyés aux shaders, pour savoir quel décalage appliquer
+
+
     for (int k=0;k<CHUNK_SIZE;k++){
-        for (int j=0;j<CHUNK_SIZE;j++){
-            for (int i=0;i<CHUNK_SIZE;i++){
-                Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k*CHUNK_SIZE*CHUNK_SIZE + j*CHUNK_SIZE + i); 
-                this->listeVoxels.push_back(vox);
+        for (int j=0;j<CHUNK_SIZE;j++){     
+            for (int i=0;i<CHUNK_SIZE;i++){     
+                //if (k < ((short)texels[((j*heightTexture)/31)*widthTexture + ((i*widthTexture)/31)]*32)/255){ // Pas sûr que ça fonctionne
+                      
+                                                                                                                           // Ca fait un effet sympa si on remet ça (servait à la base quand les chunks étaient remplis)
+                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),compteur /* k*CHUNK_SIZE*CHUNK_SIZE + j*CHUNK_SIZE + i */); 
+                    if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==CHUNK_SIZE-1){
+                        vox->setVisible();
+                        ++compteur;
+                    }
+                    this->listeVoxels.push_back(vox);
+                //}
             }
         }
     }
@@ -22,10 +33,12 @@ void Chunk::buildChunk(){
 void Chunk::loadChunk(){
     // Peut être faudrait il stocker les sommets et les indices directement dans la classe Chunk, au lieu de les récupérer pour chaque voxel
     for (int i = 0 ; i < this->listeVoxels.size() ; i++){
-        std::vector<glm::vec3> verticesVoxel = listeVoxels[i]->getVertices();
-        std::vector<unsigned int> indicesVoxel = listeVoxels[i]->getIndices();
-        this->vertices.insert(this->vertices.end(), verticesVoxel.begin(), verticesVoxel.end());
-        this->indices.insert(this->indices.end(), indicesVoxel.begin(), indicesVoxel.end());
+        if (listeVoxels[i]->getVisible()){
+            std::vector<glm::vec3> verticesVoxel = listeVoxels[i]->getVertices();
+            std::vector<unsigned int> indicesVoxel = listeVoxels[i]->getIndices();
+            this->vertices.insert(this->vertices.end(), verticesVoxel.begin(), verticesVoxel.end());
+            this->indices.insert(this->indices.end(), indicesVoxel.begin(), indicesVoxel.end());
+        }
     }
     
     glGenBuffers(1, &(this->vertexbuffer));
