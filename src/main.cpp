@@ -163,15 +163,21 @@ int main(){
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
     // Accept fragment if it closer to the camera than the former one
-    glDepthFunc(GL_LESS);
+    glDepthFunc(GL_LEQUAL);
 
-    glEnable(GL_CULL_FACE); // Attention à la construction des triangles
+    //glEnable(GL_CULL_FACE); // Attention à la construction des triangles
 
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
 
-    GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
+    buildPlanChunks();
+
+    Skybox *sky = new Skybox();
+    sky->loadSkybox();
+
+    GLuint programID_default = LoadShaders("../shaders/default_vertex.vert", "../shaders/default_fragment.frag");
+    GLuint programID_skybox = sky->getShaderID();
 
     /*
     personnage = new Personnage(glm::vec3(0.0f,2.0f,0.0f));
@@ -192,18 +198,15 @@ int main(){
 	}
     buildPlanChunks(texels, widthTexture, heightTexture);
     */
-    buildPlanChunks();
 
-    /*
-    Skybox *sky = new Skybox(1000.0f,glm::vec3(-500.0f,-500.0f,-500.0f));
-    sky->loadSkybox();
-    */
 
-    glUseProgram(programID);
-
-    GLuint ModelMatrix = glGetUniformLocation(programID,"Model");
-    GLuint ViewMatrix = glGetUniformLocation(programID,"View");
-    GLuint ProjectionMatrix = glGetUniformLocation(programID,"Projection");
+    GLuint ModelMatrix_def = glGetUniformLocation(programID_default,"Model");
+    GLuint ViewMatrix_def = glGetUniformLocation(programID_default,"View");
+    GLuint ProjectionMatrix_def = glGetUniformLocation(programID_default,"Projection");
+    GLuint ModelMatrix_sky = glGetUniformLocation(programID_skybox,"Model");
+    GLuint ViewMatrix_sky = glGetUniformLocation(programID_skybox,"View");
+    GLuint ProjectionMatrix_sky = glGetUniformLocation(programID_skybox,"Projection");
+    
 
     bool renduFilaire = false;
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -223,42 +226,35 @@ int main(){
     GLint nzGrass = loadTexture2DFromFilePath("../Textures/Grass/nz_grass.png");
     GLint pzGrass = loadTexture2DFromFilePath("../Textures/Grass/pz_grass.png");
 
-    GLint skyTexture = loadTexture2DFromFilePath("../Textures/Skybox/nx.png");
-
     if (nxGrass != -1) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, nxGrass);
-        glUniform1i(glGetUniformLocation(programID, "nxTexture"), GL_TEXTURE0);
+        glUniform1i(glGetUniformLocation(programID_default, "nxTexture"), GL_TEXTURE0);
 	}
     if (pxGrass != -1) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, pxGrass);
-        glUniform1i(glGetUniformLocation(programID, "pxTexture"), 1);
+        glUniform1i(glGetUniformLocation(programID_default, "pxTexture"), 1);
 	}
     if (nyGrass != -1) {
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, nyGrass);
-        glUniform1i(glGetUniformLocation(programID, "nyTexture"), 2);
+        glUniform1i(glGetUniformLocation(programID_default, "nyTexture"), 2);
 	}
     if (pyGrass != -1) {
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, pyGrass);
-        glUniform1i(glGetUniformLocation(programID, "pyTexture"), 3);
+        glUniform1i(glGetUniformLocation(programID_default, "pyTexture"), 3);
 	}
     if (nzGrass != -1) {
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, nzGrass);
-        glUniform1i(glGetUniformLocation(programID, "nzTexture"), 4);
+        glUniform1i(glGetUniformLocation(programID_default, "nzTexture"), 4);
 	}
     if (pzGrass != -1) {
 		glActiveTexture(GL_TEXTURE5);
 		glBindTexture(GL_TEXTURE_2D, pzGrass);
-        glUniform1i(glGetUniformLocation(programID, "pzTexture"), 5);
-	}
-    if (skyTexture != -1) {
-		glActiveTexture(GL_TEXTURE6);
-		glBindTexture(GL_TEXTURE_2D, skyTexture);
-        glUniform1i(glGetUniformLocation(programID, "skyTexture"), 6);
+        glUniform1i(glGetUniformLocation(programID_default, "pzTexture"), 5);
 	}
     
     // Boucle de rendu
@@ -271,7 +267,7 @@ int main(){
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(programID);
+        glUseProgram(programID_skybox);
 
         glm::mat4 Model = glm::mat4(1.0f);
         glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,1000.0f);
@@ -287,15 +283,20 @@ int main(){
 
         glm::mat4 View = glm::lookAt(camera_position, camera_position + camera_target, camera_up);
 
-        glUniformMatrix4fv(ModelMatrix,1,GL_FALSE,&Model[0][0]);
-        glUniformMatrix4fv(ViewMatrix,1,GL_FALSE,&View[0][0]);
-        glUniformMatrix4fv(ProjectionMatrix,1,GL_FALSE,&Projection[0][0]);
-
+        glUniformMatrix4fv(ModelMatrix_def,1,GL_FALSE,&Model[0][0]);
+        glUniformMatrix4fv(ViewMatrix_def,1,GL_FALSE,&View[0][0]);
+        glUniformMatrix4fv(ProjectionMatrix_def,1,GL_FALSE,&Projection[0][0]);
 
         for (int i = 0 ; i < listeChunks.size() ; i++){
             listeChunks[i]->drawChunk();
         }
-        //sky->drawSkybox(programID);
+
+        glUseProgram(programID_skybox);
+        glUniformMatrix4fv(ModelMatrix_sky,1,GL_FALSE,&Model[0][0]);
+        glUniformMatrix4fv(ViewMatrix_sky,1,GL_FALSE,&View[0][0]);
+        glUniformMatrix4fv(ProjectionMatrix_sky,1,GL_FALSE,&Projection[0][0]);
+
+        sky->drawSkybox();
 
         //personnage->getRepresentant()->drawVoxel(programID);
         
@@ -388,7 +389,7 @@ int main(){
         glfwPollEvents();
     }
 
-    glDeleteProgram(programID);
+    glDeleteProgram(programID_default);
     glDeleteVertexArrays(1, &VertexArrayID);
 
     ImGui_ImplOpenGL3_Shutdown();

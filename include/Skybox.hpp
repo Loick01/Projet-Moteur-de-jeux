@@ -4,16 +4,18 @@
 
 class Skybox {
     private:
-        glm::vec3 backBottomLeftCorner;
-        std::vector<glm::vec3> vertices;
-        std::vector<unsigned int> indices;
-        float size;
+        float skyboxVertices[24];
+        unsigned int indices[36];
+        std::string pathTextures[6];
         GLuint vertexbuffer;
         GLuint elementbuffer;
+        GLuint programID_skybox;
+        unsigned int textureID;
 
     public:
-        Skybox(float size, glm::vec3 position);
-        void buildSkybox();
+        Skybox();
+        void loadCubemap();
         void loadSkybox();
-        void drawSkybox(GLint programID);
+        void drawSkybox();
+        GLuint getShaderID();
 };
