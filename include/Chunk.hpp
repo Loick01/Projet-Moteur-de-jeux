@@ -12,8 +12,10 @@ class Chunk{
         GLuint vertexbuffer;
         GLuint elementbuffer;
     public:
-        Chunk(glm::vec3 position, GLubyte *texels, GLint widthTexture, GLint heightTexture);
-        void buildChunk(GLubyte *texels, GLint widthTexture, GLint heightTexture);
+        Chunk(glm::vec3 position, int typeChunk/*, GLubyte *texels, GLint widthTexture, GLint heightTexture*/);
+        void buildFullChunk(/*GLubyte *texels, GLint widthTexture, GLint heightTexture*/);
+        void buildSinusChunk();
+        void buildCrazyChunk();
         void loadChunk();
         void drawChunk();
 };
