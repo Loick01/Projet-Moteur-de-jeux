@@ -24,7 +24,7 @@
 #include <Window.hpp>
 #include <Voxel.hpp>
 #include <Shader.hpp>
-#include <Personnage.hpp>
+#include <Player.hpp>
 #include <stb_image.h>
 #include <Texture.h>
 #include <Chunk.hpp>

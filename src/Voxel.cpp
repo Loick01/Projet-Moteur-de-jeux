@@ -62,11 +62,14 @@ std::vector<unsigned int> Voxel::getIndices(){
 glm::vec3 Voxel::getPoint(){
     return this->backBottomLeftCorner;
 }
-
-void Voxel::updatePoint(glm::vec3 motion){
-    this->backBottomLeftCorner += motion;
-}
 */
+
+void Voxel::updateVertices(glm::vec3 motion){
+    this->backBottomLeftCorner += motion;
+    for (int i = 0 ; i < this->vertices.size() ; i++){
+        this->vertices[i] += motion;
+    }
+}
 
 void Voxel::setVisible(){
     this->isVisible = true;

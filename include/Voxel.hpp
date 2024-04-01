@@ -13,7 +13,7 @@ class Voxel {
         Voxel(glm::vec3 position, int numBlock);
         void buildVoxel(int numBlock);
         glm::vec3 getPoint();
-        void updatePoint(glm::vec3 motion);
+        void updateVertices(glm::vec3 motion);
         std::vector<glm::vec3> getVertices();
         std::vector<unsigned int> getIndices();
         void setVisible();

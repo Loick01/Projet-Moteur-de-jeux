@@ -48,7 +48,7 @@ add_executable(main
     src/Shader.cpp
     src/Texture.cpp
     src/stb_image.cpp
-    src/Personnage.cpp
+    src/Player.cpp
     src/Chunk.cpp
     src/Skybox.cpp
     )

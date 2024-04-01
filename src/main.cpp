@@ -13,7 +13,8 @@ glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
 
 bool cameraOrbitale = false;
 bool cameraLibre = true; // Caméra libre par défaut
-bool cameraMouse = false;
+bool cameraMouseLibre = false;
+bool cameraMousePlayer = false;
 int speedCam = 15;
 double previousX = SCREEN_WIDTH / 2;
 double previousY = SCREEN_HEIGHT / 2;
@@ -25,7 +26,8 @@ float theta = 0.0f;
 int planeWidth = 1; // De 1 à 32
 int planeLength = 1; // De 1 à 32
 int planeHeight = 1; // De 1 à 
-//Personnage *personnage;
+
+Player *player;
 
 int typeChunk = 0; // Chunk plein par défaut
 
@@ -76,41 +78,40 @@ void processInput(GLFWwindow* window){
         camera_position -= (camera_speed / 5.f) * glm::normalize(glm::cross(camera_target,camera_up));;
     }
     
-    /*
-    // Déplacement du personnage
+    // Déplacement du joueur
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS){
-        personnage->move(glm::vec3(0.f,0.f,-0.1f));
-        personnage->loadPerso();
+        player->move(glm::vec3(0.f,0.f,-0.1f));
+        player->loadPlayer();
     }
     if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){
-        personnage->move(glm::vec3(-0.1f,0.f,0.f));
-        personnage->loadPerso();
+        player->move(glm::vec3(-0.1f,0.f,0.f));
+        player->loadPlayer();
     }
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
-        personnage->move(glm::vec3(0.f,0.f,0.1f));
-        personnage->loadPerso();
+        player->move(glm::vec3(0.f,0.f,0.1f));
+        player->loadPlayer();
     }
     if (glfwGetKey(window, GLFW_KEY_SEMICOLON) == GLFW_PRESS){
-        personnage->move(glm::vec3(0.1f,0.f,0.f));
-        personnage->loadPerso();
+        player->move(glm::vec3(0.1f,0.f,0.f));
+        player->loadPlayer();
     }
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
-        if(personnage->getRepresentant()->getPoint()[1] == 1.0f){
-            // On initie le saut du personnage
-            personnage->setJumpSpeed(0.23);
-            personnage->move(glm::vec3(0.f,personnage->getJumpSpeed(),0.f));
-            personnage->loadPerso();
+        // On initie le saut du joueur
+        if (player->getCanJump()){
+            player->setJumpSpeed(0.23f);
+            player->move(glm::vec3(0.f,0.23f,0.f));
+            player->loadPlayer();
         }
     }
-    */
 
     // Pour sortir de la caméra à la souris (plus tard ce sera la touche qui ouvre l'inventaire, et donc affiche la souris dans la fenêtre)
-    // Pour l'instant, impossible de revenir à la souris initiale (peut être un autre callback à utiliser...)
+    // Pour l'instant, impossible de revenir à la souris initiale et faire en sorte de prendre en compte les clics
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS){ 
-        cameraMouse = false;
+        cameraMouseLibre = false;
+        cameraMousePlayer = false;
         cameraOrbitale = false;
         cameraLibre = true;
-        glfwSetCursorPosCallback(window, nullptr);
+        glfwSetCursorPosCallback(window, NULL);
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Afficher le curseur
     }
 }
@@ -173,10 +174,8 @@ int main(){
 
     GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
 
-    /*
-    personnage = new Personnage(glm::vec3(0.0f,2.0f,0.0f));
-    personnage->loadPerso();
-    */
+    player = new Player(glm::vec3(-0.5f,20.0f,-0.5f));
+    player->loadPlayer();
 
     /*
     GLint heightmap = loadTexture2DFromFilePath("../Textures/heightmap.png");
@@ -279,11 +278,9 @@ int main(){
         // On verra plus tard pour faire les changements de caméra au cours de l'éxécution
         if (cameraOrbitale){
             camera_target = -1.0f * camera_position;
-        }/*else if (cameraMouse){ // Recentre la caméra sur le personnage
-            //camera_position = personnage->getRepresentant()->getPoint() + glm::vec3(0.5f,2.f,4.f);
-            //camera_target = personnage->getRepresentant()->getPoint() + glm::vec3(0.5f,0.0f,-3.0f) - camera_position;
+        }else if (cameraMousePlayer){
+            camera_position = player->getBottomPoint() + glm::vec3(0.0f,2.f,1.f); // Recentre la caméra sur le player
         }
-        */
 
         glm::mat4 View = glm::lookAt(camera_position, camera_position + camera_target, camera_up);
 
@@ -297,7 +294,7 @@ int main(){
         }
         //sky->drawSkybox(programID);
 
-        //personnage->getRepresentant()->drawVoxel(programID);
+        player->drawPlayer();
         
         /*
         // Temporaire (simule la gravité)
@@ -327,23 +324,34 @@ int main(){
 
         if (ImGui::Checkbox("Caméra orbitale", &cameraOrbitale)){
             cameraLibre = false;
-            cameraMouse = false;
+            cameraMouseLibre = false;
+            cameraMousePlayer = false;
         }
 
         ImGui::Spacing();
         
         if (ImGui::Checkbox("Caméra libre", &cameraLibre)){
             cameraOrbitale = false;
-            cameraMouse = false;
+            cameraMouseLibre = false;
+            cameraMousePlayer = false;
         }
 
         ImGui::Spacing();
         
-        if (ImGui::Checkbox("Caméra personnage", &cameraMouse)){
+        if (ImGui::Checkbox("Caméra souris", &cameraMouseLibre)){
             cameraLibre = false;
             cameraOrbitale = false;
-            glfwSetCursorPosCallback(window, mouse_callback);
+            cameraMousePlayer = false;
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Pour masquer la souris sur la fenêtre
+            glfwSetCursorPosCallback(window, mouse_callback);
+        }
+
+        if (ImGui::Checkbox("Caméra player", &cameraMousePlayer)){
+            cameraLibre = false;
+            cameraOrbitale = false;
+            cameraMouseLibre = false;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Pour masquer la souris sur la fenêtre
+            glfwSetCursorPosCallback(window, mouse_callback);
         }
 
         ImGui::Spacing();

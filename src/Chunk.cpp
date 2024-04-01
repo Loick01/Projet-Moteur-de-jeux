@@ -42,7 +42,9 @@ void Chunk::buildSinusChunk(){
         for (int j=0;j<CHUNK_SIZE;j++){     
             for (int i=0;i<CHUNK_SIZE;i++){
                 float t = (float)i / CHUNK_SIZE-1;
-                float value = (std::sin(2 * M_PI * t) + 1.0f) * 0.5f; // Valeur entre 0 et 1
+                float s = (float)j / CHUNK_SIZE-1;
+                float value = (std::sin(4 * M_PI * ((t+s)/2)) + 1.0f) * 0.5f; // Valeur entre 0 et 1
+                //float value = (std::sin(2 * M_PI * t) + 1.0f) * 0.5f; // Valeur entre 0 et 1
                 int heightVox = value*30 + 1; // Hauteur du cube entre 1 et 31
                 if (k <= heightVox){
                     Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),compteur); 
