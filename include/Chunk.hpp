@@ -18,4 +18,5 @@ class Chunk{
         void buildCrazyChunk();
         void loadChunk();
         void drawChunk();
+        std::vector<Voxel*> getListeVoxels();
 };

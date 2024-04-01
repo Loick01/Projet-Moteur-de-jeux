@@ -53,6 +53,9 @@ void Chunk::buildSinusChunk(){
                         ++compteur;
                     }
                     this->listeVoxels.push_back(vox);
+                }else{
+                    // Temporaire (ce ne sera sûrement pas la manière définitive de faire)
+                    this->listeVoxels.push_back(nullptr); // Pour tester les collisions avec le joueur, on doit qu'il n'y a pas de voxel à cet emplacement
                 }
             }
         }
@@ -79,11 +82,13 @@ void Chunk::buildCrazyChunk(){
 void Chunk::loadChunk(){
     // Peut être faudrait il stocker les sommets et les indices directement dans la classe Chunk, au lieu de les récupérer pour chaque voxel
     for (int i = 0 ; i < this->listeVoxels.size() ; i++){
-        if (listeVoxels[i]->getVisible()){
-            std::vector<glm::vec3> verticesVoxel = listeVoxels[i]->getVertices();
-            std::vector<unsigned int> indicesVoxel = listeVoxels[i]->getIndices();
-            this->vertices.insert(this->vertices.end(), verticesVoxel.begin(), verticesVoxel.end());
-            this->indices.insert(this->indices.end(), indicesVoxel.begin(), indicesVoxel.end());
+        if (listeVoxels[i] != nullptr){
+            if (listeVoxels[i]->getVisible()){
+                std::vector<glm::vec3> verticesVoxel = listeVoxels[i]->getVertices();
+                std::vector<unsigned int> indicesVoxel = listeVoxels[i]->getIndices();
+                this->vertices.insert(this->vertices.end(), verticesVoxel.begin(), verticesVoxel.end());
+                this->indices.insert(this->indices.end(), indicesVoxel.begin(), indicesVoxel.end());
+            }
         }
     }
     
@@ -120,4 +125,8 @@ void Chunk::drawChunk(){
                     );
 
     glDisableVertexAttribArray(0);
+}
+
+std::vector<Voxel*> Chunk::getListeVoxels(){
+    return this->listeVoxels;
 }

@@ -21,12 +21,9 @@ class Player {
         void drawPlayer();
         void move(glm::vec3 motion);
         glm::vec3 getBottomPoint();
-        void setJumpSpeed(float initialeSpeed);
-        bool getCanJump();
-        /*
-        Voxel* getRepresentant();
-        void updateJumpSpeed(float js);
-        void setJumpSpeed(float js);
+        void addToSpeed(float s);
         float getJumpSpeed();
-        */
+        bool getCanJump();
+        void couldJump(bool t);
+        void resetJumpSpeed();
 };

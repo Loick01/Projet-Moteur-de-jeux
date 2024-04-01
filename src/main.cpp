@@ -12,9 +12,9 @@ glm::vec3 camera_target = camera_position * -1.0f;
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
 
 bool cameraOrbitale = false;
-bool cameraLibre = true; // Caméra libre par défaut
+bool cameraLibre = false; // Caméra libre par défaut
 bool cameraMouseLibre = false;
-bool cameraMousePlayer = false;
+bool cameraMousePlayer = true;
 int speedCam = 15;
 double previousX = SCREEN_WIDTH / 2;
 double previousY = SCREEN_HEIGHT / 2;
@@ -29,7 +29,7 @@ int planeHeight = 1; // De 1 à
 
 Player *player;
 
-int typeChunk = 0; // Chunk plein par défaut
+int typeChunk = 1; // Chunk plein par défaut (0), Chunk sinus (1), Chunk problème d'indice volontaire (2)
 
 std::vector<Chunk*> listeChunks;
 void buildPlanChunks(/*GLubyte *texels, GLint widthTexture, GLint heightTexture*/){
@@ -98,7 +98,8 @@ void processInput(GLFWwindow* window){
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
         // On initie le saut du joueur
         if (player->getCanJump()){
-            player->setJumpSpeed(0.23f);
+            player->couldJump(false);
+            player->addToSpeed(0.23f);
             player->move(glm::vec3(0.f,0.23f,0.f));
             player->loadPlayer();
         }
@@ -159,7 +160,7 @@ int main(){
     glfwMakeContextCurrent(window);
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // On définit le callback à appeler lors du redimensionnement de la fenêtre
-    glClearColor(0.05f, 0.06f, 0.22f, 1.0f);
+    glClearColor(0.36f, 0.61f, 1.0f, 1.0f);
 
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
@@ -174,7 +175,7 @@ int main(){
 
     GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
 
-    player = new Player(glm::vec3(-0.5f,20.0f,-0.5f));
+    player = new Player(glm::vec3(-0.5f,30.0f,-0.5f));
     player->loadPlayer();
 
     /*
@@ -275,11 +276,10 @@ int main(){
         glm::mat4 Model = glm::mat4(1.0f);
         glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,1000.0f);
 
-        // On verra plus tard pour faire les changements de caméra au cours de l'éxécution
         if (cameraOrbitale){
             camera_target = -1.0f * camera_position;
         }else if (cameraMousePlayer){
-            camera_position = player->getBottomPoint() + glm::vec3(0.0f,2.f,1.f); // Recentre la caméra sur le player
+            camera_position = player->getBottomPoint() + glm::vec3(0.0f,2.f,0.f); // Recentre la caméra sur le player
         }
 
         glm::mat4 View = glm::lookAt(camera_position, camera_position + camera_target, camera_up);
@@ -293,19 +293,33 @@ int main(){
             listeChunks[i]->drawChunk();
         }
         //sky->drawSkybox(programID);
-
         player->drawPlayer();
         
-        /*
-        // Temporaire (simule la gravité)
-        if(personnage->getRepresentant()->getPoint()[1] > 1.0f){
-            personnage->move(glm::vec3(0.f,personnage->getJumpSpeed(),0.f));
-            personnage->loadPerso();
-            personnage->updateJumpSpeed(-0.02);  
-        }else if (personnage->getRepresentant()->getPoint()[1] < 1.0f){
-            personnage->move(glm::vec3(0.f,1.0f - personnage->getRepresentant()->getPoint()[1],0.f)); // Le personnage retourne en 1.0
+        // Pour l'instant, on ne fait la détection des collisions du joueur que pour un seul chunk (pour simplifier les calculs)
+        // J'ai l'impression que ça marche, mais c'est compliqué d'en être sûr sans les collisions latérales
+        // Détermine la cellule ou se trouve le joueur
+        glm::vec3 pPlayer = player->getBottomPoint();
+        int numLongueur = (int)pPlayer[0] + 16;
+        int numHauteur = (int)pPlayer[1] + 16;
+        int numProfondeur = (int) pPlayer[2] + 16;
+        int indiceBlock = numHauteur *1024 + numProfondeur * 32 + numLongueur; // Indice du voxel dans lequel on considère que le joueur se trouve
+        if (numLongueur < 0 || numLongueur > 31 || numProfondeur < 0 || numProfondeur > 31 || numHauteur < 0 || numHauteur > 31){
+            player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
+            player->loadPlayer();
+            player->addToSpeed(-0.02);
+        }else{
+            int indiceBlock = numHauteur *1024 + numProfondeur * 32 + numLongueur; // Indice du voxel dans lequel on considère que le joueur se trouve
+            Voxel *v = listeChunks[0]->getListeVoxels()[indiceBlock]; // Pour l'instant on considère qu'il n'y a qu'un seul chunk, d'où listeChunks[0]
+            if (v == nullptr){
+                player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
+                player->loadPlayer();
+                player->addToSpeed(-0.02);
+            }else{
+                player->resetJumpSpeed();
+                player->couldJump(true);
+            }
         }
-        */
+        
 
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -315,6 +329,10 @@ int main(){
         ImGui::NewFrame();
         ImGui::Begin("Panneau de contrôle");
         ImGui::Text("FPS : %.2f", fps);
+
+        ImGui::Spacing();
+
+        ImGui::Text("Position : %.2f / %.2f / %.2f", pPlayer[0], pPlayer[1], pPlayer[2]);
 
         ImGui::Spacing();
 
@@ -382,7 +400,9 @@ int main(){
             buildPlanChunks(/*texels, widthTexture, heightTexture*/);
         }
 
-        // Type 0 = Plein ; Type 1 = Sinus
+        ImGui::Spacing();
+
+        // Type 0 = Plein ; Type 1 = Sinus ; Type 2 = Pas fait exprès mais c'est joli donc je le garde
         if (ImGui::SliderInt("Type de chunk", &typeChunk, 0, 2)){
             buildPlanChunks();
         }
