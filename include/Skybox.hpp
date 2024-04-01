@@ -4,18 +4,17 @@
 
 class Skybox {
     private:
-        float skyboxVertices[24];
-        unsigned int indices[36];
+        float skyboxVertices[108];
         std::string pathTextures[6];
-        GLuint vertexbuffer;
-        GLuint elementbuffer;
         GLuint programID_skybox;
-        unsigned int textureID;
+        GLuint textureID;
+        unsigned int skyboxVAO;
 
     public:
         Skybox();
         void loadCubemap();
-        void loadSkybox();
-        void drawSkybox();
-        GLuint getShaderID();
+        void bindCubemap(GLenum TextureUnit, int unit);
+        void useShader();
+        GLuint getProgramID();
+        unsigned int getVAO();
 };

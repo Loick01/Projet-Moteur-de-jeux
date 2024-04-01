@@ -163,7 +163,7 @@ int main(){
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
     // Accept fragment if it closer to the camera than the former one
-    glDepthFunc(GL_LEQUAL);
+    glDepthFunc(GL_LESS);
 
     //glEnable(GL_CULL_FACE); // Attention à la construction des triangles
 
@@ -173,11 +173,10 @@ int main(){
 
     buildPlanChunks();
 
-    Skybox *sky = new Skybox();
-    sky->loadSkybox();
-
     GLuint programID_default = LoadShaders("../shaders/default_vertex.vert", "../shaders/default_fragment.frag");
-    GLuint programID_skybox = sky->getShaderID();
+    glUseProgram(programID_default); // Doit apparaître dans le main, même si on le met dans la boucle de rendu (j'ai remarqué que ça ne marche pas sinon)
+
+    Skybox *sky = new Skybox();
 
     /*
     personnage = new Personnage(glm::vec3(0.0f,2.0f,0.0f));
@@ -199,14 +198,9 @@ int main(){
     buildPlanChunks(texels, widthTexture, heightTexture);
     */
 
-
     GLuint ModelMatrix_def = glGetUniformLocation(programID_default,"Model");
     GLuint ViewMatrix_def = glGetUniformLocation(programID_default,"View");
     GLuint ProjectionMatrix_def = glGetUniformLocation(programID_default,"Projection");
-    GLuint ModelMatrix_sky = glGetUniformLocation(programID_skybox,"Model");
-    GLuint ViewMatrix_sky = glGetUniformLocation(programID_skybox,"View");
-    GLuint ProjectionMatrix_sky = glGetUniformLocation(programID_skybox,"Projection");
-    
 
     bool renduFilaire = false;
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -256,6 +250,8 @@ int main(){
 		glBindTexture(GL_TEXTURE_2D, pzGrass);
         glUniform1i(glGetUniformLocation(programID_default, "pzTexture"), 5);
 	}
+
+    sky->bindCubemap(GL_TEXTURE6,6);
     
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -266,8 +262,6 @@ int main(){
         processInput(window);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glUseProgram(programID_skybox);
 
         glm::mat4 Model = glm::mat4(1.0f);
         glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,1000.0f);
@@ -287,16 +281,20 @@ int main(){
         glUniformMatrix4fv(ViewMatrix_def,1,GL_FALSE,&View[0][0]);
         glUniformMatrix4fv(ProjectionMatrix_def,1,GL_FALSE,&Projection[0][0]);
 
+        glUniformMatrix4fv(glGetUniformLocation(sky->getProgramID(),"View"),1,GL_FALSE,&View[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(sky->getProgramID(),"Projection"),1,GL_FALSE,&Projection[0][0]);
+
+        sky->useShader();
+        glDepthMask(GL_FALSE);
+        glBindVertexArray(sky->getVAO());
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthMask(GL_FALSE);
+
+        glUseProgram(programID_default);
         for (int i = 0 ; i < listeChunks.size() ; i++){
             listeChunks[i]->drawChunk();
         }
-
-        glUseProgram(programID_skybox);
-        glUniformMatrix4fv(ModelMatrix_sky,1,GL_FALSE,&Model[0][0]);
-        glUniformMatrix4fv(ViewMatrix_sky,1,GL_FALSE,&View[0][0]);
-        glUniformMatrix4fv(ProjectionMatrix_sky,1,GL_FALSE,&Projection[0][0]);
-
-        sky->drawSkybox();
 
         //personnage->getRepresentant()->drawVoxel(programID);
         
