@@ -12,9 +12,9 @@ glm::vec3 camera_target = camera_position * -1.0f;
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
 
 bool cameraOrbitale = false;
-bool cameraLibre = false; // Caméra libre par défaut
+bool cameraLibre = true; // Caméra libre par défaut
 bool cameraMouseLibre = false;
-bool cameraMousePlayer = true;
+bool cameraMousePlayer = false;
 int speedCam = 15;
 double previousX = SCREEN_WIDTH / 2;
 double previousY = SCREEN_HEIGHT / 2;
@@ -29,7 +29,7 @@ int planeHeight = 1; // De 1 à
 
 Player *player;
 
-int typeChunk = 1; // Chunk plein par défaut (0), Chunk sinus (1), Chunk problème d'indice volontaire (2)
+int typeChunk = 0; // Chunk plein par défaut (0), Chunk sinus (1), Chunk problème d'indice volontaire (2)
 
 std::vector<Chunk*> listeChunks;
 void buildPlanChunks(/*GLubyte *texels, GLint widthTexture, GLint heightTexture*/){
@@ -112,33 +112,38 @@ void processInput(GLFWwindow* window){
         cameraMousePlayer = false;
         cameraOrbitale = false;
         cameraLibre = true;
-        glfwSetCursorPosCallback(window, NULL);
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Afficher le curseur
     }
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos){
-    if (firstMouse){
-        previousX = xpos;
-        previousY = ypos;
-        firstMouse = false;
+    if (cameraMouseLibre || cameraMousePlayer){
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Pour masquer la souris sur la fenêtre
+
+        if (firstMouse){
+            previousX = xpos;
+            previousY = ypos;
+            firstMouse = false;
+        }
+
+        double deltaX = xpos - previousX;
+        double deltaY = previousY - ypos;
+
+        phi += deltaX*0.05f;
+        theta += deltaY*0.05f;
+        // On empêche la caméra de s'inverser
+        theta = std::max(std::min(theta, 89.99f), -89.99f);
+
+        float x = cos(glm::radians(phi)) * cos(glm::radians(theta));
+        float y = sin(glm::radians(theta));
+        float z = sin(glm::radians(phi)) * cos(glm::radians(theta));
+        camera_target = glm::normalize(glm::vec3(x,y,z));
+
+        previousX=xpos;
+        previousY=ypos;
+
+    }else{
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Afficher le curseur
     }
-
-    double deltaX = xpos - previousX;
-    double deltaY = previousY - ypos;
-
-    phi += deltaX*0.05f;
-    theta += deltaY*0.05f;
-    // On empêche la caméra de s'inverser
-    theta = std::max(std::min(theta, 89.99f), -89.99f);
-
-    float x = cos(glm::radians(phi)) * cos(glm::radians(theta));
-    float y = sin(glm::radians(theta));
-    float z = sin(glm::radians(phi)) * cos(glm::radians(theta));
-    camera_target = glm::normalize(glm::vec3(x,y,z));
-
-    previousX=xpos;
-    previousY=ypos;
 }
 
 int main(){
@@ -168,6 +173,8 @@ int main(){
     glDepthFunc(GL_LESS);
 
     glEnable(GL_CULL_FACE); // Attention à la construction des triangles
+
+    glfwSetCursorPosCallback(window, mouse_callback);
 
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
@@ -296,12 +303,11 @@ int main(){
         player->drawPlayer();
         
         // Pour l'instant, on ne fait la détection des collisions du joueur que pour un seul chunk (pour simplifier les calculs)
-        // J'ai l'impression que ça marche, mais c'est compliqué d'en être sûr sans les collisions latérales
         // Détermine la cellule ou se trouve le joueur
         glm::vec3 pPlayer = player->getBottomPoint();
-        int numLongueur = (int)pPlayer[0] + 16;
-        int numHauteur = (int)pPlayer[1] + 16;
-        int numProfondeur = (int) pPlayer[2] + 16;
+        int numLongueur = (int)floor(pPlayer[0]) + 16;
+        int numHauteur = (int)floor(pPlayer[1]) + 16;
+        int numProfondeur = (int)floor(pPlayer[2]) + 16;
         int indiceBlock = numHauteur *1024 + numProfondeur * 32 + numLongueur; // Indice du voxel dans lequel on considère que le joueur se trouve
         if (numLongueur < 0 || numLongueur > 31 || numProfondeur < 0 || numProfondeur > 31 || numHauteur < 0 || numHauteur > 31){
             player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
@@ -360,16 +366,12 @@ int main(){
             cameraLibre = false;
             cameraOrbitale = false;
             cameraMousePlayer = false;
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Pour masquer la souris sur la fenêtre
-            glfwSetCursorPosCallback(window, mouse_callback);
         }
 
         if (ImGui::Checkbox("Caméra player", &cameraMousePlayer)){
             cameraLibre = false;
             cameraOrbitale = false;
             cameraMouseLibre = false;
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Pour masquer la souris sur la fenêtre
-            glfwSetCursorPosCallback(window, mouse_callback);
         }
 
         ImGui::Spacing();
