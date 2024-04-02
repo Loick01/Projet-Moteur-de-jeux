@@ -75,6 +75,10 @@ void Voxel::setVisible(){
     this->isVisible = true;
 }
 
+void Voxel::setInvisible(){
+    this->isVisible = false;
+}
+
 bool Voxel::getVisible(){
     return this->isVisible;
 }

@@ -130,3 +130,7 @@ void Chunk::drawChunk(){
 std::vector<Voxel*> Chunk::getListeVoxels(){
     return this->listeVoxels;
 }
+
+void Chunk::setListeVoxels(std::vector<Voxel*> newListeVoxels){
+    this->listeVoxels=newListeVoxels;
+}

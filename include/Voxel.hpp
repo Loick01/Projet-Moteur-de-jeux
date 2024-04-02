@@ -17,5 +17,6 @@ class Voxel {
         std::vector<glm::vec3> getVertices();
         std::vector<unsigned int> getIndices();
         void setVisible();
+        void setInvisible();
         bool getVisible();
 };
