@@ -8,21 +8,19 @@ float lastFrame = 0.0f;
 
 // Caméra
 glm::vec3 camera_position  = glm::vec3(0.0f, 5.0f, 5.0f);
-glm::vec3 camera_target = camera_position * -1.0f;
+glm::vec3 camera_target;
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
 
 bool cameraOrbitale = false;
-bool cameraLibre = true; // Caméra libre par défaut
+bool cameraLibre = false; // Caméra libre par défaut
 bool cameraMouseLibre = false;
-bool cameraMousePlayer = false;
+bool cameraMousePlayer = true;
 int speedCam = 15;
 double previousX = SCREEN_WIDTH / 2;
 double previousY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
 float phi = -90.0f;
 float theta = 0.0f;
-
-int indiceVoxelTarget=0;
 
 // Ces 3 tailles sont en nombre de chunk
 int planeWidth = 1; // De 1 à 32
@@ -106,17 +104,6 @@ void processInput(GLFWwindow* window){
             player->loadPlayer();
         }
     }
-    // tentative de cassez un block, pour l'instant avec H car le clique droit n'est pas détecter
-    if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){
-        printf("tentative cassage\n");
-        std::vector<Voxel*> voxels = listeChunks[0]->getListeVoxels();
-        //voxels[32767]=nullptr; // remplacer par indiceVoxelTarget
-        voxels[32767]->setInvisible();
-        listeChunks[0]->setListeVoxels(voxels); //j'ai ajouté la fonction setlistevoxels dans chunk pour pouvoir update les voxels
-        listeChunks[0]->loadChunk();
-        listeChunks[0]->drawChunk();
-        // je ne sais pas vraiment dans quel ordre mettre les fonctions ni meme si certaines ne sont pas inutiles
-    }
 
     // Pour sortir de la caméra à la souris (plus tard ce sera la touche qui ouvre l'inventaire, et donc affiche la souris dans la fenêtre)
     // Pour l'instant, impossible de revenir à la souris initiale et faire en sorte de prendre en compte les clics
@@ -128,7 +115,7 @@ void processInput(GLFWwindow* window){
     }
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos){
+void mouse_cursor_callback(GLFWwindow* window, double xpos, double ypos){
     if (cameraMouseLibre || cameraMousePlayer){
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Pour masquer la souris sur la fenêtre
 
@@ -159,6 +146,22 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos){
     }
 }
 
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        std::cout << "Clic souris\n";
+        std::vector<Voxel*> listeVoxels = listeChunks[0]->getListeVoxels();
+        listeVoxels[listeVoxels.size()-1]->setVisible(false);
+        listeChunks[0]->setListeVoxels(listeVoxels);
+        listeChunks[0]->loadChunk();
+        /*
+        listeVoxels[indiceVoxelTarget] = nullptr;
+        listeChunks[0]->setListeVoxels(listeVoxels);
+        //listeChunks[0]->loadChunk();
+        */
+    }
+}
+
+
 int main(){
     if( !glfwInit()){
         fprintf( stderr, "Failed to initialize GLFW\n" );
@@ -187,7 +190,8 @@ int main(){
 
     glEnable(GL_CULL_FACE); // Attention à la construction des triangles
 
-    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetCursorPosCallback(window, mouse_cursor_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
 
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
@@ -308,10 +312,10 @@ int main(){
         glUniformMatrix4fv(ViewMatrix,1,GL_FALSE,&View[0][0]);
         glUniformMatrix4fv(ProjectionMatrix,1,GL_FALSE,&Projection[0][0]);
 
+
         for (int i = 0 ; i < listeChunks.size() ; i++){
             listeChunks[i]->drawChunk();
         }
-        
         //sky->drawSkybox(programID);
         player->drawPlayer();
         
@@ -335,28 +339,8 @@ int main(){
             }else{
                 player->resetJumpSpeed();
                 player->couldJump(true);
-                printf(" %d visible? %d\n",indiceBlock,v->getVisible());
             }
         }
-
-        //cassage de block
-        glm::vec3 targetNormalized = normalize(camera_target);
-        int range = 1;
-        // int blockTargetX =(int)ceil(std::abs(targetNormalized[0]*numLongueur)-range);
-        // int blockTargetY =(int)ceil(std::abs(targetNormalized[1]*numHauteur)-range+1);
-        // int blockTargetZ =(int)ceil(std::abs(targetNormalized[2]*numProfondeur)-range);
-
-        int blockTargetX =(int)floor(targetNormalized[0]+numLongueur);
-        int blockTargetY =(int)floor(targetNormalized[1]+numHauteur);
-        int blockTargetZ =(int)floor(targetNormalized[2]+numProfondeur);
-
-        indiceVoxelTarget= blockTargetX*32*32+blockTargetY*32+blockTargetZ;
-
-        //printf("je regarde le block %d %d %d\n",blockTargetX,blockTargetY,blockTargetZ);
-        //printf("le block target est %d\n",indiceVoxelTarget);
-        //
-        
-        
         
 
         // Start the ImGui frame
@@ -370,7 +354,7 @@ int main(){
 
         ImGui::Spacing();
 
-        ImGui::Text("Position : %.2f / %.2f / %.2f", pPlayer[0]+16, pPlayer[1]+16, pPlayer[2]+16);
+        ImGui::Text("Position : %.2f / %.2f / %.2f", pPlayer[0], pPlayer[1], pPlayer[2]);
 
         ImGui::Spacing();
 

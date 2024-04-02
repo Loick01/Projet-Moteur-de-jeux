@@ -71,12 +71,8 @@ void Voxel::updateVertices(glm::vec3 motion){
     }
 }
 
-void Voxel::setVisible(){
-    this->isVisible = true;
-}
-
-void Voxel::setInvisible(){
-    this->isVisible = false;
+void Voxel::setVisible(bool isVisible){
+    this->isVisible = isVisible;
 }
 
 bool Voxel::getVisible(){

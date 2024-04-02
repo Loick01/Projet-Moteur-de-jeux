@@ -23,7 +23,7 @@ void Chunk::buildFullChunk(/*GLubyte *texels, GLint widthTexture, GLint heightTe
                 //if (k < ((short)texels[((j*heightTexture)/31)*widthTexture + ((i*widthTexture)/31)]*32)/255){ // Pas sûr que ça fonctionne
                     Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),compteur); 
                     if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==CHUNK_SIZE-1){
-                        vox->setVisible();
+                        vox->setVisible(true);
                         ++compteur;
                     }
                     this->listeVoxels.push_back(vox);
@@ -49,7 +49,7 @@ void Chunk::buildSinusChunk(){
                 if (k <= heightVox){
                     Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),compteur); 
                     if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==heightVox){
-                        vox->setVisible();
+                        vox->setVisible(true);
                         ++compteur;
                     }
                     this->listeVoxels.push_back(vox);
@@ -71,7 +71,7 @@ void Chunk::buildCrazyChunk(){
             for (int i=0;i<CHUNK_SIZE;i++){     
                     Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k*CHUNK_SIZE*CHUNK_SIZE + j*CHUNK_SIZE + i); 
                     if (i*j==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==CHUNK_SIZE-1){
-                        vox->setVisible();
+                        vox->setVisible(true);
                     }
                     this->listeVoxels.push_back(vox);
             }
@@ -80,6 +80,10 @@ void Chunk::buildCrazyChunk(){
 }
 
 void Chunk::loadChunk(){
+    /*
+    glDeleteBuffers(1, &(this->vertexbuffer));
+    glDeleteBuffers(1, &(this->elementbuffer));
+    */
     // Peut être faudrait il stocker les sommets et les indices directement dans la classe Chunk, au lieu de les récupérer pour chaque voxel
     for (int i = 0 ; i < this->listeVoxels.size() ; i++){
         if (listeVoxels[i] != nullptr){
