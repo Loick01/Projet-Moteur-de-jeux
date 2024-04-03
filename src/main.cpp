@@ -3,6 +3,8 @@
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
 
+#define RANGE 3
+
 float deltaTime = 0.0f;	
 float lastFrame = 0.0f;
 
@@ -148,16 +150,34 @@ void mouse_cursor_callback(GLFWwindow* window, double xpos, double ypos){
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        std::cout << "Clic souris\n";
+        glm::vec3 originPoint = camera_position;
+        glm::vec3 direction = normalize(camera_target);
         std::vector<Voxel*> listeVoxels = listeChunks[0]->getListeVoxels();
-        listeVoxels[listeVoxels.size()-1]->setVisible(false);
-        listeChunks[0]->setListeVoxels(listeVoxels);
-        listeChunks[0]->loadChunk();
-        /*
-        listeVoxels[indiceVoxelTarget] = nullptr;
-        listeChunks[0]->setListeVoxels(listeVoxels);
-        //listeChunks[0]->loadChunk();
-        */
+        for (int k = 1 ; k < RANGE+1 ; k++){
+            glm::vec3 target = originPoint + (float)k*direction;
+            int numLongueur = (int)floor(target[0]) + 16;
+            int numHauteur = (int)floor(target[1]) + 16;
+            int numProfondeur = (int)floor(target[2]) + 16;
+            if (numLongueur < 0 || numLongueur > 31 || numProfondeur < 0 || numProfondeur > 31 || numHauteur < 0 || numHauteur > 31){
+                continue;
+            }else{
+                int indiceV = numHauteur *1024 + numProfondeur * 32 + numLongueur; // Indice du voxel que le joueur est en train de viser
+                if (listeVoxels[indiceV] == nullptr){
+                    continue;
+                }else{
+                    listeVoxels[indiceV] = nullptr;
+                    // On met à jour les indices pour  que les voxels s'affichent au bon endroit
+                    for (int i = indiceV+1 ; i < 32768; i++){
+                        if (listeVoxels[i] != nullptr){
+                            listeVoxels[i]->shiftIndice();
+                        }
+                    }
+                    listeChunks[0]->setListeVoxels(listeVoxels);
+                    listeChunks[0]->loadChunk();
+                    return;
+                }
+            }
+        }
     }
 }
 

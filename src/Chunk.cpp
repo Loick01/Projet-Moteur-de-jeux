@@ -84,6 +84,9 @@ void Chunk::loadChunk(){
     glDeleteBuffers(1, &(this->vertexbuffer));
     glDeleteBuffers(1, &(this->elementbuffer));
     */
+    // Très important de vider les vectors, sinon quand on modifie un chunk on ne voit aucune différence
+    this->vertices.clear();
+    this->indices.clear(); 
     // Peut être faudrait il stocker les sommets et les indices directement dans la classe Chunk, au lieu de les récupérer pour chaque voxel
     for (int i = 0 ; i < this->listeVoxels.size() ; i++){
         if (listeVoxels[i] != nullptr){

@@ -78,3 +78,9 @@ void Voxel::setVisible(bool isVisible){
 bool Voxel::getVisible(){
     return this->isVisible;
 }
+
+void Voxel::shiftIndice(){
+    for (int i = 0 ; i < this->indices.size() ; i++){
+        this->indices[i] -= 24; // On décale de 24 les indices du bloc
+    }
+}

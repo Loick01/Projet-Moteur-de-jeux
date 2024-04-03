@@ -18,4 +18,5 @@ class Voxel {
         std::vector<unsigned int> getIndices();
         void setVisible(bool isVisible);
         bool getVisible();
+        void shiftIndice();
 };
