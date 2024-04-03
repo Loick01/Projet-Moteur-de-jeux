@@ -3,7 +3,7 @@
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
 
-#define RANGE 3
+#define RANGE 4
 
 float deltaTime = 0.0f;	
 float lastFrame = 0.0f;
@@ -83,19 +83,19 @@ void processInput(GLFWwindow* window){
     // Déplacement du joueur
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS){
         player->move(glm::vec3(0.f,0.f,-0.1f));
-        player->loadPlayer();
+        //player->loadPlayer();
     }
     if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){
         player->move(glm::vec3(-0.1f,0.f,0.f));
-        player->loadPlayer();
+        //player->loadPlayer();
     }
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
         player->move(glm::vec3(0.f,0.f,0.1f));
-        player->loadPlayer();
+        //player->loadPlayer();
     }
     if (glfwGetKey(window, GLFW_KEY_SEMICOLON) == GLFW_PRESS){
         player->move(glm::vec3(0.1f,0.f,0.f));
-        player->loadPlayer();
+        //player->loadPlayer();
     }
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
         // On initie le saut du joueur
@@ -103,7 +103,7 @@ void processInput(GLFWwindow* window){
             player->couldJump(false);
             player->addToSpeed(0.23f);
             player->move(glm::vec3(0.f,0.23f,0.f));
-            player->loadPlayer();
+            //player->loadPlayer();
         }
     }
 
@@ -220,7 +220,7 @@ int main(){
     GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
 
     player = new Player(glm::vec3(-0.5f,30.0f,-0.5f));
-    player->loadPlayer();
+    //player->loadPlayer();
 
     /*
     GLint heightmap = loadTexture2DFromFilePath("../Textures/heightmap.png");
@@ -323,7 +323,7 @@ int main(){
         if (cameraOrbitale){
             camera_target = -1.0f * camera_position;
         }else if (cameraMousePlayer){
-            camera_position = player->getBottomPoint() + glm::vec3(0.0f,2.f,0.f); // Recentre la caméra sur le player
+            camera_position = player->getBottomPoint() + glm::vec3(0.0f,1.6f,0.f); // Positionne la caméra sur le joueur
         }
 
         glm::mat4 View = glm::lookAt(camera_position, camera_position + camera_target, camera_up);
@@ -337,7 +337,7 @@ int main(){
             listeChunks[i]->drawChunk();
         }
         //sky->drawSkybox(programID);
-        player->drawPlayer();
+        //player->drawPlayer();
         
         // Pour l'instant, on ne fait la détection des collisions du joueur que pour un seul chunk (pour simplifier les calculs)
         // Détermine la cellule ou se trouve le joueur
@@ -347,14 +347,14 @@ int main(){
         int numProfondeur = (int)floor(pPlayer[2]) + 16;
         if (numLongueur < 0 || numLongueur > 31 || numProfondeur < 0 || numProfondeur > 31 || numHauteur < 0 || numHauteur > 31){
             player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
-            player->loadPlayer();
+            //player->loadPlayer();
             player->addToSpeed(-0.02);
         }else{
             int indiceBlock = numHauteur *1024 + numProfondeur * 32 + numLongueur; // Indice du voxel dans lequel on considère que le joueur se trouve
             Voxel *v = listeChunks[0]->getListeVoxels()[indiceBlock]; // Pour l'instant on considère qu'il n'y a qu'un seul chunk, d'où listeChunks[0]
             if (v == nullptr){
                 player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
-                player->loadPlayer();
+                //player->loadPlayer();
                 player->addToSpeed(-0.02);
             }else{
                 player->resetJumpSpeed();

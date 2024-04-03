@@ -1,12 +1,13 @@
 #include <Player.hpp>
 
 Player::Player(glm::vec3 position){
-    this->hitbox = new Voxel(position,0); // Le deuxième paramètre doit rester à 0 (sert normalement à la génération des chunks, mais ici on est pas concerné)
+    //this->hitbox = new Voxel(position,0); // Le deuxième paramètre doit rester à 0 (sert normalement à la génération des chunks, mais ici on est pas concerné)
     this->bottomPoint = glm::vec3(position + glm::vec3(0.5f,0.0f,0.5f));
     this->currentJumpSpeed = 0.0f;
     this->canJump = false;
 }
 
+/*
 void Player::loadPlayer(){
     glGenBuffers(1, &(this->vertexbufferHitbox));
     glBindBuffer(GL_ARRAY_BUFFER, this->vertexbufferHitbox);
@@ -42,10 +43,11 @@ void Player::drawPlayer(){
 
     glDisableVertexAttribArray(0);
 }
+*/
 
 void Player::move(glm::vec3 motion){
     this->bottomPoint += motion;
-    this->hitbox->updateVertices(motion);
+    //this->hitbox->updateVertices(motion);
 }
 
 glm::vec3 Player::getBottomPoint(){
