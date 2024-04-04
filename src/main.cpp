@@ -173,7 +173,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                         }
                     }
 
-                    // Rendre visible les 6 cubes adjacents (s'il existe et s'il ne sont pas déjà visible)
+                    // Rendre visible les 6 cubes adjacents (s'ils existent et s'ils ne sont pas déjà visible)
                     for (int c = -1 ; c < 2 ; c+=2){
                         int numLongueurVoisin = numLongueur + c;
                         int numHauteurVoisin = numHauteur + c;
@@ -182,41 +182,35 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
                         if (numLongueurVoisin >= 0 && numLongueurVoisin <= 31){
                             indiceVoisin = numHauteur *1024 + numProfondeur * 32 + numLongueurVoisin;
-                            if (listeVoxels[indiceVoisin] != nullptr){
+                            if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){ // Bien vérifier si le voxel n'est pas déjà visible (ça peut poser problème vu qu'on applique un shift)
                                 listeVoxels[indiceVoisin]->setVisible(true);
-                                /*
                                 for (int i = indiceVoisin+1 ; i < 32768; i++){
                                     if (listeVoxels[i] != nullptr){
                                         listeVoxels[i]->shiftIndice(24);
                                     }
                                 }
-                                */
                             }
                         }
                         if (numHauteurVoisin >= 0 && numHauteurVoisin <= 31){
                             indiceVoisin = numHauteurVoisin *1024 + numProfondeur * 32 + numLongueur;
-                            if (listeVoxels[indiceVoisin] != nullptr){
+                            if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){
                                 listeVoxels[indiceVoisin]->setVisible(true);
-                                /*
                                 for (int i = indiceVoisin+1 ; i < 32768; i++){
                                     if (listeVoxels[i] != nullptr){
                                         listeVoxels[i]->shiftIndice(24);
                                     }
                                 }
-                                */
                             }
                         }
                         if (numProfondeurVoisin >= 0 && numProfondeurVoisin <= 31){
                             indiceVoisin = numHauteur *1024 + numProfondeurVoisin * 32 + numLongueur;
-                            if (listeVoxels[indiceVoisin] != nullptr){
+                            if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){
                                 listeVoxels[indiceVoisin]->setVisible(true);
-                                /*
                                 for (int i = indiceVoisin+1 ; i < 32768; i++){
                                     if (listeVoxels[i] != nullptr){
                                         listeVoxels[i]->shiftIndice(24);
                                     }
                                 }
-                                */
                             }
                         }
                     }
