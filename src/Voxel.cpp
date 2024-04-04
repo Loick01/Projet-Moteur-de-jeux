@@ -79,8 +79,8 @@ bool Voxel::getVisible(){
     return this->isVisible;
 }
 
-void Voxel::shiftIndice(){
+void Voxel::shiftIndice(int shift){
     for (int i = 0 ; i < this->indices.size() ; i++){
-        this->indices[i] -= 24; // On décale de 24 les indices du bloc
+        this->indices[i] += shift; // On décale de 24 les indices du bloc
     }
 }

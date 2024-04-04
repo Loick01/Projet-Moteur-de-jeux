@@ -169,9 +169,58 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                     // On met à jour les indices pour  que les voxels s'affichent au bon endroit
                     for (int i = indiceV+1 ; i < 32768; i++){
                         if (listeVoxels[i] != nullptr){
-                            listeVoxels[i]->shiftIndice();
+                            listeVoxels[i]->shiftIndice(-24);
                         }
                     }
+
+                    // Rendre visible les 6 cubes adjacents (s'il existe et s'il ne sont pas déjà visible)
+                    for (int c = -1 ; c < 2 ; c+=2){
+                        int numLongueurVoisin = numLongueur + c;
+                        int numHauteurVoisin = numHauteur + c;
+                        int numProfondeurVoisin = numProfondeur + c;
+                        int indiceVoisin;
+
+                        if (numLongueurVoisin >= 0 && numLongueurVoisin <= 31){
+                            indiceVoisin = numHauteur *1024 + numProfondeur * 32 + numLongueurVoisin;
+                            if (listeVoxels[indiceVoisin] != nullptr){
+                                listeVoxels[indiceVoisin]->setVisible(true);
+                                /*
+                                for (int i = indiceVoisin+1 ; i < 32768; i++){
+                                    if (listeVoxels[i] != nullptr){
+                                        listeVoxels[i]->shiftIndice(24);
+                                    }
+                                }
+                                */
+                            }
+                        }
+                        if (numHauteurVoisin >= 0 && numHauteurVoisin <= 31){
+                            indiceVoisin = numHauteurVoisin *1024 + numProfondeur * 32 + numLongueur;
+                            if (listeVoxels[indiceVoisin] != nullptr){
+                                listeVoxels[indiceVoisin]->setVisible(true);
+                                /*
+                                for (int i = indiceVoisin+1 ; i < 32768; i++){
+                                    if (listeVoxels[i] != nullptr){
+                                        listeVoxels[i]->shiftIndice(24);
+                                    }
+                                }
+                                */
+                            }
+                        }
+                        if (numProfondeurVoisin >= 0 && numProfondeurVoisin <= 31){
+                            indiceVoisin = numHauteur *1024 + numProfondeurVoisin * 32 + numLongueur;
+                            if (listeVoxels[indiceVoisin] != nullptr){
+                                listeVoxels[indiceVoisin]->setVisible(true);
+                                /*
+                                for (int i = indiceVoisin+1 ; i < 32768; i++){
+                                    if (listeVoxels[i] != nullptr){
+                                        listeVoxels[i]->shiftIndice(24);
+                                    }
+                                }
+                                */
+                            }
+                        }
+                    }
+
                     listeChunks[0]->setListeVoxels(listeVoxels);
                     listeChunks[0]->loadChunk();
                     return;
@@ -323,7 +372,7 @@ int main(){
         if (cameraOrbitale){
             camera_target = -1.0f * camera_position;
         }else if (cameraMousePlayer){
-            camera_position = player->getBottomPoint() + glm::vec3(0.0f,1.6f,0.f); // Positionne la caméra sur le joueur
+            camera_position = player->getBottomPoint() + glm::vec3(0.0f,1.8f,0.f); // Positionne la caméra sur le joueur
         }
 
         glm::mat4 View = glm::lookAt(camera_position, camera_position + camera_target, camera_up);

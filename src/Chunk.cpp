@@ -80,10 +80,6 @@ void Chunk::buildCrazyChunk(){
 }
 
 void Chunk::loadChunk(){
-    /*
-    glDeleteBuffers(1, &(this->vertexbuffer));
-    glDeleteBuffers(1, &(this->elementbuffer));
-    */
     // Très important de vider les vectors, sinon quand on modifie un chunk on ne voit aucune différence
     this->vertices.clear();
     this->indices.clear(); 
