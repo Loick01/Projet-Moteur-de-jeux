@@ -4,15 +4,9 @@ out vec4 FragColor;
 
 in vec2 uv_coord;
 
-uniform sampler2D nxTexture;
-uniform sampler2D pxTexture;
-uniform sampler2D nyTexture;
-uniform sampler2D pyTexture;
-uniform sampler2D nzTexture;
-uniform sampler2D pzTexture;
-
-uniform sampler2D skyTexture;
-
+uniform sampler2D grassText;
+uniform sampler2D bedrockText;
+uniform sampler2D cobblestoneText;
 uniform int objectID;
 
 void main(){
@@ -43,11 +37,15 @@ void main(){
                 FragColor = vec4(color, 1.0);
         }
         */
-        if (objectID == 1){
-                vec3 color = texture(skyTexture, uv_coord).rgb;
+
+        if (objectID == 0){
+                vec3 color = texture(grassText, uv_coord).rgb;
                 FragColor = vec4(color, 1.0);
-        }else{
-                vec3 color = texture(pyTexture, uv_coord).rgb;
+        }else if (objectID == 1){
+                vec3 color = texture(bedrockText, uv_coord).rgb;
+                FragColor = vec4(color, 1.0);
+        }else if (objectID == 2){
+                vec3 color = texture(cobblestoneText, uv_coord).rgb;
                 FragColor = vec4(color, 1.0);
         }
 }

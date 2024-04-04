@@ -27,11 +27,11 @@ float theta = 0.0f;
 // Ces 3 tailles sont en nombre de chunk
 int planeWidth = 1; // De 1 à 32
 int planeLength = 1; // De 1 à 32
-int planeHeight = 1; // De 1 à 
+int planeHeight = 1; // De 1 à 8
 
 Player *player;
 
-int typeChunk = 0; // Chunk plein par défaut (0), Chunk sinus (1), Chunk problème d'indice volontaire (2)
+int typeChunk = 0; // Chunk plein par défaut (0), Chunk sinus (1)
 
 std::vector<Chunk*> listeChunks;
 void buildPlanChunks(/*GLubyte *texels, GLint widthTexture, GLint heightTexture*/){
@@ -108,7 +108,6 @@ void processInput(GLFWwindow* window){
     }
 
     // Pour sortir de la caméra à la souris (plus tard ce sera la touche qui ouvre l'inventaire, et donc affiche la souris dans la fenêtre)
-    // Pour l'instant, impossible de revenir à la souris initiale et faire en sorte de prendre en compte les clics
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS){ 
         cameraMouseLibre = false;
         cameraMousePlayer = false;
@@ -166,14 +165,9 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                     continue;
                 }else{
                     listeVoxels[indiceV] = nullptr;
-                    // On met à jour les indices pour  que les voxels s'affichent au bon endroit
-                    for (int i = indiceV+1 ; i < 32768; i++){
-                        if (listeVoxels[i] != nullptr){
-                            listeVoxels[i]->shiftIndice(-24);
-                        }
-                    }
 
                     // Rendre visible les 6 cubes adjacents (s'ils existent et s'ils ne sont pas déjà visible)
+                    // Il faudrait chercher une meilleure façon de faire ça
                     for (int c = -1 ; c < 2 ; c+=2){
                         int numLongueurVoisin = numLongueur + c;
                         int numHauteurVoisin = numHauteur + c;
@@ -182,35 +176,20 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
                         if (numLongueurVoisin >= 0 && numLongueurVoisin <= 31){
                             indiceVoisin = numHauteur *1024 + numProfondeur * 32 + numLongueurVoisin;
-                            if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){ // Bien vérifier si le voxel n'est pas déjà visible (ça peut poser problème vu qu'on applique un shift)
+                            if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){ // On vérifie si le voxel n'est pas déjà visible (en vrai c'est pas obligatoire)
                                 listeVoxels[indiceVoisin]->setVisible(true);
-                                for (int i = indiceVoisin+1 ; i < 32768; i++){
-                                    if (listeVoxels[i] != nullptr){
-                                        listeVoxels[i]->shiftIndice(24);
-                                    }
-                                }
                             }
                         }
                         if (numHauteurVoisin >= 0 && numHauteurVoisin <= 31){
                             indiceVoisin = numHauteurVoisin *1024 + numProfondeur * 32 + numLongueur;
                             if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){
                                 listeVoxels[indiceVoisin]->setVisible(true);
-                                for (int i = indiceVoisin+1 ; i < 32768; i++){
-                                    if (listeVoxels[i] != nullptr){
-                                        listeVoxels[i]->shiftIndice(24);
-                                    }
-                                }
                             }
                         }
                         if (numProfondeurVoisin >= 0 && numProfondeurVoisin <= 31){
                             indiceVoisin = numHauteur *1024 + numProfondeurVoisin * 32 + numLongueur;
                             if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){
                                 listeVoxels[indiceVoisin]->setVisible(true);
-                                for (int i = indiceVoisin+1 ; i < 32768; i++){
-                                    if (listeVoxels[i] != nullptr){
-                                        listeVoxels[i]->shiftIndice(24);
-                                    }
-                                }
                             }
                         }
                     }
@@ -223,7 +202,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         }
     }
 }
-
 
 int main(){
     if( !glfwInit()){
@@ -263,8 +241,7 @@ int main(){
     GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
 
     player = new Player(glm::vec3(-0.5f,30.0f,-0.5f));
-    //player->loadPlayer();
-
+    
     /*
     GLint heightmap = loadTexture2DFromFilePath("../Textures/heightmap.png");
     GLint widthTexture, heightTexture;
@@ -302,50 +279,25 @@ int main(){
     ImGui_ImplOpenGL3_Init("#version 330");
     ImGui::StyleColorsLight();
 
-    // Chargement des textures (temporaire)
-    GLint nxGrass = loadTexture2DFromFilePath("../Textures/Grass/nx_grass.png");
-    GLint pxGrass = loadTexture2DFromFilePath("../Textures/Grass/px_grass.png");
-    GLint nyGrass = loadTexture2DFromFilePath("../Textures/Grass/ny_grass.png");
-    GLint pyGrass = loadTexture2DFromFilePath("../Textures/Grass/py_grass.png");
-    GLint nzGrass = loadTexture2DFromFilePath("../Textures/Grass/nz_grass.png");
-    GLint pzGrass = loadTexture2DFromFilePath("../Textures/Grass/pz_grass.png");
+    // Chargement des textures (temporaire, plus tard on utilisera un atlas)
+    GLint grassID = loadTexture2DFromFilePath("../Textures/grass.png");
+    GLint bedrockID = loadTexture2DFromFilePath("../Textures/bedrock.png");
+    GLint cobblestoneID = loadTexture2DFromFilePath("../Textures/cobblestone.png");
 
-    GLint skyTexture = loadTexture2DFromFilePath("../Textures/Skybox/nx.png");
-
-    if (nxGrass != -1) {
+    if (grassID != -1) {
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, nxGrass);
-        glUniform1i(glGetUniformLocation(programID, "nxTexture"), GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, grassID);
+        glUniform1i(glGetUniformLocation(programID, "grassText"), GL_TEXTURE0);
 	}
-    if (pxGrass != -1) {
+    if (bedrockID != -1) {
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, pxGrass);
-        glUniform1i(glGetUniformLocation(programID, "pxTexture"), 1);
+		glBindTexture(GL_TEXTURE_2D, bedrockID);
+        glUniform1i(glGetUniformLocation(programID, "bedrockText"), 1);
 	}
-    if (nyGrass != -1) {
+    if (cobblestoneID != -1) {
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, nyGrass);
-        glUniform1i(glGetUniformLocation(programID, "nyTexture"), 2);
-	}
-    if (pyGrass != -1) {
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, pyGrass);
-        glUniform1i(glGetUniformLocation(programID, "pyTexture"), 3);
-	}
-    if (nzGrass != -1) {
-		glActiveTexture(GL_TEXTURE4);
-		glBindTexture(GL_TEXTURE_2D, nzGrass);
-        glUniform1i(glGetUniformLocation(programID, "nzTexture"), 4);
-	}
-    if (pzGrass != -1) {
-		glActiveTexture(GL_TEXTURE5);
-		glBindTexture(GL_TEXTURE_2D, pzGrass);
-        glUniform1i(glGetUniformLocation(programID, "pzTexture"), 5);
-	}
-    if (skyTexture != -1) {
-		glActiveTexture(GL_TEXTURE6);
-		glBindTexture(GL_TEXTURE_2D, skyTexture);
-        glUniform1i(glGetUniformLocation(programID, "skyTexture"), 6);
+		glBindTexture(GL_TEXTURE_2D, cobblestoneID);
+        glUniform1i(glGetUniformLocation(programID, "cobblestoneText"), 2);
 	}
     
     // Boucle de rendu
@@ -380,7 +332,6 @@ int main(){
             listeChunks[i]->drawChunk();
         }
         //sky->drawSkybox(programID);
-        //player->drawPlayer();
         
         // Pour l'instant, on ne fait la détection des collisions du joueur que pour un seul chunk (pour simplifier les calculs)
         // Détermine la cellule ou se trouve le joueur
@@ -390,14 +341,12 @@ int main(){
         int numProfondeur = (int)floor(pPlayer[2]) + 16;
         if (numLongueur < 0 || numLongueur > 31 || numProfondeur < 0 || numProfondeur > 31 || numHauteur < 0 || numHauteur > 31){
             player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
-            //player->loadPlayer();
             player->addToSpeed(-0.02);
         }else{
             int indiceBlock = numHauteur *1024 + numProfondeur * 32 + numLongueur; // Indice du voxel dans lequel on considère que le joueur se trouve
             Voxel *v = listeChunks[0]->getListeVoxels()[indiceBlock]; // Pour l'instant on considère qu'il n'y a qu'un seul chunk, d'où listeChunks[0]
             if (v == nullptr){
                 player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
-                //player->loadPlayer();
                 player->addToSpeed(-0.02);
             }else{
                 player->resetJumpSpeed();
@@ -483,8 +432,8 @@ int main(){
 
         ImGui::Spacing();
 
-        // Type 0 = Plein ; Type 1 = Sinus ; Type 2 = Pas fait exprès mais c'est joli donc je le garde
-        if (ImGui::SliderInt("Type de chunk", &typeChunk, 0, 2)){
+        // Type 0 = Plein ; Type 1 = Sinus
+        if (ImGui::SliderInt("Type de chunk", &typeChunk, 0, 1)){
             buildPlanChunks();
         }
 

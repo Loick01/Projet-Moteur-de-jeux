@@ -8,23 +8,20 @@ Chunk::Chunk(glm::vec3 position, int typeChunk/*, GLubyte *texels, GLint widthTe
         this->buildFullChunk(/*texels, widthTexture, heightTexture*/);
     }else if (typeChunk==1){
         this->buildSinusChunk();
-    }else if (typeChunk==2){
-        this->buildCrazyChunk();
     }
 }
 
 void Chunk::buildFullChunk(/*GLubyte *texels, GLint widthTexture, GLint heightTexture*/){
     this->listeVoxels.clear();
-    short compteur = 0; // Dénombre les voxels qui seront envoyés aux shaders, pour savoir quel décalage appliquer
 
     for (int k=0;k<CHUNK_SIZE;k++){
         for (int j=0;j<CHUNK_SIZE;j++){     
             for (int i=0;i<CHUNK_SIZE;i++){     
                 //if (k < ((short)texels[((j*heightTexture)/31)*widthTexture + ((i*widthTexture)/31)]*32)/255){ // Pas sûr que ça fonctionne
-                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),compteur); 
+                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),2); 
                     if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==CHUNK_SIZE-1){
                         vox->setVisible(true);
-                        ++compteur;
+                        vox->setId(0);
                     }
                     this->listeVoxels.push_back(vox);
                 //}
@@ -36,7 +33,6 @@ void Chunk::buildFullChunk(/*GLubyte *texels, GLint widthTexture, GLint heightTe
 // Avec ce modèle de génération, on voit qu'il y a un problème sur la détection de l'extérieur. Il faudra un algo pour déterminer les contours d'un chunk
 void Chunk::buildSinusChunk(){
     this->listeVoxels.clear();
-    short compteur = 0; // Dénombre les voxels qui seront envoyés aux shaders, pour savoir quel décalage appliquer
 
     for (int k=0;k<CHUNK_SIZE;k++){
         for (int j=0;j<CHUNK_SIZE;j++){     
@@ -47,33 +43,14 @@ void Chunk::buildSinusChunk(){
                 //float value = (std::sin(2 * M_PI * t) + 1.0f) * 0.5f; // Valeur entre 0 et 1
                 int heightVox = value*30 + 1; // Hauteur du cube entre 1 et 31
                 if (k <= heightVox){
-                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),compteur); 
+                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j), 0); 
                     if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==heightVox){
                         vox->setVisible(true);
-                        ++compteur;
                     }
                     this->listeVoxels.push_back(vox);
                 }else{
-                    // Temporaire (ce ne sera sûrement pas la manière définitive de faire)
-                    this->listeVoxels.push_back(nullptr); // Pour tester les collisions avec le joueur, on doit qu'il n'y a pas de voxel à cet emplacement
+                    this->listeVoxels.push_back(nullptr);
                 }
-            }
-        }
-    }
-}
-
-// Temporaire
-void Chunk::buildCrazyChunk(){
-    this->listeVoxels.clear();
-
-    for (int k=0;k<CHUNK_SIZE;k++){
-        for (int j=0;j<CHUNK_SIZE;j++){     
-            for (int i=0;i<CHUNK_SIZE;i++){     
-                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k*CHUNK_SIZE*CHUNK_SIZE + j*CHUNK_SIZE + i); 
-                    if (i*j==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==CHUNK_SIZE-1){
-                        vox->setVisible(true);
-                    }
-                    this->listeVoxels.push_back(vox);
             }
         }
     }
@@ -83,14 +60,24 @@ void Chunk::loadChunk(){
     // Très important de vider les vectors, sinon quand on modifie un chunk on ne voit aucune différence
     this->vertices.clear();
     this->indices.clear(); 
-    // Peut être faudrait il stocker les sommets et les indices directement dans la classe Chunk, au lieu de les récupérer pour chaque voxel
+    int compteur = 0; // Nombre de voxel déjà chargé, pour savoir où en est le décalage des indices
+
     for (int i = 0 ; i < this->listeVoxels.size() ; i++){
         if (listeVoxels[i] != nullptr){
             if (listeVoxels[i]->getVisible()){
                 std::vector<glm::vec3> verticesVoxel = listeVoxels[i]->getVertices();
-                std::vector<unsigned int> indicesVoxel = listeVoxels[i]->getIndices();
                 this->vertices.insert(this->vertices.end(), verticesVoxel.begin(), verticesVoxel.end());
-                this->indices.insert(this->indices.end(), indicesVoxel.begin(), indicesVoxel.end());
+
+                for (int c = 0 ; c < 6 ; c++){ // Toutes les faces d'un voxel
+                    unsigned int decalage = 24*compteur + c*4;
+                    this->indices.push_back(decalage + 2);
+                    this->indices.push_back(decalage + 0);
+                    this->indices.push_back(decalage + 3);
+                    this->indices.push_back(decalage + 3);
+                    this->indices.push_back(decalage + 0);
+                    this->indices.push_back(decalage + 1);
+                }
+                compteur++;
             }
         }
     }

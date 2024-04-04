@@ -1,15 +1,14 @@
 #include <Voxel.hpp>
 
-Voxel::Voxel(glm::vec3 position, int numBlock){
+Voxel::Voxel(glm::vec3 position, int objectID){
     this->backBottomLeftCorner = position;
-    this->buildVoxel(numBlock);
+    this->buildVoxel();
+    this->objectID = objectID;
     this->isVisible = false;
 }
 
-void Voxel::buildVoxel(int numBlock){
-    //std::cout << "Construction des faces du voxel\n";
-    // Voxel de taille 1.0
-
+// Voxel de taille 1.0
+void Voxel::buildVoxel(){
     for (int i = 0 ; i < 6 ; i++){
         for (int h = 0; h < 2 ; h++) {
             for (int w = 0; w < 2; w++) {
@@ -40,29 +39,12 @@ void Voxel::buildVoxel(int numBlock){
                 this->vertices.push_back(glm::vec3(x,y,z));
             }
         }
-
-        unsigned int decalage = 24*numBlock + i*4; // 24 sommets par voxel
-        this->indices.push_back(decalage + 2);
-        this->indices.push_back(decalage + 0);
-        this->indices.push_back(decalage + 3);
-        this->indices.push_back(decalage + 3);
-        this->indices.push_back(decalage + 0);
-        this->indices.push_back(decalage + 1);
     }
 }
 
 std::vector<glm::vec3> Voxel::getVertices(){
     return this->vertices;
 }
-std::vector<unsigned int> Voxel::getIndices(){
-    return this->indices;
-}
-
-/*
-glm::vec3 Voxel::getPoint(){
-    return this->backBottomLeftCorner;
-}
-*/
 
 void Voxel::updateVertices(glm::vec3 motion){
     this->backBottomLeftCorner += motion;
@@ -79,8 +61,6 @@ bool Voxel::getVisible(){
     return this->isVisible;
 }
 
-void Voxel::shiftIndice(int shift){
-    for (int i = 0 ; i < this->indices.size() ; i++){
-        this->indices[i] += shift; // On décale de 24 les indices du bloc
-    }
+void Voxel::setId(int new_id){
+    this->objectID = new_id;
 }
