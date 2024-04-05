@@ -23,6 +23,11 @@ double previousY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
 float phi = -90.0f;
 float theta = 0.0f;
+float playerSpeed = 1.f;
+bool goingFront = false;
+bool goingBack = false;
+bool goingLeft = false;
+bool goingRight = false;
 
 // Ces 3 tailles sont en nombre de chunk
 int planeWidth = 1; // De 1 à 32
@@ -58,61 +63,71 @@ void processInput(GLFWwindow* window){
         glfwSetWindowShouldClose(window,true);
     }
 
-     // Avancer/Reculer la caméra
-    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
-        camera_position += (camera_speed / 5.f) * camera_target;
-    }
-    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS){
-        camera_position -= (camera_speed / 5.f) * camera_target;
-    }
-    // Monter/Descendre la caméra
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
-        camera_position += (camera_speed / 5.f) * camera_up;
-    }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-        camera_position -= (camera_speed / 5.f) * camera_up;
-    }
-    // Déplacer vers la droite/gauche la caméra
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
-        camera_position += (camera_speed / 5.f) * glm::normalize(glm::cross(camera_target,camera_up));;
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
-        camera_position -= (camera_speed / 5.f) * glm::normalize(glm::cross(camera_target,camera_up));;
-    }
-    
-    // Déplacement du joueur
-    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS){
-        player->move(glm::vec3(0.f,0.f,-0.1f));
-        //player->loadPlayer();
-    }
-    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){
-        player->move(glm::vec3(-0.1f,0.f,0.f));
-        //player->loadPlayer();
-    }
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
-        player->move(glm::vec3(0.f,0.f,0.1f));
-        //player->loadPlayer();
-    }
-    if (glfwGetKey(window, GLFW_KEY_SEMICOLON) == GLFW_PRESS){
-        player->move(glm::vec3(0.1f,0.f,0.f));
-        //player->loadPlayer();
-    }
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
-        // On initie le saut du joueur
-        if (player->getCanJump()){
-            player->couldJump(false);
-            player->addToSpeed(0.23f);
-            player->move(glm::vec3(0.f,0.23f,0.f));
-            //player->loadPlayer();
-        }
-    }
-
     // Pour sortir de la caméra à la souris (plus tard ce sera la touche qui ouvre l'inventaire, et donc affiche la souris dans la fenêtre)
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS){ 
         cameraMouseLibre = false;
         cameraMousePlayer = false;
         cameraOrbitale = false;
         cameraLibre = true;
+    }
+    
+    // Déplacement du joueur
+    if(cameraMousePlayer){
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
+            glm::vec3 movement = glm::vec3(camera_target[0],0.0f,camera_target[2]);
+            movement=movement/10.0f*playerSpeed;
+            player->move(movement);
+            //player->loadPlayer();
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
+            glm::vec3 movement = glm::normalize(glm::cross(camera_target,camera_up));
+            movement=movement/10.0f*playerSpeed;
+            player->move(-movement);
+            //player->loadPlayer();
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+            glm::vec3 movement = glm::vec3(camera_target[0],0.0f,camera_target[2]);
+            movement=movement/10.0f*playerSpeed;
+            player->move(-movement);
+            //player->loadPlayer();
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
+            glm::vec3 movement = glm::normalize(glm::cross(camera_target,camera_up));
+            movement=movement/10.0f*playerSpeed;
+            player->move(movement);
+            //player->loadPlayer();
+        }
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
+            // On initie le saut du joueur
+            if (player->getCanJump()){
+                player->couldJump(false);
+                player->addToSpeed(0.23f);
+                player->move(glm::vec3(0.f,0.23f,0.f));
+                //player->loadPlayer();
+            }
+        }
+    }else{
+        // Avancer/Reculer la caméra
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
+            camera_position += (camera_speed / 5.f) * camera_target;
+        }
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS){
+            camera_position -= (camera_speed / 5.f) * camera_target;
+        }
+        // Monter/Descendre la caméra
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
+            camera_position += (camera_speed / 5.f) * camera_up;
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+            camera_position -= (camera_speed / 5.f) * camera_up;
+        }
+        // Déplacer vers la droite/gauche la caméra
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
+            camera_position += (camera_speed / 5.f) * glm::normalize(glm::cross(camera_target,camera_up));;
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
+            camera_position -= (camera_speed / 5.f) * glm::normalize(glm::cross(camera_target,camera_up));;
+        }
     }
 }
 
@@ -371,6 +386,8 @@ int main(){
         ImGui::Spacing();
 
         ImGui::SliderInt("Vitesse caméra", &speedCam, 5, 50);
+
+        ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 1, 10);
 
         ImGui::Spacing();
 
