@@ -23,11 +23,6 @@ double previousY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
 float phi = -90.0f;
 float theta = 0.0f;
-float playerSpeed = 1.f;
-bool goingFront = false;
-bool goingBack = false;
-bool goingLeft = false;
-bool goingRight = false;
 
 // Ces 3 tailles sont en nombre de chunk
 int planeWidth = 1; // De 1 à 32
@@ -35,6 +30,7 @@ int planeLength = 1; // De 1 à 32
 int planeHeight = 1; // De 1 à 8
 
 Player *player;
+float playerSpeed = 0.1f;
 
 int typeChunk = 0; // Chunk plein par défaut (0), Chunk sinus (1)
 
@@ -74,28 +70,24 @@ void processInput(GLFWwindow* window){
     // Déplacement du joueur
     if(cameraMousePlayer){
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
-            glm::vec3 movement = glm::vec3(camera_target[0],0.0f,camera_target[2]);
-            movement=movement/10.0f*playerSpeed;
-            player->move(movement);
-            //player->loadPlayer();
+            glm::vec3 motion = glm::vec3(camera_target[0],0.0f,camera_target[2]);
+            motion=glm::normalize(motion)*playerSpeed;
+            player->move(motion);
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
-            glm::vec3 movement = glm::normalize(glm::cross(camera_target,camera_up));
-            movement=movement/10.0f*playerSpeed;
-            player->move(-movement);
-            //player->loadPlayer();
+            glm::vec3 motion = glm::normalize(glm::cross(camera_target,camera_up));
+            motion=motion*playerSpeed;
+            player->move(-motion);
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-            glm::vec3 movement = glm::vec3(camera_target[0],0.0f,camera_target[2]);
-            movement=movement/10.0f*playerSpeed;
-            player->move(-movement);
-            //player->loadPlayer();
+            glm::vec3 motion = glm::vec3(camera_target[0],0.0f,camera_target[2]);
+            motion=glm::normalize(motion)*playerSpeed;
+            player->move(-motion);
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
-            glm::vec3 movement = glm::normalize(glm::cross(camera_target,camera_up));
-            movement=movement/10.0f*playerSpeed;
-            player->move(movement);
-            //player->loadPlayer();
+            glm::vec3 motion = glm::normalize(glm::cross(camera_target,camera_up));
+            motion=motion*playerSpeed;
+            player->move(motion);
         }
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
             // On initie le saut du joueur
@@ -103,7 +95,6 @@ void processInput(GLFWwindow* window){
                 player->couldJump(false);
                 player->addToSpeed(0.23f);
                 player->move(glm::vec3(0.f,0.23f,0.f));
-                //player->loadPlayer();
             }
         }
     }else{
@@ -387,7 +378,9 @@ int main(){
 
         ImGui::SliderInt("Vitesse caméra", &speedCam, 5, 50);
 
-        ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 1, 10);
+        ImGui::Spacing();
+
+        ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 0.1, 1.0);
 
         ImGui::Spacing();
 

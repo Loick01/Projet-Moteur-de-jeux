@@ -12,7 +12,7 @@ class Voxel {
         Voxel(glm::vec3 position, int objectID);
         void buildVoxel();
         glm::vec3 getPoint();
-        void updateVertices(glm::vec3 motion);
+        //void updateVertices(glm::vec3 motion);
         std::vector<glm::vec3> getVertices();
         void setVisible(bool isVisible);
         bool getVisible();
