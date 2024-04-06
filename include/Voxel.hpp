@@ -17,4 +17,5 @@ class Voxel {
         void setVisible(bool isVisible);
         bool getVisible();
         void setId(int new_id);
+        int getID();
 };

@@ -66,3 +66,7 @@ bool Voxel::getVisible(){
 void Voxel::setId(int new_id){
     this->objectID = new_id;
 }
+
+int Voxel::getID(){
+    return this->objectID;
+}

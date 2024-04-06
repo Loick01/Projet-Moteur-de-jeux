@@ -62,6 +62,8 @@ void Chunk::loadChunk(){
     this->indices.clear(); 
     int compteur = 0; // Nombre de voxel déjà chargé, pour savoir où en est le décalage des indices
 
+    std::vector<int> objectIDs;
+
     for (int i = 0 ; i < this->listeVoxels.size() ; i++){
         if (listeVoxels[i] != nullptr){
             if (listeVoxels[i]->getVisible()){
@@ -78,6 +80,8 @@ void Chunk::loadChunk(){
                     this->indices.push_back(decalage + 1);
                 }
                 compteur++;
+
+                objectIDs.push_back(listeVoxels[i]->getID());
             }
         }
     }
@@ -89,6 +93,13 @@ void Chunk::loadChunk(){
     glGenBuffers(1, &(this->elementbuffer));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->elementbuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size()* sizeof(unsigned int), &(this->indices[0]) , GL_STATIC_DRAW);
+
+    // Pour les ID des blocs, on utilise des shaders storage buffers
+    glGenBuffers(1, &(this->shaderstoragebuffer));
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->shaderstoragebuffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, objectIDs.size()*sizeof(int), objectIDs.data(), GL_STATIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->shaderstoragebuffer); // Attention : Dans le shader binding doit valoir la même chose que le 2è paramètre
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 void Chunk::drawChunk(){

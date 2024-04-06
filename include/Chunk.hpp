@@ -13,6 +13,7 @@ class Chunk{
         std::vector<glm::vec3> vertices;
         GLuint vertexbuffer;
         GLuint elementbuffer;
+        GLuint shaderstoragebuffer;
     public:
         Chunk(glm::vec3 position, int typeChunk/*, GLubyte *texels, GLint widthTexture, GLint heightTexture*/);
         void buildFullChunk(/*GLubyte *texels, GLint widthTexture, GLint heightTexture*/);
