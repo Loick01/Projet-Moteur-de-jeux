@@ -287,23 +287,35 @@ int main(){
 
     // Chargement des textures (temporaire, plus tard on utilisera un atlas)
     GLint grassID = loadTexture2DFromFilePath("../Textures/grass.png");
-    GLint bedrockID = loadTexture2DFromFilePath("../Textures/bedrock.png");
     GLint cobblestoneID = loadTexture2DFromFilePath("../Textures/cobblestone.png");
+    GLint diamondID = loadTexture2DFromFilePath("../Textures/diamond.png");
+    GLint woodID = loadTexture2DFromFilePath("../Textures/wood.png");
+    GLint obsidianID = loadTexture2DFromFilePath("../Textures/obsidian.png");
 
     if (grassID != -1) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, grassID);
         glUniform1i(glGetUniformLocation(programID, "grassText"), GL_TEXTURE0);
 	}
-    if (bedrockID != -1) {
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, bedrockID);
-        glUniform1i(glGetUniformLocation(programID, "bedrockText"), 1);
-	}
     if (cobblestoneID != -1) {
-		glActiveTexture(GL_TEXTURE2);
+		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, cobblestoneID);
-        glUniform1i(glGetUniformLocation(programID, "cobblestoneText"), 2);
+        glUniform1i(glGetUniformLocation(programID, "cobblestoneText"), 1);
+	}
+    if (diamondID != -1) {
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, diamondID);
+        glUniform1i(glGetUniformLocation(programID, "diamondText"), 2);
+	}
+    if (woodID != -1) {
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, woodID);
+        glUniform1i(glGetUniformLocation(programID, "woodText"), 3);
+	}
+    if (obsidianID != -1) {
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, obsidianID);
+        glUniform1i(glGetUniformLocation(programID, "obsidianText"), 4);
 	}
     
     // Boucle de rendu
