@@ -25,8 +25,8 @@ float phi = -90.0f;
 float theta = 0.0f;
 
 // Ces 3 tailles sont en nombre de chunk
-int planeWidth = 1; // De 1 à 32
-int planeLength = 1; // De 1 à 32
+int planeWidth = 3; // De 1 à 32
+int planeLength = 3; // De 1 à 32
 int planeHeight = 1; // De 1 à 8
 
 Player *player;
@@ -157,16 +157,18 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         glm::vec3 originPoint = camera_position;
         glm::vec3 direction = normalize(camera_target);
-        std::vector<Voxel*> listeVoxels = listeChunks[0]->getListeVoxels();
         for (int k = 1 ; k < RANGE+1 ; k++){
             glm::vec3 target = originPoint + (float)k*direction;
-            int numLongueur = (int)floor(target[0]) + 16;
-            int numHauteur = (int)floor(target[1]) + 16;
-            int numProfondeur = (int)floor(target[2]) + 16;
-            if (numLongueur < 0 || numLongueur > 31 || numProfondeur < 0 || numProfondeur > 31 || numHauteur < 0 || numHauteur > 31){
-                continue;
+            int numLongueur = floor(target[0]) + 16*planeWidth;
+            int numHauteur = floor(target[1]) + 16;
+            int numProfondeur = floor(target[2]) + 16*planeLength;
+            if (numLongueur < 0 || numLongueur > (planeWidth*32)-1 || numProfondeur < 0 || numProfondeur > (planeLength*32)-1 || numHauteur < 0 || numHauteur > 31){
+                continue; // Attention à ne pas mettre return même si c'est tentant (par exemple si le joueur regarde vers le bas en étant au sommet d'un chunk)
             }else{
-                int indiceV = numHauteur *1024 + numProfondeur * 32 + numLongueur; // Indice du voxel que le joueur est en train de viser
+                int indiceV = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel que le joueur est en train de viser
+                int indiceChunk = (numLongueur/32) * planeLength + numProfondeur/32;
+                std::vector<Voxel*> listeVoxels = listeChunks[indiceChunk]->getListeVoxels();
+
                 if (listeVoxels[indiceV] == nullptr){
                     continue;
                 }else{
@@ -175,33 +177,33 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                     // Rendre visible les 6 cubes adjacents (s'ils existent et s'ils ne sont pas déjà visible)
                     // Il faudrait chercher une meilleure façon de faire ça
                     for (int c = -1 ; c < 2 ; c+=2){
-                        int numLongueurVoisin = numLongueur + c;
+                        int numLongueurVoisin = (numLongueur%32) + c;
                         int numHauteurVoisin = numHauteur + c;
-                        int numProfondeurVoisin = numProfondeur + c;
+                        int numProfondeurVoisin = (numProfondeur%32) + c;
                         int indiceVoisin;
 
                         if (numLongueurVoisin >= 0 && numLongueurVoisin <= 31){
-                            indiceVoisin = numHauteur *1024 + numProfondeur * 32 + numLongueurVoisin;
+                            indiceVoisin = numHauteur *1024 + (numProfondeur%32) * 32 + numLongueurVoisin;
                             if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){ // On vérifie si le voxel n'est pas déjà visible (en vrai c'est pas obligatoire)
                                 listeVoxels[indiceVoisin]->setVisible(true);
                             }
                         }
                         if (numHauteurVoisin >= 0 && numHauteurVoisin <= 31){
-                            indiceVoisin = numHauteurVoisin *1024 + numProfondeur * 32 + numLongueur;
+                            indiceVoisin = numHauteurVoisin *1024 + (numProfondeur%32) * 32 + (numLongueur%32);
                             if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){
                                 listeVoxels[indiceVoisin]->setVisible(true);
                             }
                         }
                         if (numProfondeurVoisin >= 0 && numProfondeurVoisin <= 31){
-                            indiceVoisin = numHauteur *1024 + numProfondeurVoisin * 32 + numLongueur;
+                            indiceVoisin = numHauteur *1024 + numProfondeurVoisin * 32 + (numLongueur%32);
                             if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){
                                 listeVoxels[indiceVoisin]->setVisible(true);
                             }
                         }
                     }
 
-                    listeChunks[0]->setListeVoxels(listeVoxels);
-                    listeChunks[0]->loadChunk();
+                    listeChunks[indiceChunk]->setListeVoxels(listeVoxels);
+                    listeChunks[indiceChunk]->loadChunk();
                     return;
                 }
             }
@@ -351,22 +353,24 @@ int main(){
         }
         //sky->drawSkybox(programID);
         
-        // Pour l'instant, on ne fait la détection des collisions du joueur que pour un seul chunk (pour simplifier les calculs)
         // Détermine la cellule ou se trouve le joueur
         glm::vec3 pPlayer = player->getBottomPoint();
-        int numLongueur = (int)floor(pPlayer[0]) + 16;
-        int numHauteur = (int)floor(pPlayer[1]) + 16;
-        int numProfondeur = (int)floor(pPlayer[2]) + 16;
-        if (numLongueur < 0 || numLongueur > 31 || numProfondeur < 0 || numProfondeur > 31 || numHauteur < 0 || numHauteur > 31){
+        int numLongueur = floor(pPlayer[0]) + 16*planeWidth;
+        int numHauteur = floor(pPlayer[1]-0.001) + 16;
+        int numProfondeur = floor(pPlayer[2]) + 16*planeLength;
+        if (numLongueur < 0 || numLongueur > (planeWidth*32)-1 || numProfondeur < 0 || numProfondeur > (planeLength*32)-1 || numHauteur < 0 || numHauteur > 31){
             player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
             player->addToSpeed(-0.02);
         }else{
-            int indiceBlock = numHauteur *1024 + numProfondeur * 32 + numLongueur; // Indice du voxel dans lequel on considère que le joueur se trouve
-            Voxel *v = listeChunks[0]->getListeVoxels()[indiceBlock]; // Pour l'instant on considère qu'il n'y a qu'un seul chunk, d'où listeChunks[0]
+            int indiceBlock = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel dans lequel on considère que le joueur se trouve
+            Voxel *v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
             if (v == nullptr){
                 player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
                 player->addToSpeed(-0.02);
             }else{
+                if (pPlayer[1] != ceil(pPlayer[1])){
+                    player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
+                }
                 player->resetJumpSpeed();
                 player->couldJump(true);
             }
