@@ -11,6 +11,7 @@ class Chunk{
         std::vector<Voxel*> listeVoxels;
         std::vector<unsigned int> indices;
         std::vector<glm::vec3> vertices;
+        std::vector<int> objectIDs;
         GLuint vertexbuffer;
         GLuint elementbuffer;
         GLuint shaderstoragebuffer;
