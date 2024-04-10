@@ -18,9 +18,11 @@ class Chunk{
     public:
         Chunk(glm::vec3 position, int typeChunk/*, GLubyte *texels, GLint widthTexture, GLint heightTexture*/);
         void buildFullChunk(/*GLubyte *texels, GLint widthTexture, GLint heightTexture*/);
+        void buildFlatChunk();
         void buildSinusChunk();
         void loadChunk();
         void drawChunk();
         std::vector<Voxel*> getListeVoxels();
         void setListeVoxels(std::vector<Voxel*> newListeVoxels);
+        glm::vec3 getPosition();
 };

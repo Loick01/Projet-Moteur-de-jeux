@@ -8,15 +8,15 @@ GLuint loadTexture2DFromFilePath(const std::string& path) {
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
-	int width = 0;
-	int height = 0;
-	int channels = 3;
-	unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, 3);
+	int width;
+	int height;
+	int channels;
+	unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, 4);
 	if (!data) {
 		stbi_image_free(data);
 		throw std::runtime_error("Failed to load texture: " + path);
 	}
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	stbi_image_free(data);
 	setDefaultTexture2DParameters(texture);

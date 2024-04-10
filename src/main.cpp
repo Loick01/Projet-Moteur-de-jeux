@@ -32,7 +32,7 @@ int planeHeight = 1; // De 1 à 8
 Player *player;
 float playerSpeed = 0.1f;
 
-int typeChunk = 0; // Chunk plein par défaut (0), Chunk sinus (1)
+int typeChunk = 2; // Chunk plein par défaut (0), Chunk sinus (1), Chunk plat (2)
 
 std::vector<Chunk*> listeChunks;
 void buildPlanChunks(/*GLubyte *texels, GLint widthTexture, GLint heightTexture*/){
@@ -208,6 +208,33 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 }
             }
         }
+    }else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
+        glm::vec3 originPoint = camera_position;
+        glm::vec3 direction = normalize(camera_target);
+        float k = 3.0; // Pour l'instant le joueur ne peut poser un block qu'à cette distance
+        glm::vec3 target = originPoint + (float)k*direction;
+        int numLongueur = floor(target[0]) + 16*planeWidth;
+        int numHauteur = floor(target[1]) + 16;
+        int numProfondeur = floor(target[2]) + 16*planeLength;
+        if (numLongueur < 0 || numLongueur > (planeWidth*32)-1 || numProfondeur < 0 || numProfondeur > (planeLength*32)-1 || numHauteur < 0 || numHauteur > 31){
+            return;
+        }else{
+            int indiceV = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel que le joueur est en train de viser
+            int indiceChunk = (numLongueur/32) * planeLength + numProfondeur/32;
+            std::vector<Voxel*> listeVoxels = listeChunks[indiceChunk]->getListeVoxels();
+
+            if (listeVoxels[indiceV] == nullptr){
+                glm::vec3 posChunk = listeChunks[indiceChunk]->getPosition();
+                Voxel* vox = new Voxel(glm::vec3(posChunk[0]+numLongueur%32,posChunk[1]+numHauteur,posChunk[2]+numProfondeur%32),1); // Pour l'instant le joueur ne peut poser qu'un seul type de bloc (ici objectID = 1)
+                vox->setVisible(true);
+                listeVoxels[indiceV] = vox;
+
+                // A voir si ici on ne pourrait pas mettre à jour la visibilité de certains voxels pour faire mieux
+
+                listeChunks[indiceChunk]->setListeVoxels(listeVoxels);
+                listeChunks[indiceChunk]->loadChunk();
+            }
+        }
     }
 }
 
@@ -239,6 +266,11 @@ int main(){
 
     glEnable(GL_CULL_FACE); // Attention à la construction des triangles
 
+    /* Pour utiliser de la transparence dans le fragment shader (à priori on en aura pas besoin mais si jamais...)
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    */
+
     glfwSetCursorPosCallback(window, mouse_cursor_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
@@ -248,7 +280,7 @@ int main(){
 
     GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
 
-    player = new Player(glm::vec3(-0.5f,30.0f,-0.5f));
+    player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
     
     /*
     GLint heightmap = loadTexture2DFromFilePath("../Textures/heightmap.png");
@@ -287,38 +319,21 @@ int main(){
     ImGui_ImplOpenGL3_Init("#version 330");
     ImGui::StyleColorsLight();
 
-    // Chargement des textures (temporaire, plus tard on utilisera un atlas)
-    GLint grassID = loadTexture2DFromFilePath("../Textures/grass.png");
-    GLint cobblestoneID = loadTexture2DFromFilePath("../Textures/cobblestone.png");
-    GLint diamondID = loadTexture2DFromFilePath("../Textures/diamond.png");
-    GLint woodID = loadTexture2DFromFilePath("../Textures/wood.png");
-    GLint obsidianID = loadTexture2DFromFilePath("../Textures/obsidian.png");
+    // Chargement des textures
+    GLint atlasTexture = loadTexture2DFromFilePath("../Textures/atlas.png");
 
-    if (grassID != -1) {
+    if (atlasTexture != -1) {
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, grassID);
-        glUniform1i(glGetUniformLocation(programID, "grassText"), GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, atlasTexture);
+        glUniform1i(glGetUniformLocation(programID, "atlasTexture"), GL_TEXTURE0);
 	}
+    /*
     if (cobblestoneID != -1) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, cobblestoneID);
         glUniform1i(glGetUniformLocation(programID, "cobblestoneText"), 1);
-	}
-    if (diamondID != -1) {
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, diamondID);
-        glUniform1i(glGetUniformLocation(programID, "diamondText"), 2);
-	}
-    if (woodID != -1) {
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, woodID);
-        glUniform1i(glGetUniformLocation(programID, "woodText"), 3);
-	}
-    if (obsidianID != -1) {
-		glActiveTexture(GL_TEXTURE4);
-		glBindTexture(GL_TEXTURE_2D, obsidianID);
-        glUniform1i(glGetUniformLocation(programID, "obsidianText"), 4);
-	}
+    }
+    */
     
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -469,7 +484,7 @@ int main(){
         ImGui::Spacing();
 
         // Type 0 = Plein ; Type 1 = Sinus
-        if (ImGui::SliderInt("Type de chunk", &typeChunk, 0, 1)){
+        if (ImGui::SliderInt("Type de chunk", &typeChunk, 0, 2)){
             buildPlanChunks();
         }
 

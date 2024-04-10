@@ -8,6 +8,8 @@ Chunk::Chunk(glm::vec3 position, int typeChunk/*, GLubyte *texels, GLint widthTe
         this->buildFullChunk(/*texels, widthTexture, heightTexture*/);
     }else if (typeChunk==1){
         this->buildSinusChunk();
+    }else if (typeChunk==2){
+        this->buildFlatChunk();
     }
 }
 
@@ -18,13 +20,34 @@ void Chunk::buildFullChunk(/*GLubyte *texels, GLint widthTexture, GLint heightTe
         for (int j=0;j<CHUNK_SIZE;j++){     
             for (int i=0;i<CHUNK_SIZE;i++){     
                 //if (k < ((short)texels[((j*heightTexture)/31)*widthTexture + ((i*widthTexture)/31)]*32)/255){ // Pas sûr que ça fonctionne
-                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),rand()%5); 
+                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),rand()%23); 
                     if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==CHUNK_SIZE-1){
                         vox->setVisible(true);
-                        vox->setId(0);
+                        vox->setId(14);
                     }
                     this->listeVoxels.push_back(vox);
                 //}
+            }
+        }
+    }
+}
+
+void Chunk::buildFlatChunk(){
+    this->listeVoxels.clear();
+    int hauteurMax = 3; // Nombre de couches générées
+    for (int k=0;k<CHUNK_SIZE;k++){
+        for (int j=0;j<CHUNK_SIZE;j++){     
+            for (int i=0;i<CHUNK_SIZE;i++){     
+                    if (k >= hauteurMax){
+                        this->listeVoxels.push_back(nullptr);
+                    }else{
+                        Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),rand()%23); 
+                        if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==hauteurMax-1){
+                            vox->setVisible(true);
+                            vox->setId(14);
+                        }
+                        this->listeVoxels.push_back(vox);
+                    }
             }
         }
     }
@@ -137,4 +160,8 @@ std::vector<Voxel*> Chunk::getListeVoxels(){
 
 void Chunk::setListeVoxels(std::vector<Voxel*> newListeVoxels){
     this->listeVoxels=newListeVoxels;
+}
+
+glm::vec3 Chunk::getPosition(){
+    return this->position;
 }
