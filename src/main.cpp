@@ -367,7 +367,17 @@ int main(){
             if (v == nullptr){
                 player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
                 player->addToSpeed(-0.02);
+
+                // On fait attention à ne pas afficher le joueur à l'intérieur d'un bloc (même pendant une frame, c'est plus propre)
+                pPlayer = player->getBottomPoint();
+                numHauteur = floor(pPlayer[1]-0.001) + 16;
+                indiceBlock = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32);
+                v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
+                if (v != nullptr){
+                    player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
+                }
             }else{
+                // Quand le joueur est au sommet du chunk, il ne faut pas qu'il rentre dans le bloc (à voir si on peut pas mieux faire)
                 if (pPlayer[1] != ceil(pPlayer[1])){
                     player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
                 }
