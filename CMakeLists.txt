@@ -51,6 +51,7 @@ add_executable(main
     src/Player.cpp
     src/Chunk.cpp
     src/Skybox.cpp
+    src/Hud.cpp
     )
 
 # Include directories for our project

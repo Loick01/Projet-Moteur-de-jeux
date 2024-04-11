@@ -44,7 +44,7 @@ void Chunk::buildFlatChunk(){
                         Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),rand()%23); 
                         if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==hauteurMax-1){
                             vox->setVisible(true);
-                            vox->setId(11);
+                            vox->setId(14);
                         }
                         this->listeVoxels.push_back(vox);
                     }

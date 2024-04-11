@@ -23,7 +23,7 @@ double previousY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
 float phi = -90.0f;
 float theta = 0.0f;
-float focale = 45.0f;
+float FoV = 45.0f;
 
 // Ces 3 tailles sont en nombre de chunk
 int planeWidth = 3; // De 1 à 32
@@ -32,6 +32,7 @@ int planeHeight = 1; // De 1 à 8
 
 Player *player;
 float playerSpeed = 0.1f;
+int handBlock = 1; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris)
 
 int typeChunk = 2; // Chunk plein (0), Chunk sinus (1), Chunk plat (2)
 
@@ -100,17 +101,17 @@ void processInput(GLFWwindow* window){
         }
     }else{
         // Avancer/Reculer la caméra
-        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
             camera_position += (camera_speed / 5.f) * camera_target;
         }
-        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS){
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
             camera_position -= (camera_speed / 5.f) * camera_target;
         }
         // Monter/Descendre la caméra
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
             camera_position += (camera_speed / 5.f) * camera_up;
         }
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS){
             camera_position -= (camera_speed / 5.f) * camera_up;
         }
         // Déplacer vers la droite/gauche la caméra
@@ -226,7 +227,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
             if (listeVoxels[indiceV] == nullptr){
                 glm::vec3 posChunk = listeChunks[indiceChunk]->getPosition();
-                Voxel* vox = new Voxel(glm::vec3(posChunk[0]+numLongueur%32,posChunk[1]+numHauteur,posChunk[2]+numProfondeur%32),1); // Pour l'instant le joueur ne peut poser qu'un seul type de bloc (ici objectID = 1)
+                Voxel* vox = new Voxel(glm::vec3(posChunk[0]+numLongueur%32,posChunk[1]+numHauteur,posChunk[2]+numProfondeur%32),handBlock); // Pour l'instant le joueur ne peut poser qu'un seul type de bloc (ici objectID = 1)
                 vox->setVisible(true);
                 listeVoxels[indiceV] = vox;
 
@@ -236,6 +237,15 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 listeChunks[indiceChunk]->loadChunk();
             }
         }
+    }
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    
+    if (yoffset > 0) {
+        handBlock = (handBlock==22 ? 0 : handBlock+1);
+    } else if (yoffset < 0) {
+        handBlock = (handBlock==0 ? 22 : handBlock-1);
     }
 }
 
@@ -274,12 +284,15 @@ int main(){
 
     glfwSetCursorPosCallback(window, mouse_cursor_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
 
     GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
+    GLuint programID_HUD = LoadShaders("../shaders/hud_vertex.vert", "../shaders/hud_frag.frag");
+    glUseProgram(programID_HUD); // Attention à bien laisser cette ligne (apparemment il faut un glUseProgram initialement sinon ça cause problème quand on essaye de charger des textures)
 
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
     
@@ -299,12 +312,13 @@ int main(){
     */
     buildPlanChunks();
 
+    Hud *hud = new Hud(glm::vec2(SCREEN_WIDTH/2 - 362.0f, 50.0f),724.0f,83.0f);
+    hud->loadHud();
+    
     /*
     Skybox *sky = new Skybox(1000.0f,glm::vec3(-500.0f,-500.0f,-500.0f));
     sky->loadSkybox();
     */
-
-    glUseProgram(programID);
 
     GLuint ModelMatrix = glGetUniformLocation(programID,"Model");
     GLuint ViewMatrix = glGetUniformLocation(programID,"View");
@@ -321,13 +335,20 @@ int main(){
     ImGui::StyleColorsLight();
 
     // Chargement des textures
-    GLint atlasTexture = loadTexture2DFromFilePath("../Textures/atlas.png");
+    GLint atlasTexture = loadTexture2DFromFilePath("../Textures/Blocks/atlas.png");
+    GLint hudTexture = loadTexture2DFromFilePath("../Textures/HUD/hud.png");
 
     if (atlasTexture != -1) {
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, atlasTexture);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, atlasTexture);
         glUniform1i(glGetUniformLocation(programID, "atlasTexture"), GL_TEXTURE0);
-	}
+    }
+
+    if (hudTexture != -1) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, hudTexture);
+        glUniform1i(glGetUniformLocation(programID_HUD, "hudTexture"), 1);
+    }
     
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -342,7 +363,7 @@ int main(){
         glUseProgram(programID);
 
         glm::mat4 Model = glm::mat4(1.0f);
-        glm::mat4 Projection = glm::perspective(glm::radians(focale), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,1000.0f);
+        glm::mat4 Projection = glm::perspective(glm::radians(FoV), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,1000.0f);
 
         if (cameraOrbitale){
             camera_target = -1.0f * camera_position;
@@ -361,6 +382,9 @@ int main(){
             listeChunks[i]->drawChunk();
         }
         //sky->drawSkybox(programID);
+
+        glUseProgram(programID_HUD);
+        hud->drawHud();
         
         // Détermine la cellule ou se trouve le joueur
         glm::vec3 pPlayer = player->getBottomPoint();
@@ -418,7 +442,7 @@ int main(){
 
         ImGui::Spacing();
 
-        ImGui::SliderFloat("Focale", &focale, 1.0, 360.0);
+        ImGui::SliderFloat("FoV", &FoV, 1.0, 179.9);
 
         ImGui::Spacing();
 
@@ -495,6 +519,7 @@ int main(){
     }
 
     glDeleteProgram(programID);
+    glDeleteProgram(programID_HUD);
     glDeleteVertexArrays(1, &VertexArrayID);
 
     ImGui_ImplOpenGL3_Shutdown();

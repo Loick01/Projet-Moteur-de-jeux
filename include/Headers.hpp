@@ -29,3 +29,4 @@
 #include <Texture.h>
 #include <Chunk.hpp>
 #include <Skybox.hpp>
+#include <Hud.hpp>
