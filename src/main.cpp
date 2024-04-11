@@ -23,6 +23,7 @@ double previousY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
 float phi = -90.0f;
 float theta = 0.0f;
+float focale = 45.0f;
 
 // Ces 3 tailles sont en nombre de chunk
 int planeWidth = 3; // De 1 à 32
@@ -32,7 +33,7 @@ int planeHeight = 1; // De 1 à 8
 Player *player;
 float playerSpeed = 0.1f;
 
-int typeChunk = 2; // Chunk plein par défaut (0), Chunk sinus (1), Chunk plat (2)
+int typeChunk = 2; // Chunk plein (0), Chunk sinus (1), Chunk plat (2)
 
 std::vector<Chunk*> listeChunks;
 void buildPlanChunks(/*GLubyte *texels, GLint widthTexture, GLint heightTexture*/){
@@ -266,10 +267,10 @@ int main(){
 
     glEnable(GL_CULL_FACE); // Attention à la construction des triangles
 
-    /* Pour utiliser de la transparence dans le fragment shader (à priori on en aura pas besoin mais si jamais...)
+    // Pour utiliser de la transparence dans le fragment shader (par exemple pour le bloc de glace)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    */
+    
 
     glfwSetCursorPosCallback(window, mouse_cursor_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
@@ -327,13 +328,6 @@ int main(){
 		glBindTexture(GL_TEXTURE_2D, atlasTexture);
         glUniform1i(glGetUniformLocation(programID, "atlasTexture"), GL_TEXTURE0);
 	}
-    /*
-    if (cobblestoneID != -1) {
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, cobblestoneID);
-        glUniform1i(glGetUniformLocation(programID, "cobblestoneText"), 1);
-    }
-    */
     
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -348,7 +342,7 @@ int main(){
         glUseProgram(programID);
 
         glm::mat4 Model = glm::mat4(1.0f);
-        glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,1000.0f);
+        glm::mat4 Projection = glm::perspective(glm::radians(focale), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,1000.0f);
 
         if (cameraOrbitale){
             camera_target = -1.0f * camera_position;
@@ -401,7 +395,6 @@ int main(){
             }
         }
         
-
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -422,6 +415,10 @@ int main(){
         ImGui::Spacing();
 
         ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 0.1, 1.0);
+
+        ImGui::Spacing();
+
+        ImGui::SliderFloat("Focale", &focale, 1.0, 360.0);
 
         ImGui::Spacing();
 
