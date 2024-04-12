@@ -5,15 +5,16 @@
 struct PlaneHud{
     std::vector<glm::vec2> vertices;
     std::vector<unsigned int> indices;
-    GLuint vertexbuffer;
-    GLuint elementbuffer;
 };
 
 class Hud{
     private:
-        PlaneHud hotbar; // Pour l'instant cette classe est faite uniquement pour la hotbar, ensuite ce sera tout l'hud
+        std::vector<PlaneHud> elements; // Pour l'instant juste la hotbar
+        GLuint vertexbuffer;
+        GLuint elementbuffer;
+        int nbIndices;
     public:
-        Hud(glm::vec2 bottomLeft,float widthPlane, float heightPlane);
+        Hud(glm::vec2 bottomLeft,float widthPlane, float heightPlane/*, float widthSelect, float heightSelect*/);
         void loadHud();
         void drawHud();
 };

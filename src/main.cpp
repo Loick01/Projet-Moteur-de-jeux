@@ -32,7 +32,7 @@ int planeHeight = 1; // De 1 à 8
 
 Player *player;
 float playerSpeed = 0.1f;
-int handBlock = 1; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris)
+int handBlock = 0; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris, pas encore affiché à la fenêtre)
 
 int typeChunk = 2; // Chunk plein (0), Chunk sinus (1), Chunk plat (2)
 
@@ -241,7 +241,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    
     if (yoffset > 0) {
         handBlock = (handBlock==22 ? 0 : handBlock+1);
     } else if (yoffset < 0) {
@@ -292,7 +291,7 @@ int main(){
 
     GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
     GLuint programID_HUD = LoadShaders("../shaders/hud_vertex.vert", "../shaders/hud_frag.frag");
-    glUseProgram(programID_HUD); // Attention à bien laisser cette ligne (apparemment il faut un glUseProgram initialement sinon ça cause problème quand on essaye de charger des textures)
+    glUseProgram(programID_HUD); // Attention à bien laisser cette ligne (apparemment il faut un glUseProgram initialement sinon ça cause des problèmes quand on essaye de charger des textures)
 
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
     
