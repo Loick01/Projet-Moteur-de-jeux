@@ -10,7 +10,7 @@ float lastFrame = 0.0f;
 
 // Caméra
 glm::vec3 camera_position  = glm::vec3(0.0f, 5.0f, 5.0f);
-glm::vec3 camera_target;
+glm::vec3 camera_target = glm::vec3(1.0f,0.0f,-1.0f);
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f,  0.0f);
 
 bool cameraOrbitale = false;
@@ -71,26 +71,31 @@ void processInput(GLFWwindow* window){
     
     // Déplacement du joueur
     if(cameraMousePlayer){
+        bool x_axis = false;
+        bool z_axis = false;
+        // On est obligé de vérifier que le joueur n'appuie pas sur 2 touches opposées en même temps (sinon motion est nulle et ça fait des valeurs NaN)
+
+        glm::vec3 motion = glm::vec3(0.0f,0.0f,0.0f); // On accumule les déplacements pour que le joueur puisse se déplacer en diagonale
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
-            glm::vec3 motion = glm::vec3(camera_target[0],0.0f,camera_target[2]);
-            motion=glm::normalize(motion)*playerSpeed;
-            player->move(motion);
+            motion += glm::vec3(camera_target[0],0.0f,camera_target[2]);
+            z_axis = true;
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
-            glm::vec3 motion = glm::normalize(glm::cross(camera_target,camera_up));
-            motion=motion*playerSpeed;
-            player->move(-motion);
+            motion += glm::cross(camera_target,camera_up)*-1.0f;
+            x_axis = true;
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-            glm::vec3 motion = glm::vec3(camera_target[0],0.0f,camera_target[2]);
-            motion=glm::normalize(motion)*playerSpeed;
-            player->move(-motion);
+            motion += glm::vec3(camera_target[0],0.0f,camera_target[2])*-1.0f;
+            z_axis = !z_axis;
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
-            glm::vec3 motion = glm::normalize(glm::cross(camera_target,camera_up));
-            motion=motion*playerSpeed;
-            player->move(motion);
+            motion += glm::cross(camera_target,camera_up);
+            x_axis = !x_axis;
         }
+        if (x_axis || z_axis){
+            player->move(glm::normalize(motion)*playerSpeed); // Attention à bien normaliser le vecteur de déplacement final (ça règle le problème de sqrt(2))
+        }
+
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
             // On initie le saut du joueur
             if (player->getCanJump()){
@@ -309,15 +314,13 @@ int main(){
 	}
     buildPlanChunks(texels, widthTexture, heightTexture);
     */
+
     buildPlanChunks();
+
+    Skybox *skybox = new Skybox();
 
     Hud *hud = new Hud(glm::vec2(SCREEN_WIDTH/2 - 362.0f, 50.0f),724.0f,83.0f);
     hud->loadHud();
-    
-    /*
-    Skybox *sky = new Skybox(1000.0f,glm::vec3(-500.0f,-500.0f,-500.0f));
-    sky->loadSkybox();
-    */
 
     GLuint ModelMatrix = glGetUniformLocation(programID,"Model");
     GLuint ViewMatrix = glGetUniformLocation(programID,"View");
@@ -348,6 +351,8 @@ int main(){
         glBindTexture(GL_TEXTURE_2D, hudTexture);
         glUniform1i(glGetUniformLocation(programID_HUD, "hudTexture"), 1);
     }
+
+    skybox->bindCubemap(GL_TEXTURE2, 2); 
     
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -362,7 +367,7 @@ int main(){
         glUseProgram(programID);
 
         glm::mat4 Model = glm::mat4(1.0f);
-        glm::mat4 Projection = glm::perspective(glm::radians(FoV), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,1000.0f);
+        glm::mat4 Projection = glm::perspective(glm::radians(FoV), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,2000.0f);
 
         if (cameraOrbitale){
             camera_target = -1.0f * camera_position;
@@ -380,11 +385,15 @@ int main(){
         for (int i = 0 ; i < listeChunks.size() ; i++){
             listeChunks[i]->drawChunk();
         }
-        //sky->drawSkybox(programID);
 
+        // Affichage de la skybox
+        skybox->drawSkybox(Model, Projection, View);
+
+        // Affichage de l'hud
         glUseProgram(programID_HUD);
         hud->drawHud();
-        
+
+        // Pour les collisions, voir peut être swept aabb
         // Détermine la cellule ou se trouve le joueur
         glm::vec3 pPlayer = player->getBottomPoint();
         int numLongueur = floor(pPlayer[0]) + 16*planeWidth;
@@ -409,7 +418,7 @@ int main(){
                     player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
                 }
             }else{
-                // Quand le joueur est au sommet du chunk, il ne faut pas qu'il rentre dans le bloc (à voir si on peut pas mieux faire)
+                // Quand le joueur est au sommet du chunk, il ne faut pas qu'il rentre dans le bloc
                 if (pPlayer[1] != ceil(pPlayer[1])){
                     player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
                 }
