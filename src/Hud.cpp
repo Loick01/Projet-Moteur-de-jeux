@@ -1,39 +1,37 @@
 #include <Hud.hpp>
 
-Hud::Hud(glm::vec2 bottomLeft,float widthPlane, float heightPlane/*, float widthSelect, float heightSelect*/){
-    PlaneHud hotbar;
-    hotbar.vertices.push_back(bottomLeft);
-    hotbar.vertices.push_back(glm::vec2(bottomLeft[0]+widthPlane,bottomLeft[1]));
-    hotbar.vertices.push_back(glm::vec2(bottomLeft[0],bottomLeft[1]+heightPlane));
-    hotbar.vertices.push_back(glm::vec2(bottomLeft[0]+widthPlane,bottomLeft[1]+heightPlane));
+PlaneHud Hud::createPlaneHud(glm::vec2 refPoint, float widthPlane, float heightPlane, int decalage){ // refPoint est le point en bas à gauche du plan
+    PlaneHud planeRes;
 
-    hotbar.indices.push_back(0);
-    hotbar.indices.push_back(3);
-    hotbar.indices.push_back(2);
-    hotbar.indices.push_back(0);
-    hotbar.indices.push_back(1);
-    hotbar.indices.push_back(3);
+    // Ajout des 4 sommets
+    planeRes.vertices.push_back(refPoint);
+    planeRes.vertices.push_back(glm::vec2(refPoint[0]+widthPlane,refPoint[1]));
+    planeRes.vertices.push_back(glm::vec2(refPoint[0],refPoint[1]+heightPlane));
+    planeRes.vertices.push_back(glm::vec2(refPoint[0]+widthPlane,refPoint[1]+heightPlane));
 
-    this->elements.push_back(hotbar);
+    // Ajout des 6 indices
+    planeRes.indices.push_back(decalage + 0);
+    planeRes.indices.push_back(decalage + 3);
+    planeRes.indices.push_back(decalage + 2);
+    planeRes.indices.push_back(decalage + 0);
+    planeRes.indices.push_back(decalage + 1);
+    planeRes.indices.push_back(decalage + 3);
 
-    /* Temporaire
-    PlaneHud select;
-    select.vertices.push_back(bottomLeft);
-    select.vertices.push_back(glm::vec2(bottomLeft[0]+widthSelect,bottomLeft[1]));
-    select.vertices.push_back(glm::vec2(bottomLeft[0],bottomLeft[1]+heightSelect));
-    select.vertices.push_back(glm::vec2(bottomLeft[0]+widthSelect,bottomLeft[1]+heightSelect));
+    return planeRes;
+}
 
-    select.indices.push_back(4);
-    select.indices.push_back(7);
-    select.indices.push_back(6);
-    select.indices.push_back(4);
-    select.indices.push_back(5);
-    select.indices.push_back(7);
+Hud::Hud(int screen_width, int screen_height){
+    float hotbarWidth = 724.0f;
+    float hotbarHeight = 84.0f;
+    float selectSize = 92.0f;
+    float cursorSize =36.0f;
+    this->select = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 - 4.0,6.0),selectSize,selectSize,0); // Par défaut, le sélecteur est placé sur le premier élément de la hotbar
+    this->hotbar = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 ,10.0),hotbarWidth,hotbarHeight,4);
+    this->cursor = createPlaneHud(glm::vec2(screen_width/2.0 - cursorSize/2.0 ,screen_height/2.0 - cursorSize/2.0),cursorSize,cursorSize,8);
 
-    this->elements.push_back(select);
-    */
-
-    this->nbIndices = 0;
+    this->elements.push_back(this->select);
+    this->elements.push_back(this->hotbar);
+    this->elements.push_back(this->cursor);
 }
 
 void Hud::loadHud(){

@@ -8,6 +8,8 @@
 float deltaTime = 0.0f;	
 float lastFrame = 0.0f;
 
+GLuint programID, programID_HUD;
+
 // Caméra
 glm::vec3 camera_position  = glm::vec3(0.0f, 5.0f, 5.0f);
 glm::vec3 camera_target = glm::vec3(1.0f,0.0f,-1.0f);
@@ -32,6 +34,7 @@ int planeHeight = 1; // De 1 à 8
 
 Player *player;
 float playerSpeed = 0.1f;
+// Attention : Pour l'instant on fait le lien entre l'ID du bloc en main et la position du select sur la hotbar, mais il faudra dissocier ça plus tard
 int handBlock = 0; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris, pas encore affiché à la fenêtre)
 
 int typeChunk = 2; // Chunk plein (0), Chunk sinus (1), Chunk plat (2)
@@ -164,7 +167,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         glm::vec3 originPoint = camera_position;
         glm::vec3 direction = normalize(camera_target);
-        for (int k = 1 ; k < RANGE+1 ; k++){
+        for (int k = 1 ; k < RANGE+1 ; k++){ // Trouver une meilleure manière pour détecter le bloc à casser
+        // for (float k = 0.1 ; k < RANGE+1. ; k+=0.1){
             glm::vec3 target = originPoint + (float)k*direction;
             int numLongueur = floor(target[0]) + 16*planeWidth;
             int numHauteur = floor(target[1]) + 16;
@@ -246,11 +250,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    if (yoffset > 0) {
-        handBlock = (handBlock==22 ? 0 : handBlock+1);
-    } else if (yoffset < 0) {
-        handBlock = (handBlock==0 ? 22 : handBlock-1);
-    }
+    handBlock = (handBlock + (yoffset > 0 ? 1 : -1) + 9) % 9; // 9 emplacements dans la hotbar
+    glUniform1i(glGetUniformLocation(programID_HUD, "selectLocation"), handBlock);
 }
 
 int main(){
@@ -294,8 +295,8 @@ int main(){
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
 
-    GLuint programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
-    GLuint programID_HUD = LoadShaders("../shaders/hud_vertex.vert", "../shaders/hud_frag.frag");
+    programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
+    programID_HUD = LoadShaders("../shaders/hud_vertex.vert", "../shaders/hud_frag.frag");
     glUseProgram(programID_HUD); // Attention à bien laisser cette ligne (apparemment il faut un glUseProgram initialement sinon ça cause des problèmes quand on essaye de charger des textures)
 
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
@@ -319,7 +320,8 @@ int main(){
 
     Skybox *skybox = new Skybox();
 
-    Hud *hud = new Hud(glm::vec2(SCREEN_WIDTH/2 - 362.0f, 50.0f),724.0f,83.0f);
+    Hud *hud = new Hud(SCREEN_WIDTH, SCREEN_HEIGHT);
+    glUniform1i(glGetUniformLocation(programID_HUD, "selectLocation"), handBlock);
     hud->loadHud();
 
     GLuint ModelMatrix = glGetUniformLocation(programID,"Model");
