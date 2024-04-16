@@ -32,6 +32,11 @@ Hud::Hud(int screen_width, int screen_height){
     this->elements.push_back(this->select);
     this->elements.push_back(this->hotbar);
     this->elements.push_back(this->cursor);
+
+    for (int i = 0 ; i < 9 ; i++){ // On génère les 9 emplacements de la hotbar
+        PlaneHud ei = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 + 80.0 * i + 8.0, 18.0),68,68,12+i*4);
+        this->elements.push_back(ei);
+    }
 }
 
 void Hud::loadHud(){

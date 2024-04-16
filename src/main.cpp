@@ -34,8 +34,11 @@ int planeHeight = 1; // De 1 à 8
 
 Player *player;
 float playerSpeed = 0.1f;
-// Attention : Pour l'instant on fait le lien entre l'ID du bloc en main et la position du select sur la hotbar, mais il faudra dissocier ça plus tard
-int handBlock = 0; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris, pas encore affiché à la fenêtre)
+
+int blockInHotbar[9] = {0,1,3,7,10,13,14,17,20}; // Blocs qui sont dans la hotbar
+int indexHandBlock = 0;
+int handBlock = blockInHotbar[indexHandBlock]; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris)
+
 
 int typeChunk = 2; // Chunk plein (0), Chunk sinus (1), Chunk plat (2)
 
@@ -250,8 +253,9 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    handBlock = (handBlock + (yoffset > 0 ? 1 : -1) + 9) % 9; // 9 emplacements dans la hotbar
-    glUniform1i(glGetUniformLocation(programID_HUD, "selectLocation"), handBlock);
+    indexHandBlock = (indexHandBlock + (yoffset > 0 ? 1 : -1) + 9) % 9; // 9 emplacements dans la hotbar
+    glUniform1i(glGetUniformLocation(programID_HUD, "selectLocation"), indexHandBlock);
+    handBlock = blockInHotbar[indexHandBlock];
 }
 
 int main(){
@@ -338,6 +342,9 @@ int main(){
     ImGui_ImplOpenGL3_Init("#version 330");
     ImGui::StyleColorsLight();
 
+    // Temporaire (plus tard il faudra envoyer aux shaders le tableau des blocs dans la hotbar à chaque fois que celle-ci changera)
+    glUniform1iv(glGetUniformLocation(programID_HUD, "blockHotbar"), 9, blockInHotbar);
+
     // Chargement des textures
     GLint atlasTexture = loadTexture2DFromFilePath("../Textures/Blocks/atlas.png");
     GLint hudTexture = loadTexture2DFromFilePath("../Textures/HUD/hud.png");
@@ -346,6 +353,7 @@ int main(){
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, atlasTexture);
         glUniform1i(glGetUniformLocation(programID, "atlasTexture"), GL_TEXTURE0);
+        glUniform1i(glGetUniformLocation(programID_HUD, "atlasTexture"), GL_TEXTURE0);
     }
 
     if (hudTexture != -1) {
