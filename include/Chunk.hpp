@@ -16,10 +16,11 @@ class Chunk{
         GLuint elementbuffer;
         GLuint shaderstoragebuffer;
     public:
-        Chunk(glm::vec3 position, int typeChunk/*, GLubyte *texels, GLint widthTexture, GLint heightTexture*/);
-        void buildFullChunk(/*GLubyte *texels, GLint widthTexture, GLint heightTexture*/);
+        Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int widthHeightmap, int heightHeightmap);
+        void buildFullChunk();
         void buildFlatChunk();
         void buildSinusChunk();
+        void buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, int heightHeightmap);
         void loadChunk();
         void drawChunk();
         std::vector<Voxel*> getListeVoxels();

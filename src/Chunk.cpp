@@ -2,31 +2,31 @@
 
 #define CHUNK_SIZE 32
 
-Chunk::Chunk(glm::vec3 position, int typeChunk/*, GLubyte *texels, GLint widthTexture, GLint heightTexture*/){
+Chunk::Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int widthHeightmap, int heightHeightmap){
     this->position = position;
     if (typeChunk==0){
-        this->buildFullChunk(/*texels, widthTexture, heightTexture*/);
+        this->buildFullChunk();
     }else if (typeChunk==1){
         this->buildSinusChunk();
     }else if (typeChunk==2){
         this->buildFlatChunk();
+    }else if (typeChunk==3){
+        this->buildProceduralChunk(dataPixels, widthHeightmap, heightHeightmap);
     }
 }
 
-void Chunk::buildFullChunk(/*GLubyte *texels, GLint widthTexture, GLint heightTexture*/){
+void Chunk::buildFullChunk(){
     this->listeVoxels.clear();
 
     for (int k=0;k<CHUNK_SIZE;k++){
         for (int j=0;j<CHUNK_SIZE;j++){     
             for (int i=0;i<CHUNK_SIZE;i++){     
-                //if (k < ((short)texels[((j*heightTexture)/31)*widthTexture + ((i*widthTexture)/31)]*32)/255){ // Pas sûr que ça fonctionne
-                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),rand()%23); 
-                    if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==CHUNK_SIZE-1){
-                        vox->setVisible(true);
-                        vox->setId(14);
-                    }
-                    this->listeVoxels.push_back(vox);
-                //}
+                Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),rand()%23); 
+                if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==CHUNK_SIZE-1){
+                    vox->setVisible(true);
+                    vox->setId(14);
+                }
+                this->listeVoxels.push_back(vox);
             }
         }
     }
@@ -69,6 +69,28 @@ void Chunk::buildSinusChunk(){
                     Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j), 0); 
                     if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==heightVox){
                         vox->setVisible(true);
+                    }
+                    this->listeVoxels.push_back(vox);
+                }else{
+                    this->listeVoxels.push_back(nullptr);
+                }
+            }
+        }
+    }
+}
+
+void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, int heightHeightmap){
+    this->listeVoxels.clear();
+
+    for (int k=0;k<CHUNK_SIZE;k++){
+        for (int j=0;j<CHUNK_SIZE;j++){     
+            for (int i=0;i<CHUNK_SIZE;i++){ 
+                int indInText = j*widthHeightmap*4 + i*4;
+                if (k <= ((int)dataPixels[indInText])){ 
+                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),rand()%23); 
+                    if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==((int)dataPixels[indInText])){
+                        vox->setVisible(true);
+                        vox->setId(rand()%23);
                     }
                     this->listeVoxels.push_back(vox);
                 }else{

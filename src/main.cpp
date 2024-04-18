@@ -40,15 +40,15 @@ int indexHandBlock = 0;
 int handBlock = blockInHotbar[indexHandBlock]; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris)
 
 
-int typeChunk = 2; // Chunk plein (0), Chunk sinus (1), Chunk plat (2)
+int typeChunk = 3; // Chunk plein (0), Chunk sinus (1), Chunk plat (2), Chunk procédural (3)
 
 std::vector<Chunk*> listeChunks;
-void buildPlanChunks(/*GLubyte *texels, GLint widthTexture, GLint heightTexture*/){
+void buildPlanChunks(unsigned char* dataPixels, int widthHeightmap, int heightHeightmap){
     listeChunks.clear();
     for (int i = 0 ; i < planeWidth ; i++){
         for (int j = 0 ; j < planeLength ; j++){
             for (int k = 0 ; k < planeHeight ; k++){
-                Chunk *c = new Chunk(glm::vec3((planeWidth*32)/2*(-1.f) + i*32,(planeHeight*32)/2*(-1.f) + k*32,(planeLength*32)/2*(-1.f) + j*32), typeChunk/*, texels, widthTexture, heightTexture*/); 
+                Chunk *c = new Chunk(glm::vec3((planeWidth*32)/2*(-1.f) + i*32,(planeHeight*32)/2*(-1.f) + k*32,(planeLength*32)/2*(-1.f) + j*32), typeChunk, dataPixels, widthHeightmap, heightHeightmap); 
                 c->loadChunk();
                 listeChunks.push_back(c);
             }
@@ -253,7 +253,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    indexHandBlock = (indexHandBlock + (yoffset > 0 ? 1 : -1) + 9) % 9; // 9 emplacements dans la hotbar
+    indexHandBlock = (indexHandBlock + (yoffset > 0 ? -1 : 1) + 9) % 9; // 9 emplacements dans la hotbar
     glUniform1i(glGetUniformLocation(programID_HUD, "selectLocation"), indexHandBlock);
     handBlock = blockInHotbar[indexHandBlock];
 }
@@ -304,23 +304,11 @@ int main(){
     glUseProgram(programID_HUD); // Attention à bien laisser cette ligne (apparemment il faut un glUseProgram initialement sinon ça cause des problèmes quand on essaye de charger des textures)
 
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
-    
-    /*
-    GLint heightmap = loadTexture2DFromFilePath("../Textures/heightmap.png");
-    GLint widthTexture, heightTexture;
-    GLubyte *texels;
-    if (heightmap != -1) { // Pour l'instant on lit cette texture dans le CPU au lieu des shaders
-		glBindTexture(GL_TEXTURE_2D, heightmap);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &widthTexture);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &heightTexture);
-        
-        texels = new GLubyte[widthTexture * heightTexture * 4]; // Je ne comprends pas pourquoi mais il faut multiplier par 4 la taille nécessaire
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_UNSIGNED_INT, texels);
-	}
-    buildPlanChunks(texels, widthTexture, heightTexture);
-    */
 
-    buildPlanChunks();
+    int widthHeightmap, heightHeightmap, channels;
+    unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
+
+    buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
 
     Skybox *skybox = new Skybox();
 
@@ -505,26 +493,26 @@ int main(){
         ImGui::Spacing();
 
         if (ImGui::SliderInt("Longueur", &planeWidth, 1, 32)){
-            buildPlanChunks(/*texels, widthTexture, heightTexture*/);
+            buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
         }
 
         ImGui::Spacing();
 
         if (ImGui::SliderInt("Largeur", &planeLength, 1, 32)){
-            buildPlanChunks(/*texels, widthTexture, heightTexture*/);
+            buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
         }
 
         ImGui::Spacing();
 
         if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
-            buildPlanChunks(/*texels, widthTexture, heightTexture*/);
+            buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
         }
 
         ImGui::Spacing();
 
-        // Type 0 = Plein ; Type 1 = Sinus
-        if (ImGui::SliderInt("Type de chunk", &typeChunk, 0, 2)){
-            buildPlanChunks();
+        // Type 0 = Plein ; Type 1 = Sinus ; Type 2 = Flat ; Type 3 = Procedural
+        if (ImGui::SliderInt("Type de chunk", &typeChunk, 0, 3)){
+            buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
         }
 
         ImGui::End();
