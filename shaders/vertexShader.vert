@@ -25,8 +25,12 @@ void main(){
         mat4 mvp = Projection * View * Model;
         gl_Position = mvp * vec4(aPos,1);
         int objectID = dataID[gl_VertexID/24];
+        if (objectID == 14){ // Pour avoir des textures différentes sur les faces d'un même bloc, mais du coup ça oblige à réserver 6 textures dans l'atlas, même si c'est des textures identiques pour plusieurs faces
+                objectID += (gl_VertexID % 24)/4;
+        }
         uv_coord = texCoords[gl_VertexID%4];
         uv_coord[0] += objectID%5*0.2;
         uv_coord[1] += objectID/5*0.2;
 }
+
 
