@@ -2,7 +2,7 @@
 
 #define CHUNK_SIZE 32
 
-Chunk::Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int widthHeightmap, int heightHeightmap){
+Chunk::Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int widthHeightmap, int heightHeightmap, int posWidthChunk, int posLengthChunk){
     this->position = position;
     if (typeChunk==0){
         this->buildFullChunk();
@@ -11,7 +11,7 @@ Chunk::Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int w
     }else if (typeChunk==2){
         this->buildFlatChunk();
     }else if (typeChunk==3){
-        this->buildProceduralChunk(dataPixels, widthHeightmap, heightHeightmap);
+        this->buildProceduralChunk(dataPixels, widthHeightmap, heightHeightmap, posWidthChunk, posLengthChunk);
     }
 }
 
@@ -79,18 +79,18 @@ void Chunk::buildSinusChunk(){
     }
 }
 
-void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, int heightHeightmap){
+void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, int heightHeightmap, int posWidthChunk, int posLengthChunk){
     this->listeVoxels.clear();
 
     for (int k=0;k<CHUNK_SIZE;k++){
         for (int j=0;j<CHUNK_SIZE;j++){     
             for (int i=0;i<CHUNK_SIZE;i++){ 
-                int indInText = j*widthHeightmap*4 + i*4;
+                int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
                 if (k <= ((int)dataPixels[indInText])){ 
-                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),rand()%23); 
+                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k%23); 
                     if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==((int)dataPixels[indInText])){
                         vox->setVisible(true);
-                        vox->setId(rand()%23);
+                        //vox->setId(rand()%23);
                     }
                     this->listeVoxels.push_back(vox);
                 }else{

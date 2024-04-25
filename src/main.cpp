@@ -48,7 +48,7 @@ void buildPlanChunks(unsigned char* dataPixels, int widthHeightmap, int heightHe
     for (int i = 0 ; i < planeWidth ; i++){
         for (int j = 0 ; j < planeLength ; j++){
             for (int k = 0 ; k < planeHeight ; k++){
-                Chunk *c = new Chunk(glm::vec3((planeWidth*32)/2*(-1.f) + i*32,(planeHeight*32)/2*(-1.f) + k*32,(planeLength*32)/2*(-1.f) + j*32), typeChunk, dataPixels, widthHeightmap, heightHeightmap); 
+                Chunk *c = new Chunk(glm::vec3((planeWidth*32)/2*(-1.f) + i*32,(planeHeight*32)/2*(-1.f) + k*32,(planeLength*32)/2*(-1.f) + j*32), typeChunk, dataPixels, widthHeightmap, heightHeightmap, i*32,j*32*planeWidth*32); 
                 c->loadChunk();
                 listeChunks.push_back(c);
             }
@@ -306,7 +306,12 @@ int main(){
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
 
     int widthHeightmap, heightHeightmap, channels;
-    unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
+    unsigned char* dataPixels = stbi_load("../Textures/terrain3x3.png", &widthHeightmap, &heightHeightmap, &channels, 4);
+
+    if (widthHeightmap != planeWidth*32 || heightHeightmap != planeLength*32 ){ // On s'assure que la carte de hauteur chargée est bien adapté au terrain (ça ne fait pas d'erreur si ce n'est pas le cas, mais on veut quand même en être sûr)
+        std::cout << "La carte de hauteur n'est pas adapté au terrain\n";
+        return -1;
+    }
 
     buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
 
@@ -440,7 +445,7 @@ int main(){
 
         ImGui::Spacing();
 
-        ImGui::SliderInt("Vitesse caméra", &speedCam, 5, 50);
+        ImGui::SliderInt("Vitesse caméra", &speedCam, 5, 100);
 
         ImGui::Spacing();
 
