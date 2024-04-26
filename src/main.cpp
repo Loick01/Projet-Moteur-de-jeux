@@ -28,8 +28,8 @@ float theta = 0.0f;
 float FoV = 45.0f;
 
 // Ces 3 tailles sont en nombre de chunk
-int planeWidth = 3; // De 1 à 32
-int planeLength = 3; // De 1 à 32
+int planeWidth = 16; // De 1 à 32
+int planeLength = 16; // De 1 à 32
 int planeHeight = 1; // De 1 à 8
 
 Player *player;
@@ -306,7 +306,9 @@ int main(){
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
 
     int widthHeightmap, heightHeightmap, channels;
-    unsigned char* dataPixels = stbi_load("../Textures/terrain3x3.png", &widthHeightmap, &heightHeightmap, &channels, 4);
+    unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
+
+
 
     if (widthHeightmap != planeWidth*32 || heightHeightmap != planeLength*32 ){ // On s'assure que la carte de hauteur chargée est bien adapté au terrain (ça ne fait pas d'erreur si ce n'est pas le cas, mais on veut quand même en être sûr)
         std::cout << "La carte de hauteur n'est pas adapté au terrain\n";
