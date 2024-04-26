@@ -26,7 +26,10 @@
 #include <Shader.hpp>
 #include <Player.hpp>
 #include <stb_image.h>
+#include <stb_image_write.h>
+#include <FastNoise.h>
 #include <Texture.h>
 #include <Chunk.hpp>
 #include <Skybox.hpp>
 #include <Hud.hpp>
+#include <MapGenerator.hpp>

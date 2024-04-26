@@ -28,8 +28,8 @@ float theta = 0.0f;
 float FoV = 45.0f;
 
 // Ces 3 tailles sont en nombre de chunk
-int planeWidth = 16; // De 1 à 32
-int planeLength = 16; // De 1 à 32
+int planeWidth = 3; // De 1 à 32
+int planeLength = 3; // De 1 à 32
 int planeHeight = 1; // De 1 à 8
 
 Player *player;
@@ -39,7 +39,7 @@ int blockInHotbar[9] = {0,1,3,7,10,13,14,17,20}; // Blocs qui sont dans la hotba
 int indexHandBlock = 0;
 int handBlock = blockInHotbar[indexHandBlock]; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris)
 
-
+bool showHud = true;
 int typeChunk = 3; // Chunk plein (0), Chunk sinus (1), Chunk plat (2), Chunk procédural (3)
 
 std::vector<Chunk*> listeChunks;
@@ -69,10 +69,10 @@ void processInput(GLFWwindow* window){
 
     // Pour sortir de la caméra à la souris (plus tard ce sera la touche qui ouvre l'inventaire, et donc affiche la souris dans la fenêtre)
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS){ 
-        cameraMouseLibre = false;
-        cameraMousePlayer = false;
-        cameraOrbitale = false;
-        cameraLibre = true;
+            cameraMouseLibre = false;
+            cameraMousePlayer = false;
+            cameraOrbitale = false;
+            cameraLibre = true;
     }
     
     // Déplacement du joueur
@@ -305,12 +305,12 @@ int main(){
 
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
 
+    MapGenerator *mg = new MapGenerator(planeWidth, planeLength, 21345); 
+    mg->generateImage();
     int widthHeightmap, heightHeightmap, channels;
     unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
 
-
-
-    if (widthHeightmap != planeWidth*32 || heightHeightmap != planeLength*32 ){ // On s'assure que la carte de hauteur chargée est bien adapté au terrain (ça ne fait pas d'erreur si ce n'est pas le cas, mais on veut quand même en être sûr)
+    if (widthHeightmap != planeWidth*32 || heightHeightmap != planeLength*32 ){ // On s'assure que la carte de hauteur chargée est bien adapté au terrain
         std::cout << "La carte de hauteur n'est pas adapté au terrain\n";
         return -1;
     }
@@ -395,8 +395,10 @@ int main(){
         skybox->drawSkybox(Model, Projection, View);
 
         // Affichage de l'hud
-        glUseProgram(programID_HUD);
-        hud->drawHud();
+        if (showHud){
+            glUseProgram(programID_HUD);
+            hud->drawHud();
+        }
 
         // Pour les collisions, voir peut être swept aabb
         // Détermine la cellule ou se trouve le joueur
@@ -496,6 +498,10 @@ int main(){
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
         }
+
+        ImGui::Spacing();
+
+        ImGui::Checkbox("Afficher l'hud", &showHud);
 
         ImGui::Spacing();
 

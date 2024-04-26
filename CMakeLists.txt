@@ -48,10 +48,13 @@ add_executable(main
     src/Shader.cpp
     src/Texture.cpp
     src/stb_image.cpp
+    src/stb_image_write.cpp
     src/Player.cpp
     src/Chunk.cpp
     src/Skybox.cpp
     src/Hud.cpp
+    src/MapGenerator.cpp
+    src/FastNoise.cpp
     )
 
 # Include directories for our project
