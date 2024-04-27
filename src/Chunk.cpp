@@ -21,10 +21,10 @@ void Chunk::buildFullChunk(){
     for (int k=0;k<CHUNK_SIZE;k++){
         for (int j=0;j<CHUNK_SIZE;j++){     
             for (int i=0;i<CHUNK_SIZE;i++){     
-                Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),rand()%23); 
+                Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),rand()%NB_BLOCK); 
                 if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==CHUNK_SIZE-1){
                     vox->setVisible(true);
-                    vox->setId(14);
+                    vox->setId(GRASS_BLOCK);
                 }
                 this->listeVoxels.push_back(vox);
             }
@@ -41,10 +41,10 @@ void Chunk::buildFlatChunk(){
                     if (k >= hauteurMax){
                         this->listeVoxels.push_back(nullptr);
                     }else{
-                        Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),rand()%23); 
+                        Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),rand()%NB_BLOCK); 
                         if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==hauteurMax-1){
                             vox->setVisible(true);
-                            vox->setId(14);
+                            vox->setId(GRASS_BLOCK);
                         }
                         this->listeVoxels.push_back(vox);
                     }
@@ -87,10 +87,10 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
             for (int i=0;i<CHUNK_SIZE;i++){ 
                 int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
                 if (k <= ((int)dataPixels[indInText])){ 
-                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k%23); 
+                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k%NB_BLOCK); 
                     if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==((int)dataPixels[indInText])){
                         vox->setVisible(true);
-                        //vox->setId(rand()%23);
+                        vox->setId(GRASS_BLOCK);
                     }
                     this->listeVoxels.push_back(vox);
                 }else{

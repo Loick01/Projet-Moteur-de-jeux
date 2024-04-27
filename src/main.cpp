@@ -33,9 +33,9 @@ int planeLength = 3; // De 1 à 32
 int planeHeight = 1; // De 1 à 8
 
 Player *player;
-float playerSpeed = 0.1f;
+float playerSpeed = 6.0f;
 
-int blockInHotbar[9] = {0,1,3,7,10,13,14,17,20}; // Blocs qui sont dans la hotbar
+int blockInHotbar[9] = {23,29,1,11,12,13,20,26,28}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
 int handBlock = blockInHotbar[indexHandBlock]; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris)
 
@@ -99,7 +99,7 @@ void processInput(GLFWwindow* window){
             x_axis = !x_axis;
         }
         if (x_axis || z_axis){
-            player->move(glm::normalize(motion)*playerSpeed); // Attention à bien normaliser le vecteur de déplacement final (ça règle le problème de sqrt(2))
+            player->move(glm::normalize(motion)*playerSpeed*deltaTime); // Attention à bien normaliser le vecteur de déplacement final (ça règle le problème de sqrt(2))
         }
 
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
@@ -239,7 +239,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
             if (listeVoxels[indiceV] == nullptr){
                 glm::vec3 posChunk = listeChunks[indiceChunk]->getPosition();
-                Voxel* vox = new Voxel(glm::vec3(posChunk[0]+numLongueur%32,posChunk[1]+numHauteur,posChunk[2]+numProfondeur%32),handBlock); // Pour l'instant le joueur ne peut poser qu'un seul type de bloc (ici objectID = 1)
+                Voxel* vox = new Voxel(glm::vec3(posChunk[0]+numLongueur%32,posChunk[1]+numHauteur,posChunk[2]+numProfondeur%32),handBlock);
                 vox->setVisible(true);
                 listeVoxels[indiceV] = vox;
 
@@ -320,7 +320,7 @@ int main(){
     Skybox *skybox = new Skybox();
 
     Hud *hud = new Hud(SCREEN_WIDTH, SCREEN_HEIGHT);
-    glUniform1i(glGetUniformLocation(programID_HUD, "selectLocation"), handBlock);
+    glUniform1i(glGetUniformLocation(programID_HUD, "selectLocation"), indexHandBlock);
     hud->loadHud();
 
     GLuint ModelMatrix = glGetUniformLocation(programID,"Model");
@@ -453,7 +453,7 @@ int main(){
 
         ImGui::Spacing();
 
-        ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 0.1, 1.0);
+        ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 0.0, 100.0);
 
         ImGui::Spacing();
 

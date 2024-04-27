@@ -2,6 +2,9 @@
 
 #include <Headers.hpp>
 
+#define NB_BLOCK 32
+#define GRASS_BLOCK 13
+
 class Voxel; // Déclaration avancée (je ne comprends pas pourquoi on est obligé de faire ça, avant ce n'était pas nécéssaire)
 
 // Chunk de taille 32x32x32

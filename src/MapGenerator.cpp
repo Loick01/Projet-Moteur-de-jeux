@@ -2,6 +2,9 @@
 
 float MapGenerator::generatePerlinNoise(float x, float y, unsigned int seed){
   FastNoise noiseGenerator;
+  //FastNoise::NoiseType nt = FastNoise::ValueFractal;
+  //noiseGenerator.SetNoiseType(nt);
+  //noiseGenerator.SetFractalOctaves(10);
   noiseGenerator.SetSeed(seed);
   return noiseGenerator.GetNoise(x,y);
 }

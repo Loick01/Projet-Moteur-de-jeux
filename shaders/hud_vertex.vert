@@ -12,10 +12,10 @@ out int inHotbar;
 
 uniform int blockHotbar[9];
 
-// Atlas de 5x5 images
+// Atlas de 5x10 images
 vec2 texCoordsBlock[4] = vec2[4](
-        vec2(0.0f,0.2f),
-        vec2(0.2f,0.2f),
+        vec2(0.0f,0.1f),
+        vec2(0.2f,0.1f),
         vec2(0.0f,0.0f),
         vec2(0.2f,0.0f)
 );
@@ -54,6 +54,6 @@ void main() {
         int objectID = blockHotbar[gl_VertexID/4 - 3];
         uv_coord = texCoordsBlock[gl_VertexID%4];
         uv_coord[0] += objectID%5*0.2;
-        uv_coord[1] += objectID/5*0.2;
+        uv_coord[1] += objectID/5*0.1;
     }
 }

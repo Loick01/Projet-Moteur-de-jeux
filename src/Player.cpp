@@ -7,7 +7,7 @@ Player::Player(glm::vec3 position){
     this->canJump = false;
 }
 
-/*
+/* A voir si on représente visuellement le joueur à l'écran
 void Player::loadPlayer(){
     glGenBuffers(1, &(this->vertexbufferHitbox));
     glBindBuffer(GL_ARRAY_BUFFER, this->vertexbufferHitbox);
