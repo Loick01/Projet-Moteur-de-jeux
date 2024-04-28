@@ -2,6 +2,8 @@
 
 #include <Headers.hpp>
 
+#include <fstream>
+
 #define NB_BLOCK 32
 #define GRASS_BLOCK 13
 
@@ -29,4 +31,5 @@ class Chunk{
         std::vector<Voxel*> getListeVoxels();
         void setListeVoxels(std::vector<Voxel*> newListeVoxels);
         glm::vec3 getPosition();
+        void buildStructure(std::ifstream &file, int i, int j, int k);
 };

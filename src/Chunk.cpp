@@ -82,6 +82,8 @@ void Chunk::buildSinusChunk(){
 void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, int heightHeightmap, int posWidthChunk, int posLengthChunk){
     this->listeVoxels.clear();
 
+    srand (time(NULL)); // Là il faudrait mettre la seed, pour que l'aléatoire soit le même pour 2 seeds (pour l'instant on laisse comme ça)
+
     for (int k=0;k<CHUNK_SIZE;k++){
         for (int j=0;j<CHUNK_SIZE;j++){     
             for (int i=0;i<CHUNK_SIZE;i++){ 
@@ -98,6 +100,52 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
                 }
             }
         }
+    }
+
+    // Pour l'instant c'est pas terrible on lit le fichier à chaque fois qu'on veut placer une structure, il faudrait conserver les infos pour les réutiliser
+
+    //std::ifstream treeStructureFile("../Structures/Tree.txt");
+    std::ifstream treeStructureFile("../Structures/Tree_2.txt");
+    if (!treeStructureFile) {
+        std::cerr << "Erreur lors de l'ouverture du fichier. Aucune structure construite" << std::endl;
+        return;
+    }
+
+    // On génère les structures (seulement après avoir générer le terrain pour l'instant, à voir si il ne vaut pas mieux le faire en même temps que le terrain)
+    for (int k=0;k<CHUNK_SIZE;k++){
+        for (int j=0;j<CHUNK_SIZE;j++){     
+            for (int i=0;i<CHUNK_SIZE;i++){ 
+                // On s'assure que la structure pourra rentrer dans le chunk
+                int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
+                if (k == ((int)dataPixels[indInText])+1 && k+5 <= 31 && rand()%100 == 0){ // Pour l'instant, les arbres apparaissent aléatoirement, mais sans utiliser la seed alors que c'est ce qu'on voudrait
+                    Voxel *blockStructure = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),1); 
+                    blockStructure->setVisible(true);
+                    this->listeVoxels[k *1024 + (j%32) * 32 + (i%32)] = blockStructure;
+                    buildStructure(treeStructureFile,i,j,k);
+                    treeStructureFile.clear(); // Pour la prochaine fois, il faudra reprendre la lecture du fichier depuis le début
+                    treeStructureFile.seekg(0);
+                }
+            }
+        }
+    }
+    treeStructureFile.close();
+}
+
+void Chunk::buildStructure(std::ifstream &file, int i, int j, int k){
+    std::string line;
+    while (std::getline(file, line)) { 
+        std::istringstream flux(line);
+
+        int infoBlock[4];
+        for (int i = 0 ; i < 4 ; i++){
+            int v;
+            flux >> v;
+            infoBlock[i] = v;
+        }
+
+        Voxel *blockStructure = new Voxel(glm::vec3(this->position[0]+i+infoBlock[1],this->position[1]+k+infoBlock[2],this->position[2]+j+infoBlock[3]),infoBlock[0]); 
+        blockStructure->setVisible(true);
+        this->listeVoxels[(k + infoBlock[2])*1024 + ((j+infoBlock[3])%32) * 32 + ((i+infoBlock[1])%32)] = blockStructure;
     }
 }
 
