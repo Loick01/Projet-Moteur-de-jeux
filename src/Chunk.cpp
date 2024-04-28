@@ -89,10 +89,13 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
             for (int i=0;i<CHUNK_SIZE;i++){ 
                 int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
                 if (k <= ((int)dataPixels[indInText])){ 
-                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k%NB_BLOCK); 
-                    if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ||k==((int)dataPixels[indInText])){
+                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),DIRT_BLOCK); 
+                    if (k==(int)dataPixels[indInText]){
                         vox->setVisible(true);
                         vox->setId(GRASS_BLOCK);
+                    }else if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1){
+                        vox->setVisible(true);
+                        vox->setId(DIRT_BLOCK);
                     }
                     this->listeVoxels.push_back(vox);
                 }else{
@@ -105,8 +108,9 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
     // Pour l'instant c'est pas terrible on lit le fichier à chaque fois qu'on veut placer une structure, il faudrait conserver les infos pour les réutiliser
 
     //std::ifstream treeStructureFile("../Structures/Tree.txt");
-    std::ifstream treeStructureFile("../Structures/Tree_2.txt");
-    if (!treeStructureFile) {
+    //std::ifstream treeStructureFile("../Structures/Tree_2.txt");
+    std::ifstream houseStructureFile("../Structures/House_1.txt");
+    if (!houseStructureFile) {
         std::cerr << "Erreur lors de l'ouverture du fichier. Aucune structure construite" << std::endl;
         return;
     }
@@ -117,18 +121,18 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
             for (int i=0;i<CHUNK_SIZE;i++){ 
                 // On s'assure que la structure pourra rentrer dans le chunk
                 int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
-                if (k == ((int)dataPixels[indInText])+1 && k+5 <= 31 && rand()%100 == 0){ // Pour l'instant, les arbres apparaissent aléatoirement, mais sans utiliser la seed alors que c'est ce qu'on voudrait
+                if (k == ((int)dataPixels[indInText])+1 && rand()%100 == 0){ // Pour l'instant, les arbres apparaissent aléatoirement, mais sans utiliser la seed alors que c'est ce qu'on voudrait
                     Voxel *blockStructure = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),1); 
                     blockStructure->setVisible(true);
                     this->listeVoxels[k *1024 + (j%32) * 32 + (i%32)] = blockStructure;
-                    buildStructure(treeStructureFile,i,j,k);
-                    treeStructureFile.clear(); // Pour la prochaine fois, il faudra reprendre la lecture du fichier depuis le début
-                    treeStructureFile.seekg(0);
+                    buildStructure(houseStructureFile,i,j,k);
+                    houseStructureFile.clear(); // Pour la prochaine fois, il faudra reprendre la lecture du fichier depuis le début
+                    houseStructureFile.seekg(0);
                 }
             }
         }
     }
-    treeStructureFile.close();
+    houseStructureFile.close();
 }
 
 void Chunk::buildStructure(std::ifstream &file, int i, int j, int k){
@@ -142,10 +146,14 @@ void Chunk::buildStructure(std::ifstream &file, int i, int j, int k){
             flux >> v;
             infoBlock[i] = v;
         }
-
-        Voxel *blockStructure = new Voxel(glm::vec3(this->position[0]+i+infoBlock[1],this->position[1]+k+infoBlock[2],this->position[2]+j+infoBlock[3]),infoBlock[0]); 
-        blockStructure->setVisible(true);
-        this->listeVoxels[(k + infoBlock[2])*1024 + ((j+infoBlock[3])%32) * 32 + ((i+infoBlock[1])%32)] = blockStructure;
+        
+        // Attention à bien vérifier si un des blocs de la structure ne rentre pas dans le chunk (si c'est le cas il n'est pas généré)
+        // Bon ça marche mais c'est pas terrible parce qu'on ne peut pas avoir une structure à cheval sur 2 chunks (ou plus), ça coupe aux bords des chunks
+        if (!(i+infoBlock[1]<0||j+infoBlock[3]<0||k+infoBlock[2]<0||i+infoBlock[1]>31||j+infoBlock[3]>31||k+infoBlock[2]>31)){
+            Voxel *blockStructure = new Voxel(glm::vec3(this->position[0]+i+infoBlock[1],this->position[1]+k+infoBlock[2],this->position[2]+j+infoBlock[3]),infoBlock[0]); 
+            blockStructure->setVisible(true);
+            this->listeVoxels[(k + infoBlock[2])*1024 + ((j+infoBlock[3])%32) * 32 + ((i+infoBlock[1])%32)] = blockStructure;
+        }
     }
 }
 

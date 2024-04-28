@@ -4,8 +4,9 @@
 
 #include <fstream>
 
-#define NB_BLOCK 32
+#define NB_BLOCK 33
 #define GRASS_BLOCK 13
+#define DIRT_BLOCK 32
 
 class Voxel; // Déclaration avancée (je ne comprends pas pourquoi on est obligé de faire ça, avant ce n'était pas nécéssaire)
 
