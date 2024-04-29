@@ -6,7 +6,12 @@ float MapGenerator::generatePerlinNoise(float x, float y, unsigned int seed){
   //noiseGenerator.SetNoiseType(nt);
   //noiseGenerator.SetFractalOctaves(10);
   noiseGenerator.SetSeed(seed);
-  return noiseGenerator.GetNoise(x,y);
+  int nb_octaves = 4;
+  float somme = noiseGenerator.GetNoise(x,y);
+  for (int i = 1 ; i < nb_octaves ; i++){
+    somme += noiseGenerator.GetNoise(x*2*i,y*2*i);
+  }
+  return somme/4;
 }
 
 MapGenerator::MapGenerator(int wMap, int hMap, unsigned int seed){

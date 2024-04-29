@@ -418,8 +418,8 @@ int main(){
             // int numHauteur2 = floor(pPlayer[1]-0.001) + 16;
             // int numProfondeur2 = floor(pPlayer[2]) + 16*planeLength;
             
-            printf("indice: %d\n",indiceBlock);
-            printf("indice gauche: %d\n",indiceBlock+1023);
+            // printf("indice: %d\n",indiceBlock);
+            // printf("indice gauche: %d\n",indiceBlock+1023);
             if(player->getCanJump()==false){
                 Voxel *vTop = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock+1024*2];
                 if(vTop != nullptr){
@@ -429,12 +429,12 @@ int main(){
                     float actualJumpSpeed=player->getJumpSpeed();
                     player->resetJumpSpeed();
                     player->move(glm::vec3(0.f,-0.01,0.f));
+                    //player->move(glm::vec3(0.0f,3.8-((indiceBlock+2048)/1024),0.0f));
                     //player->addToSpeed(-2*actualJumpSpeed);
                 }
             }
 
             if(vLeft!=nullptr){
-                printf("il y'a un bloc a gauche\n");
                 glm::vec3 pos = vLeft->backBottomLeftCorner;
             }
             
