@@ -3,6 +3,7 @@
 Player::Player(glm::vec3 position){
     //this->hitbox = new Voxel(position,0); // Le deuxième paramètre doit rester à 0 (sert normalement à la génération des chunks, mais ici on est pas concerné)
     this->bottomPoint = glm::vec3(position + glm::vec3(0.5f,0.0f,0.5f));
+    this->leftBottomPoint = glm::vec3(position + glm::vec3(0.2f,0.0f,0.5f));
     this->currentJumpSpeed = 0.0f;
     this->canJump = false;
 }
@@ -52,6 +53,10 @@ void Player::move(glm::vec3 motion){
 
 glm::vec3 Player::getBottomPoint(){
     return this->bottomPoint;
+}
+
+glm::vec3 Player::getLeftBottomPoint(){
+    return this->leftBottomPoint;
 }
 
 float Player::getJumpSpeed(){

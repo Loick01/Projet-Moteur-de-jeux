@@ -121,7 +121,7 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
             for (int i=0;i<CHUNK_SIZE;i++){ 
                 // On s'assure que la structure pourra rentrer dans le chunk
                 int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
-                if (k == ((int)dataPixels[indInText])+1 && rand()%100 == 0){ // Pour l'instant, les arbres apparaissent aléatoirement, mais sans utiliser la seed alors que c'est ce qu'on voudrait
+                if (k == ((int)dataPixels[indInText])+1 && i>1 && i<CHUNK_SIZE-2 && j>1 && j<CHUNK_SIZE-2 && rand()%10 == 0){ // Pour l'instant, les arbres apparaissent aléatoirement, mais sans utiliser la seed alors que c'est ce qu'on voudrait
                     Voxel *blockStructure = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),1); 
                     blockStructure->setVisible(true);
                     this->listeVoxels[k *1024 + (j%32) * 32 + (i%32)] = blockStructure;

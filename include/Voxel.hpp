@@ -4,11 +4,12 @@
 
 class Voxel {
     private:
-        glm::vec3 backBottomLeftCorner;
+        
         std::vector<glm::vec3> vertices;
         int objectID;
         bool isVisible;
     public:
+        glm::vec3 backBottomLeftCorner;
         Voxel(glm::vec3 position, int objectID);
         void buildVoxel();
         glm::vec3 getPoint();

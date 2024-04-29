@@ -12,6 +12,7 @@ class Player {
         GLuint elementbufferHitbox;
         */
         glm::vec3 bottomPoint; // Sert pour la détection de collision vers le bas
+        glm::vec3 leftBottomPoint;
         float currentJumpSpeed;
         bool canJump; // Le joueur ne peut sauter que s'il est au sol
     public:
@@ -20,6 +21,7 @@ class Player {
         //void drawPlayer();
         void move(glm::vec3 motion);
         glm::vec3 getBottomPoint();
+        glm::vec3 getLeftBottomPoint();
         void addToSpeed(float s);
         float getJumpSpeed();
         bool getCanJump();
