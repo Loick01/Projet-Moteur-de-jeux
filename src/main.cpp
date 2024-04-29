@@ -51,7 +51,7 @@ void buildPlanChunks(unsigned char* dataPixels, int widthHeightmap, int heightHe
     for (int i = 0 ; i < planeWidth ; i++){
         for (int j = 0 ; j < planeLength ; j++){
             for (int k = 0 ; k < planeHeight ; k++){
-                Chunk *c = new Chunk(glm::vec3((planeWidth*32)/2*(-1.f) + i*32,(planeHeight*32)/2*(-1.f) + k*32,(planeLength*32)/2*(-1.f) + j*32), typeChunk, dataPixels, widthHeightmap, heightHeightmap, i*32,j*32*planeWidth*32); 
+                Chunk *c = new Chunk(glm::vec3((planeWidth*32)/2*(-1.f) + i*32,(planeHeight*32)/2*(-1.f) + k*32,(planeLength*32)/2*(-1.f) + j*32), typeChunk, dataPixels, widthHeightmap, heightHeightmap, i*32,j*32*planeWidth*32, seedTerrain); 
                 c->loadChunk();
                 listeChunks.push_back(c);
             }
@@ -317,6 +317,20 @@ int main(){
         std::cout << "La carte de hauteur n'est pas adapté au terrain\n";
         return -1;
     }
+
+    std::vector<Structure> structures;
+    // Chargement des structures
+    std::ifstream tree_1_StructureFile("../Structures/Tree.txt");
+    structures.push_back(Chunk::readFile(tree_1_StructureFile));
+    std::ifstream tree_2_StructureFile("../Structures/Tree_2.txt");
+    structures.push_back(Chunk::readFile(tree_2_StructureFile));
+    std::ifstream houseStructureFile("../Structures/House_1.txt");
+    structures.push_back(Chunk::readFile(houseStructureFile));
+    Chunk::setListeStructures(structures);
+    tree_1_StructureFile.close();
+    tree_2_StructureFile.close();
+    houseStructureFile.close();
+
 
     buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
 
