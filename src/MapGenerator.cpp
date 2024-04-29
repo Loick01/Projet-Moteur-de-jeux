@@ -1,23 +1,20 @@
 #include <MapGenerator.hpp>
 
-float MapGenerator::generatePerlinNoise(float x, float y, unsigned int seed){
+float MapGenerator::generatePerlinNoise(float x, float y){
   FastNoise noiseGenerator;
-  //FastNoise::NoiseType nt = FastNoise::ValueFractal;
-  //noiseGenerator.SetNoiseType(nt);
-  //noiseGenerator.SetFractalOctaves(10);
-  noiseGenerator.SetSeed(seed);
-  int nb_octaves = 4;
+  noiseGenerator.SetSeed(this->seed);
   float somme = noiseGenerator.GetNoise(x,y);
-  for (int i = 1 ; i < nb_octaves ; i++){
+  for (int i = 1 ; i < this->octave ; i++){
     somme += noiseGenerator.GetNoise(x*2*i,y*2*i);
   }
   return somme/4;
 }
 
-MapGenerator::MapGenerator(int wMap, int hMap, unsigned int seed){
+MapGenerator::MapGenerator(int wMap, int hMap, int seed, int octave){
   this->widthMap = wMap;
   this->heightMap = hMap;
   this->seed = seed;
+  this->octave = octave;
 }
 
 void MapGenerator::generateImage(){
@@ -37,10 +34,26 @@ void MapGenerator::generateImage(){
 
   for(int i=0;i<heightHeightmap;i++){
     for(int j=0;j<widthHeightmap*4;j+=4){
-      float value = (((generatePerlinNoise(i/3,j/12, this->seed))+1)/2) * 31;
+      float value = ((generatePerlinNoise(i/3,j/12)+1)/2) * 31;
       dataPixels[i*widthHeightmap*4+j] = value;
     }
   }
 
   stbi_write_png("../Textures/terrain.png", widthHeightmap, heightHeightmap,4,dataPixels, 4*widthHeightmap);
+}
+
+void MapGenerator::setWidthMap(int widthMap){
+  this->widthMap = widthMap;
+}
+
+void MapGenerator::setHeightMap(int heightMap){
+  this->heightMap = heightMap;
+}
+
+void MapGenerator::setSeed(int seed){
+  this->seed = seed;
+}
+
+void MapGenerator::setOctave(int octave){
+  this->octave = octave;
 }

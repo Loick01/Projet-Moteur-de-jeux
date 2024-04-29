@@ -30,7 +30,10 @@ float FoV = 45.0f;
 // Ces 3 tailles sont en nombre de chunk
 int planeWidth = 3; // De 1 à 32
 int planeLength = 3; // De 1 à 32
-int planeHeight = 1; // De 1 à 8
+int planeHeight = 1; // Pour simplifier on bloque cette valeur à 1
+
+int seedTerrain = 1000;
+int octave = 4;
 
 Player *player;
 float playerSpeed = 6.0f;
@@ -301,11 +304,11 @@ int main(){
 
     programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
     programID_HUD = LoadShaders("../shaders/hud_vertex.vert", "../shaders/hud_frag.frag");
-    glUseProgram(programID_HUD); // Attention à bien laisser cette ligne (apparemment il faut un glUseProgram initialement sinon ça cause des problèmes quand on essaye de charger des textures)
+    glUseProgram(programID_HUD);
 
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
 
-    MapGenerator *mg = new MapGenerator(planeWidth, planeLength, 21345); 
+    MapGenerator *mg = new MapGenerator(planeWidth, planeLength, seedTerrain, octave); 
     mg->generateImage();
     int widthHeightmap, heightHeightmap, channels;
     unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
@@ -533,21 +536,47 @@ int main(){
 
         ImGui::Spacing();
 
-        if (ImGui::SliderInt("Longueur", &planeWidth, 1, 32)){
+        if (ImGui::SliderInt("Longueur terrain", &planeWidth, 1, 32)){
+            mg->setWidthMap(planeWidth);
+            mg->generateImage();
+            dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
             buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
         }
 
         ImGui::Spacing();
 
         if (ImGui::SliderInt("Largeur", &planeLength, 1, 32)){
+            mg->setHeightMap(planeLength);
+            mg->generateImage();
+            dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
             buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
         }
 
         ImGui::Spacing();
 
+        if(ImGui::SliderInt("Seed de génération", &seedTerrain, 0, 10000)){
+            mg->setSeed(seedTerrain);
+        }
+
+        ImGui::Spacing();
+
+        if(ImGui::SliderInt("Nombre d'octaves", &octave, 1, 10)){
+            mg->setOctave(octave);
+        }
+
+        ImGui::Spacing();
+
+        if (ImGui::Button("Utiliser la seed et le nombre d'octaves")){
+            mg->generateImage();
+            dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
+            buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+        }
+
+        /* Pour simplifier, on limite à un seul chunk de haut
         if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
             buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
         }
+        */
 
         ImGui::Spacing();
 
