@@ -264,6 +264,7 @@ int main(){
         getchar();
         return -1;
     }
+     glfwSwapInterval(1);
 
     glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -343,6 +344,7 @@ int main(){
     // Chargement des textures
     GLint atlasTexture = loadTexture2DFromFilePath("../Textures/Blocks/atlas.png");
     GLint hudTexture = loadTexture2DFromFilePath("../Textures/HUD/hud.png");
+    GLint inventoryTexture = loadTexture2DFromFilePath("../Textures/HUD/inventory.png");
 
     if (atlasTexture != -1) {
         glActiveTexture(GL_TEXTURE0);
@@ -355,6 +357,12 @@ int main(){
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, hudTexture);
         glUniform1i(glGetUniformLocation(programID_HUD, "hudTexture"), 1);
+    }
+
+    if (inventoryTexture != -1) {
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, inventoryTexture);
+        glUniform1i(glGetUniformLocation(programID_HUD, "inventoryTexture"), 1);
     }
 
     skybox->bindCubemap(GL_TEXTURE2, 2); 

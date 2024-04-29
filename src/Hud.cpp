@@ -2,6 +2,7 @@
 
 PlaneHud Hud::createPlaneHud(glm::vec2 refPoint, float widthPlane, float heightPlane, int decalage){ // refPoint est le point en bas à gauche du plan
     PlaneHud planeRes;
+    planeRes.visible=true;
 
     // Ajout des 4 sommets
     planeRes.vertices.push_back(refPoint);
@@ -25,13 +26,17 @@ Hud::Hud(int screen_width, int screen_height){
     float hotbarHeight = 84.0f;
     float selectSize = 92.0f;
     float cursorSize =36.0f;
+    float inventoryWidth = 352*1.5;
+    float inventoryHeight = 332*1.5;
     this->select = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 - 4.0,6.0),selectSize,selectSize,0); // Par défaut, le sélecteur est placé sur le premier élément de la hotbar
     this->hotbar = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 ,10.0),hotbarWidth,hotbarHeight,4);
     this->cursor = createPlaneHud(glm::vec2(screen_width/2.0 - cursorSize/2.0 ,screen_height/2.0 - cursorSize/2.0),cursorSize,cursorSize,8);
+    this->inventory=createPlaneHud(glm::vec2(screen_width/2.0 - inventoryWidth/2.0 ,135.0),inventoryWidth,inventoryHeight,2);
 
     this->elements.push_back(this->select);
     this->elements.push_back(this->hotbar);
     this->elements.push_back(this->cursor);
+    this->elements.push_back(this->inventory);
 
     for (int i = 0 ; i < 9 ; i++){ // On génère les 9 emplacements de la hotbar
         PlaneHud ei = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 + 80.0 * i + 8.0, 18.0),68,68,12+i*4);
