@@ -303,6 +303,7 @@ int main(){
     glBindVertexArray(VertexArrayID);
 
     programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
+    //programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/geometryShader.geo", "../shaders/fragmentShader.frag");
     programID_HUD = LoadShaders("../shaders/hud_vertex.vert", "../shaders/hud_frag.frag");
     glUseProgram(programID_HUD);
 
