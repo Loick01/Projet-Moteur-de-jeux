@@ -264,19 +264,18 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 int main(){
     if( !glfwInit()){
         fprintf( stderr, "Failed to initialize GLFW\n" );
-        getchar();
+        //getchar();
         return -1;
     }
-
     glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    Window window_object(3, 3, SCREEN_WIDTH, SCREEN_HEIGHT, "Projet Moteur de jeux");
-    window_object.setup_GLFW();
-    GLFWwindow* window = window_object.get_window();
+    
+    Window *window_object = new Window(3, 3, SCREEN_WIDTH, SCREEN_HEIGHT, "Projet Moteur de jeux");
+    window_object->setup_GLFW();
+    GLFWwindow* window = window_object->get_window();
     glfwMakeContextCurrent(window);
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // On définit le callback à appeler lors du redimensionnement de la fenêtre
@@ -293,7 +292,6 @@ int main(){
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-
     glfwSetCursorPosCallback(window, mouse_cursor_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
@@ -303,21 +301,15 @@ int main(){
     glBindVertexArray(VertexArrayID);
 
     programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
-    //programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/geometryShader.geo", "../shaders/fragmentShader.frag");
     programID_HUD = LoadShaders("../shaders/hud_vertex.vert", "../shaders/hud_frag.frag");
     glUseProgram(programID_HUD);
 
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
-
+    
     MapGenerator *mg = new MapGenerator(planeWidth, planeLength, seedTerrain, octave); 
     mg->generateImage();
     int widthHeightmap, heightHeightmap, channels;
     unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
-
-    if (widthHeightmap != planeWidth*32 || heightHeightmap != planeLength*32 ){ // On s'assure que la carte de hauteur chargée est bien adapté au terrain
-        std::cout << "La carte de hauteur n'est pas adapté au terrain\n";
-        return -1;
-    }
 
     std::vector<Structure> structures;
     // Chargement des structures
@@ -331,7 +323,6 @@ int main(){
     tree_1_StructureFile.close();
     tree_2_StructureFile.close();
     houseStructureFile.close();
-
 
     buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
 
@@ -348,6 +339,7 @@ int main(){
     bool renduFilaire = false;
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+    
     // Setup ImGui binding
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -355,7 +347,6 @@ int main(){
     ImGui_ImplOpenGL3_Init("#version 330");
     ImGui::StyleColorsLight();
 
-    // Temporaire (plus tard il faudra envoyer aux shaders le tableau des blocs dans la hotbar à chaque fois que celle-ci changera)
     glUniform1iv(glGetUniformLocation(programID_HUD, "blockHotbar"), 9, blockInHotbar);
 
     // Chargement des textures
@@ -376,7 +367,7 @@ int main(){
     }
 
     skybox->bindCubemap(GL_TEXTURE2, 2); 
-    
+
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
         float currentFrame = glfwGetTime();
@@ -404,19 +395,20 @@ int main(){
         glUniformMatrix4fv(ViewMatrix,1,GL_FALSE,&View[0][0]);
         glUniformMatrix4fv(ProjectionMatrix,1,GL_FALSE,&Projection[0][0]);
 
-
         for (int i = 0 ; i < listeChunks.size() ; i++){
             listeChunks[i]->drawChunk();
         }
 
         // Affichage de la skybox
         skybox->drawSkybox(Model, Projection, View);
-
+        
+        /*
         // Affichage de l'hud
         if (showHud){
             glUseProgram(programID_HUD);
             hud->drawHud();
         }
+        */
 
         // Pour les collisions, voir peut être swept aabb
         // Détermine la cellule ou se trouve le joueur
@@ -436,6 +428,7 @@ int main(){
             // int numHauteur2 = floor(pPlayer[1]-0.001) + 16;
             // int numProfondeur2 = floor(pPlayer[2]) + 16*planeLength;
             
+            /*
             // printf("indice: %d\n",indiceBlock);
             // printf("indice gauche: %d\n",indiceBlock+1023);
             if(player->getCanJump()==false){
@@ -455,6 +448,7 @@ int main(){
             if(vLeft!=nullptr){
                 glm::vec3 pos = vLeft->backBottomLeftCorner;
             }
+            */
             
             if (v == nullptr){
                 player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
@@ -477,7 +471,7 @@ int main(){
                 player->couldJump(true);
             }
         }
-        
+        /*
         
         
         // Start the ImGui frame
@@ -587,11 +581,10 @@ int main(){
             buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
         }
 
-        /* Pour simplifier, on limite à un seul chunk de haut
-        if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
-            buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
-        }
-        */
+        // Pour simplifier, on limite à un seul chunk de haut
+        //if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
+        //    buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+        //}
 
         ImGui::Spacing();
 
@@ -604,7 +597,7 @@ int main(){
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
+        */
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -617,7 +610,15 @@ int main(){
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    glfwDestroyWindow(window);
+    for (int i = 0 ; i < listeChunks.size() ; i++){
+        delete listeChunks[i];
+    }
+    stbi_image_free(dataPixels);
+    delete skybox;
+    delete mg;
+    delete hud;
+    delete player;
+    delete window_object;
     glfwTerminate();
     return 0;
 

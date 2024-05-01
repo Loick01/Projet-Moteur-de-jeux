@@ -39,6 +39,12 @@ Hud::Hud(int screen_width, int screen_height){
     }
 }
 
+Hud::~Hud(){
+    std::cout << "Destruction de Hud\n";
+    glDeleteBuffers(1, &(this->vertexbuffer));
+    glDeleteBuffers(1, &(this->elementbuffer));
+}
+
 void Hud::loadHud(){
     std::vector<glm::vec2> acc_vertices;
     std::vector<unsigned int> acc_indices;

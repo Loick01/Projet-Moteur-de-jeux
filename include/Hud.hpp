@@ -19,6 +19,7 @@ class Hud{
         PlaneHud cursor;
     public:
         Hud(int screen_width, int screen_height);
+        ~Hud();
         PlaneHud createPlaneHud(glm::vec2 refPoint, float widthPlane, float heightPlane, int decalage);
         void loadHud();
         void drawHud();

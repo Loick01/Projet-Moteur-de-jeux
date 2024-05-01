@@ -8,6 +8,10 @@ Player::Player(glm::vec3 position){
     this->canJump = false;
 }
 
+Player::~Player(){ // Si on laisse un destructeur vide, valgrind aime pas ça
+    std::cout << "Destructeur de Player\n";
+}
+
 /* A voir si on représente visuellement le joueur à l'écran
 void Player::loadPlayer(){
     glGenBuffers(1, &(this->vertexbufferHitbox));

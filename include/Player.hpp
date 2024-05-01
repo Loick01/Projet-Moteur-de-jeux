@@ -17,6 +17,7 @@ class Player {
         bool canJump; // Le joueur ne peut sauter que s'il est au sol
     public:
         Player(glm::vec3 position);
+        ~Player();
         //void loadPlayer();
         //void drawPlayer();
         void move(glm::vec3 motion);

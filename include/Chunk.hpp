@@ -32,6 +32,7 @@ class Chunk{
         static std::vector<Structure> structures;
     public:
         Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int widthHeightmap, int heightHeightmap, int posWidthChunk, int posLengthChunk, int seed);
+        ~Chunk();
         void buildFullChunk();
         void buildFlatChunk();
         void buildSinusChunk();

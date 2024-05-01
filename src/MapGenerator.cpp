@@ -17,6 +17,10 @@ MapGenerator::MapGenerator(int wMap, int hMap, int seed, int octave){
   this->octave = octave;
 }
 
+MapGenerator::~MapGenerator(){
+  std::cout << "Destructeur de MapGenerator\n";
+}
+
 void MapGenerator::generateImage(){
     // A voir si on ne peut pas utiliser des images sur 3 canaux, voir en niveau de gris
     int dataSize = this->widthMap*32*this->heightMap*32*4;
@@ -40,6 +44,7 @@ void MapGenerator::generateImage(){
   }
 
   stbi_write_png("../Textures/terrain.png", widthHeightmap, heightHeightmap,4,dataPixels, 4*widthHeightmap);
+  free(dataPixels);
 }
 
 void MapGenerator::setWidthMap(int widthMap){

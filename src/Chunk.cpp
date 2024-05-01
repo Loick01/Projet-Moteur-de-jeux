@@ -17,6 +17,16 @@ Chunk::Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int w
     }
 }
 
+Chunk::~Chunk(){
+    std::cout << "Destruction de Chunk\n";
+    for (int i = 0 ; i < this->listeVoxels.size() ; i++){
+        delete this->listeVoxels[i];
+    }
+    glDeleteBuffers(1, &(this->vertexbuffer));
+    glDeleteBuffers(1, &(this->elementbuffer));
+    glDeleteBuffers(1, &(this->shaderstoragebuffer));
+}
+
 void Chunk::buildFullChunk(){
     this->listeVoxels.clear();
 
@@ -143,8 +153,13 @@ void Chunk::setListeStructures(std::vector<Structure> liste){
 void Chunk::buildStructure(int i, int j, int k){
     Structure to_build = structures[rand()%structures.size()]; // On construit l'une des structures disponibles 
     for (int n = 0 ; n < to_build.blocks.size() ; n++){
+        
         int *infoBlock = to_build.blocks[n].infoBlock;
         if (!(i+infoBlock[1]<0||j+infoBlock[3]<0||k+infoBlock[2]<0||i+infoBlock[1]>=CHUNK_SIZE||j+infoBlock[3]>=CHUNK_SIZE||k+infoBlock[2]>=CHUNK_SIZE)){
+            Voxel *actual_voxel = this->listeVoxels[(k + infoBlock[2])*1024 + ((j+infoBlock[3])%32) * 32 + ((i+infoBlock[1])%32)];
+            if (actual_voxel != nullptr){ // Si lun voxel du terrain est généré à cet endroit, on le supprime pour le remplacer par celui de la structure
+                delete actual_voxel;
+            }
             Voxel *block = new Voxel(glm::vec3(this->position[0]+i+infoBlock[1],this->position[1]+k+infoBlock[2],this->position[2]+j+infoBlock[3]),infoBlock[0]); 
             block->setVisible(true);
             this->listeVoxels[(k + infoBlock[2])*1024 + ((j+infoBlock[3])%32) * 32 + ((i+infoBlock[1])%32)] = block;
@@ -195,7 +210,7 @@ void Chunk::loadChunk(){
 
 void Chunk::drawChunk(){
 
-     // Pour les ID des blocs, on utilise des shaders storage buffers
+    // Pour les ID des blocs, on utilise des shaders storage buffers
     glGenBuffers(1, &(this->shaderstoragebuffer));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->shaderstoragebuffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, this->objectIDs.size()*sizeof(int), this->objectIDs.data(), GL_STATIC_DRAW);
