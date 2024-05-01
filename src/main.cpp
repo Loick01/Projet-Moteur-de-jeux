@@ -402,13 +402,11 @@ int main(){
         // Affichage de la skybox
         skybox->drawSkybox(Model, Projection, View);
         
-        /*
         // Affichage de l'hud
         if (showHud){
             glUseProgram(programID_HUD);
             hud->drawHud();
         }
-        */
 
         // Pour les collisions, voir peut être swept aabb
         // Détermine la cellule ou se trouve le joueur
@@ -471,8 +469,6 @@ int main(){
                 player->couldJump(true);
             }
         }
-        /*
-        
         
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -597,7 +593,7 @@ int main(){
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        */
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

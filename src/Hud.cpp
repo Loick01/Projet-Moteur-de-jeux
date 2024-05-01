@@ -1,22 +1,25 @@
 #include <Hud.hpp>
 
 PlaneHud Hud::createPlaneHud(glm::vec2 refPoint, float widthPlane, float heightPlane, int decalage){ // refPoint est le point en bas à gauche du plan
-    PlaneHud planeRes;
+
+    std::vector<glm::vec2> verticesPlane;
+    std::vector<unsigned int> indicesPlane;
 
     // Ajout des 4 sommets
-    planeRes.vertices.push_back(refPoint);
-    planeRes.vertices.push_back(glm::vec2(refPoint[0]+widthPlane,refPoint[1]));
-    planeRes.vertices.push_back(glm::vec2(refPoint[0],refPoint[1]+heightPlane));
-    planeRes.vertices.push_back(glm::vec2(refPoint[0]+widthPlane,refPoint[1]+heightPlane));
+    verticesPlane.push_back(refPoint);
+    verticesPlane.push_back(glm::vec2(refPoint[0]+widthPlane,refPoint[1]));
+    verticesPlane.push_back(glm::vec2(refPoint[0],refPoint[1]+heightPlane));
+    verticesPlane.push_back(glm::vec2(refPoint[0]+widthPlane,refPoint[1]+heightPlane));
 
     // Ajout des 6 indices
-    planeRes.indices.push_back(decalage + 0);
-    planeRes.indices.push_back(decalage + 3);
-    planeRes.indices.push_back(decalage + 2);
-    planeRes.indices.push_back(decalage + 0);
-    planeRes.indices.push_back(decalage + 1);
-    planeRes.indices.push_back(decalage + 3);
+    indicesPlane.push_back(decalage + 0);
+    indicesPlane.push_back(decalage + 3);
+    indicesPlane.push_back(decalage + 2);
+    indicesPlane.push_back(decalage + 0);
+    indicesPlane.push_back(decalage + 1);
+    indicesPlane.push_back(decalage + 3);
 
+    PlaneHud planeRes = {verticesPlane, indicesPlane};
     return planeRes;
 }
 
