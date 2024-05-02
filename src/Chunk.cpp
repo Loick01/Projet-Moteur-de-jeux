@@ -95,6 +95,7 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
 
     srand(seed);
 
+    // Génération du terrain
     for (int k=0;k<CHUNK_SIZE;k++){
         for (int j=0;j<CHUNK_SIZE;j++){     
             for (int i=0;i<CHUNK_SIZE;i++){ 
@@ -116,6 +117,7 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
         }
     }
 
+    // On complète les trous de la génération
     for (int j=0;j<CHUNK_SIZE;j++){     
         for (int i=0;i<CHUNK_SIZE;i++){ 
             int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
@@ -259,7 +261,7 @@ void Chunk::drawChunk(){
     glGenBuffers(1, &(this->shaderstoragebuffer));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->shaderstoragebuffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, this->objectIDs.size()*sizeof(int), this->objectIDs.data(), GL_STATIC_DRAW);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->shaderstoragebuffer); // Attention : Dans le shader binding doit valoir la même chose que le 2è paramètre
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->shaderstoragebuffer); // Attention : Dans le shader, binding doit valoir la même chose que le 2è paramètre
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     

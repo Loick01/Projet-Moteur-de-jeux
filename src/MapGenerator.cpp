@@ -7,7 +7,7 @@ float MapGenerator::generatePerlinNoise(float x, float y){
   for (int i = 1 ; i < this->octave ; i++){
     somme += noiseGenerator.GetNoise(x*2*i,y*2*i);
   }
-  return somme/4;
+  return somme/this->octave;
 }
 
 MapGenerator::MapGenerator(int wMap, int hMap, int seed, int octave){

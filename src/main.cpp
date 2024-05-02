@@ -37,6 +37,8 @@ int octave = 4;
 
 Player *player;
 float playerSpeed = 6.0f;
+float forceJump;
+float gravity = 0.25f;
 
 int blockInHotbar[9] = {23,29,1,11,12,13,20,26,28}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
@@ -106,11 +108,9 @@ void processInput(GLFWwindow* window){
         }
 
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
-            // On initie le saut du joueur
             if (player->getCanJump()){
-                player->couldJump(false);
-                player->addToSpeed(0.23f);
-                player->move(glm::vec3(0.f,0.23f,0.f));
+                player->setCanJump(false);
+                forceJump = 7.0f;
             }
         }
     }else{
@@ -189,6 +189,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 if (listeVoxels[indiceV] == nullptr){
                     continue;
                 }else{
+                    delete listeVoxels[indiceV]; // Ne pas oublier de bien libérer la mémoire
                     listeVoxels[indiceV] = nullptr;
 
                     // Rendre visible les 6 cubes adjacents (s'ils existent et s'ils ne sont pas déjà visible)
@@ -408,49 +409,27 @@ int main(){
             hud->drawHud();
         }
 
-        // Pour les collisions, voir peut être swept aabb
+        if (!player->getCanJump()){ // Le joueur ne peut pas sauter, donc il tombe
+            player->move(glm::vec3(0.0,forceJump*deltaTime,0.0));
+            forceJump -= gravity;
+        }
+
         // Détermine la cellule ou se trouve le joueur
         glm::vec3 pPlayer = player->getBottomPoint();
+        
         int numLongueur = floor(pPlayer[0]) + 16*planeWidth;
         int numHauteur = floor(pPlayer[1]-0.001) + 16;
         int numProfondeur = floor(pPlayer[2]) + 16*planeLength;
         if (numLongueur < 0 || numLongueur > (planeWidth*32)-1 || numProfondeur < 0 || numProfondeur > (planeLength*32)-1 || numHauteur < 0 || numHauteur > 31){
-            player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
-            player->addToSpeed(-0.02);
+            player->move(glm::vec3(0.0,forceJump*deltaTime,0.0));
+            forceJump -= gravity;
+            player->setCanJump(false);
         }else{
             int indiceBlock = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel dans lequel on considère que le joueur se trouve
             Voxel *v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
-            Voxel *vLeft = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock+1023];
-            // glm::vec3 pLeftBottomPlayer=player->getLeftBottomPoint();
-            // int numLongueur2 = floor(pPlayer[0]) + 16*planeWidth;
-            // int numHauteur2 = floor(pPlayer[1]-0.001) + 16;
-            // int numProfondeur2 = floor(pPlayer[2]) + 16*planeLength;
-            
-            /*
-            // printf("indice: %d\n",indiceBlock);
-            // printf("indice gauche: %d\n",indiceBlock+1023);
-            if(player->getCanJump()==false){
-                Voxel *vTop = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock+1024*2];
-                if(vTop != nullptr){
-                    //printf("block au dessus \n");
-                    //if(pTopPlayer[1]==vTopPos[1])printf("collision\n");
-                    player->couldJump(false);
-                    float actualJumpSpeed=player->getJumpSpeed();
-                    player->resetJumpSpeed();
-                    player->move(glm::vec3(0.f,-0.01,0.f));
-                    //player->move(glm::vec3(0.0f,3.8-((indiceBlock+2048)/1024),0.0f));
-                    //player->addToSpeed(-2*actualJumpSpeed);
-                }
-            }
-
-            if(vLeft!=nullptr){
-                glm::vec3 pos = vLeft->backBottomLeftCorner;
-            }
-            */
             
             if (v == nullptr){
-                player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
-                player->addToSpeed(-0.02);
+                player->setCanJump(false);
 
                 // On fait attention à ne pas afficher le joueur à l'intérieur d'un bloc (même pendant une frame, c'est plus propre)
                 pPlayer = player->getBottomPoint();
@@ -461,12 +440,10 @@ int main(){
                     player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
                 }
             }else{
-                // Quand le joueur est au sommet du chunk, il ne faut pas qu'il rentre dans le bloc
                 if (pPlayer[1] != ceil(pPlayer[1])){
                     player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
                 }
-                player->resetJumpSpeed();
-                player->couldJump(true);
+                player->setCanJump(true);
             }
         }
         
