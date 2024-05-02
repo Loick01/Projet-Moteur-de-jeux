@@ -6,6 +6,7 @@ struct PlaneHud{
     // Chaque plan du hud est définit par 4 sommets, et 6 indices qui forment 2 triangles 
     std::vector<glm::vec2> vertices;
     std::vector<unsigned int> indices;
+    bool sauveteur;
 };
 
 class Hud{

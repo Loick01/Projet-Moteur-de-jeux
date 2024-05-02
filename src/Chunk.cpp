@@ -100,13 +100,13 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
             for (int i=0;i<CHUNK_SIZE;i++){ 
                 int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
                 if (k <= ((int)dataPixels[indInText])){ 
-                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),DIRT_BLOCK); 
+                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k>=(int)dataPixels[indInText]-3 ? DIRT_BLOCK : 0); 
                     if (k==(int)dataPixels[indInText]){
                         vox->setVisible(true);
                         vox->setId(GRASS_BLOCK);
-                    }else if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1){
+                    }else if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ){
                         vox->setVisible(true);
-                        vox->setId(DIRT_BLOCK);
+                        vox->setId(k>=(int)dataPixels[indInText]-3 ? DIRT_BLOCK : 0);
                     }
                     this->listeVoxels.push_back(vox);
                 }else{
@@ -115,6 +115,52 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
             }
         }
     }
+
+    for (int j=0;j<CHUNK_SIZE;j++){     
+        for (int i=0;i<CHUNK_SIZE;i++){ 
+            int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
+            int indInText2 = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + (i+1)*4;
+            int indInText3 = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + (i-1)*4;
+            int indInText4 = posLengthChunk*4 + posWidthChunk*4 + (j+1)*widthHeightmap*4 + i*4;
+            int indInText5 = posLengthChunk*4 + posWidthChunk*4 + (j-1)*widthHeightmap*4 + i*4;
+
+            if(i<CHUNK_SIZE-1){
+
+                if(dataPixels[indInText]-dataPixels[indInText2]>1){
+                    for(int k=dataPixels[indInText]-1;k>dataPixels[indInText2];k--){
+                        listeVoxels[k*1024+32*j+i]->setVisible(true);
+                        
+                    }
+                }
+            }
+
+            if(i>0){
+                if(dataPixels[indInText]-dataPixels[indInText3]>1){
+                    for(int k=dataPixels[indInText]-1;k>dataPixels[indInText3];k--){
+                        listeVoxels[k*1024+32*j+i]->setVisible(true);
+                    }
+                }
+            }
+
+            if(j<CHUNK_SIZE-1){
+                if(dataPixels[indInText]-dataPixels[indInText4]>1){
+                    for(int k=dataPixels[indInText]-1;k>dataPixels[indInText4];k--){
+                        listeVoxels[k*1024+32*j+i]->setVisible(true);
+                    }
+                }
+            }
+
+            if(j>0){
+                if(dataPixels[indInText]-dataPixels[indInText5]>1){
+                    for(int k=dataPixels[indInText]-1;k>dataPixels[indInText5];k--){
+                        listeVoxels[k*1024+32*j+i]->setVisible(true);
+                    }
+                }
+            }
+        }
+    }
+
+
 
     // On génère les structures (seulement après avoir généré le terrain)
     for (int k=0;k<CHUNK_SIZE;k++){
