@@ -24,7 +24,6 @@ Chunk::~Chunk(){
     }
     glDeleteBuffers(1, &(this->vertexbuffer));
     glDeleteBuffers(1, &(this->elementbuffer));
-    glDeleteBuffers(1, &(this->shaderstoragebuffer));
 }
 
 void Chunk::buildFullChunk(){
@@ -216,6 +215,7 @@ void Chunk::drawChunk(){
     glBufferData(GL_SHADER_STORAGE_BUFFER, this->objectIDs.size()*sizeof(int), this->objectIDs.data(), GL_STATIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->shaderstoragebuffer); // Attention : Dans le shader binding doit valoir la même chose que le 2è paramètre
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
     
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, this->vertexbuffer);
@@ -240,6 +240,8 @@ void Chunk::drawChunk(){
                     );
 
     glDisableVertexAttribArray(0);
+
+    glDeleteBuffers(1, &(this->shaderstoragebuffer)); // Attention à bien le supprimer, c'est ça qui causait la chute de FPS au bout d'un certain temps
 }
 
 std::vector<Voxel*> Chunk::getListeVoxels(){
