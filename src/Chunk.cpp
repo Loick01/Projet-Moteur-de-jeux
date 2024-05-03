@@ -93,7 +93,7 @@ void Chunk::buildSinusChunk(){
 void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, int heightHeightmap, int posWidthChunk, int posLengthChunk, int seed){
     this->listeVoxels.clear();
 
-    srand(seed);
+    srand(seed+posWidthChunk+posLengthChunk);
 
     // Génération du terrain
     for (int k=0;k<CHUNK_SIZE;k++){
@@ -101,16 +101,49 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
             for (int i=0;i<CHUNK_SIZE;i++){ 
                 int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
                 if (k <= ((int)dataPixels[indInText])){ 
-                    int typeBlock = rand() % 100;
+                    int typeBlock = rand() % 1000;
+                    int tailleFilon = rand() % 3;
                     Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k>=(int)dataPixels[indInText]-3 ? DIRT_BLOCK : (typeBlock==0?19:(typeBlock<=10?21:0))); 
                     if (k==(int)dataPixels[indInText]){
                         vox->setVisible(true);
                         vox->setId(GRASS_BLOCK);
                     }else if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ){
                         vox->setVisible(true);
-                        vox->setId(k>=(int)dataPixels[indInText]-3 ? DIRT_BLOCK : (typeBlock==0?19:(typeBlock<=10?21:0)));
+                        vox->setId(k>=(int)dataPixels[indInText]-3 ? DIRT_BLOCK : (typeBlock==0?19:(typeBlock<=50?21:0)));
+                        vox->setId(k>=(int)dataPixels[indInText]-3 ? DIRT_BLOCK : (typeBlock==0?19:0));
                     }
                     this->listeVoxels.push_back(vox);
+                    // if(k*1024+32*(j-1)+i>0 && k*1024+32*j+i<listeVoxels.size() && listeVoxels[k*1024+32*j+i]->getID()==19){
+                    //     listeVoxels[k*1024+32*(j-1)+i]->setId(19);
+                    // }
+                    // if(j>tailleFilon && j<CHUNK_SIZE && listeVoxels[k*1024+32*j+i]->getID()==19){
+                    //     for(int m=1;m<tailleFilon;m++){
+                    //         if(rand()%m<=4)listeVoxels[k*1024+32*(j-m)+i]->setId(19);
+                    //         else break;
+                    //     }
+                    // }
+                    // if(i>tailleFilon && i<CHUNK_SIZE && listeVoxels[k*1024+32*j+i]->getID()==19){
+                    //     for(int m=1;m<tailleFilon;m++){
+                    //         if(rand()%m<=4)listeVoxels[k*1024+32*j+(i-m)]->setId(19);
+                    //         else break;
+                    //     }
+                    // }
+
+                    if(j>tailleFilon && i>tailleFilon && k>tailleFilon && j<CHUNK_SIZE && listeVoxels[k*1024+32*j+i]->getID()==19){
+                        for(int m=1;m<tailleFilon;m++){
+                            for(int n=1;m<tailleFilon;m++){
+                                for(int l=1;l<tailleFilon;l++){
+                                    if(rand()%m<=4)listeVoxels[k*1024+32*(j-m)+i]->setId(19);
+                                    if(rand()%m<=4)listeVoxels[k*1024+32*j+(i-n)]->setId(19);
+                                    if(rand()%m<=4)listeVoxels[k*1024+32*(j-m)+(i-n)]->setId(19);
+                                    if(rand()%m<=4)listeVoxels[(k-l)*1024+32*j+i]->setId(19);
+                                    if(rand()%m<=4)listeVoxels[(k-l)*1024+32*(j-m)+i]->setId(19);
+                                    if(rand()%m<=4)listeVoxels[(k-l)*1024+32*j+(i-n)]->setId(19);
+                                    if(rand()%m<=4)listeVoxels[(k-l)*1024+32*(j-m)+(i-n)]->setId(19);
+                                }
+                            }
+                        }
+                    }
                 }else{
                     this->listeVoxels.push_back(nullptr);
                 }
