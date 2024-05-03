@@ -36,9 +36,10 @@ int seedTerrain = 1000;
 int octave = 4;
 
 Player *player;
-float playerSpeed = 6.0f;
+float playerSpeed = 7.0f;
 float forceJump;
-float gravity = 0.25f;
+float forceJumpInitial = 7.0f;
+float gravity = 18.0f;
 
 int blockInHotbar[9] = {23,29,1,11,12,13,20,26,28}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
@@ -65,6 +66,15 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
     glViewport(0,0,width,height);
 }
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
+    if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS){
+        playerSpeed *= 1.4;
+    }
+    if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE){
+        playerSpeed /= 1.4;
+    }
+}
+
 void processInput(GLFWwindow* window){ 
     float camera_speed = (float)speedCam * deltaTime;
 
@@ -84,6 +94,7 @@ void processInput(GLFWwindow* window){
     if(cameraMousePlayer){
         bool x_axis = false;
         bool z_axis = false;
+
         // On est obligé de vérifier que le joueur n'appuie pas sur 2 touches opposées en même temps (sinon motion est nulle et ça fait des valeurs NaN)
 
         glm::vec3 motion = glm::vec3(0.0f,0.0f,0.0f); // On accumule les déplacements pour que le joueur puisse se déplacer en diagonale
@@ -110,9 +121,10 @@ void processInput(GLFWwindow* window){
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
             if (player->getCanJump()){
                 player->setCanJump(false);
-                forceJump = 7.0f;
+                forceJump = forceJumpInitial;
             }
         }
+
     }else{
         // Avancer/Reculer la caméra
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
@@ -293,6 +305,7 @@ int main(){
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
+    glfwSetKeyCallback(window, key_callback);
     glfwSetCursorPosCallback(window, mouse_cursor_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
@@ -411,7 +424,7 @@ int main(){
 
         if (!player->getCanJump()){ // Le joueur ne peut pas sauter, donc il tombe
             player->move(glm::vec3(0.0,forceJump*deltaTime,0.0));
-            forceJump -= gravity;
+            forceJump -= gravity*deltaTime;
         }
 
         // Détermine la cellule ou se trouve le joueur
@@ -422,7 +435,7 @@ int main(){
         int numProfondeur = floor(pPlayer[2]) + 16*planeLength;
         if (numLongueur < 0 || numLongueur > (planeWidth*32)-1 || numProfondeur < 0 || numProfondeur > (planeLength*32)-1 || numHauteur < 0 || numHauteur > 31){
             player->move(glm::vec3(0.0,forceJump*deltaTime,0.0));
-            forceJump -= gravity;
+            forceJump -= gravity*deltaTime;
             player->setCanJump(false);
         }else{
             int indiceBlock = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel dans lequel on considère que le joueur se trouve
@@ -466,7 +479,7 @@ int main(){
 
         ImGui::Spacing();
 
-        ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 0.0, 100.0);
+        ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 0.0, 50.0);
 
         ImGui::Spacing();
 

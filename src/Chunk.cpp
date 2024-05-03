@@ -101,13 +101,14 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
             for (int i=0;i<CHUNK_SIZE;i++){ 
                 int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
                 if (k <= ((int)dataPixels[indInText])){ 
-                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k>=(int)dataPixels[indInText]-3 ? DIRT_BLOCK : 0); 
+                    int typeBlock = rand() % 100;
+                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k>=(int)dataPixels[indInText]-3 ? DIRT_BLOCK : (typeBlock==0?19:(typeBlock<=10?21:0))); 
                     if (k==(int)dataPixels[indInText]){
                         vox->setVisible(true);
                         vox->setId(GRASS_BLOCK);
                     }else if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ){
                         vox->setVisible(true);
-                        vox->setId(k>=(int)dataPixels[indInText]-3 ? DIRT_BLOCK : 0);
+                        vox->setId(k>=(int)dataPixels[indInText]-3 ? DIRT_BLOCK : (typeBlock==0?19:(typeBlock<=10?21:0)));
                     }
                     this->listeVoxels.push_back(vox);
                 }else{
