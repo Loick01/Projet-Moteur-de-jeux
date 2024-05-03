@@ -6,6 +6,12 @@ Skybox::Skybox() {
     this->loadCubemap();
 }
 
+Skybox::~Skybox(){
+    std::cout << "Destruction de Skybox\n";
+    glDeleteBuffers(1, &(this->vertexbuffer));
+    glDeleteBuffers(1, &(this->elementbuffer));
+}
+
 void Skybox::createSkybox() {  
     this->vertices.push_back(-1.0f );     this->vertices.push_back( -1.0f );     this->vertices.push_back( 1.0f );
     this->vertices.push_back( 1.0f );     this->vertices.push_back( -1.0f );     this->vertices.push_back( 1.0f );

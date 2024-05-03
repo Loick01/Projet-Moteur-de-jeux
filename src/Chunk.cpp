@@ -2,7 +2,9 @@
 
 #define CHUNK_SIZE 32
 
-Chunk::Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int widthHeightmap, int heightHeightmap, int posWidthChunk, int posLengthChunk){
+std::vector<Structure> Chunk::structures; // Permet d'éviter les erreurs de lien à la compilation
+
+Chunk::Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int widthHeightmap, int heightHeightmap, int posWidthChunk, int posLengthChunk, int seed){
     this->position = position;
     if (typeChunk==0){
         this->buildFullChunk();
@@ -11,8 +13,17 @@ Chunk::Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int w
     }else if (typeChunk==2){
         this->buildFlatChunk();
     }else if (typeChunk==3){
-        this->buildProceduralChunk(dataPixels, widthHeightmap, heightHeightmap, posWidthChunk, posLengthChunk);
+        this->buildProceduralChunk(dataPixels, widthHeightmap, heightHeightmap, posWidthChunk, posLengthChunk, seed);
     }
+}
+
+Chunk::~Chunk(){
+    std::cout << "Destruction de Chunk\n";
+    for (int i = 0 ; i < this->listeVoxels.size() ; i++){
+        delete this->listeVoxels[i];
+    }
+    glDeleteBuffers(1, &(this->vertexbuffer));
+    glDeleteBuffers(1, &(this->elementbuffer));
 }
 
 void Chunk::buildFullChunk(){
@@ -79,25 +90,60 @@ void Chunk::buildSinusChunk(){
     }
 }
 
-void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, int heightHeightmap, int posWidthChunk, int posLengthChunk){
+void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, int heightHeightmap, int posWidthChunk, int posLengthChunk, int seed){
     this->listeVoxels.clear();
 
-    srand (time(NULL)); // Là il faudrait mettre la seed, pour que l'aléatoire soit le même pour 2 seeds (pour l'instant on laisse comme ça)
+    srand(seed+posWidthChunk+posLengthChunk);
 
+    // Génération du terrain
     for (int k=0;k<CHUNK_SIZE;k++){
         for (int j=0;j<CHUNK_SIZE;j++){     
             for (int i=0;i<CHUNK_SIZE;i++){ 
                 int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
                 if (k <= ((int)dataPixels[indInText])){ 
-                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),DIRT_BLOCK); 
+                    int typeBlock = rand() % 1000;
+                    int tailleFilon = rand() % 3;
+                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k>=(int)dataPixels[indInText]-3 ? DIRT_BLOCK : (typeBlock==0?19:(typeBlock<=10?21:0))); 
                     if (k==(int)dataPixels[indInText]){
                         vox->setVisible(true);
                         vox->setId(GRASS_BLOCK);
-                    }else if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1){
+                    }else if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ){
                         vox->setVisible(true);
-                        vox->setId(DIRT_BLOCK);
+                        vox->setId(k>=(int)dataPixels[indInText]-3 ? DIRT_BLOCK : (typeBlock==0?19:(typeBlock<=50?21:0)));
+                        vox->setId(k>=(int)dataPixels[indInText]-3 ? DIRT_BLOCK : (typeBlock==0?19:0));
                     }
                     this->listeVoxels.push_back(vox);
+                    // if(k*1024+32*(j-1)+i>0 && k*1024+32*j+i<listeVoxels.size() && listeVoxels[k*1024+32*j+i]->getID()==19){
+                    //     listeVoxels[k*1024+32*(j-1)+i]->setId(19);
+                    // }
+                    // if(j>tailleFilon && j<CHUNK_SIZE && listeVoxels[k*1024+32*j+i]->getID()==19){
+                    //     for(int m=1;m<tailleFilon;m++){
+                    //         if(rand()%m<=4)listeVoxels[k*1024+32*(j-m)+i]->setId(19);
+                    //         else break;
+                    //     }
+                    // }
+                    // if(i>tailleFilon && i<CHUNK_SIZE && listeVoxels[k*1024+32*j+i]->getID()==19){
+                    //     for(int m=1;m<tailleFilon;m++){
+                    //         if(rand()%m<=4)listeVoxels[k*1024+32*j+(i-m)]->setId(19);
+                    //         else break;
+                    //     }
+                    // }
+
+                    if(j>tailleFilon && i>tailleFilon && k>tailleFilon && j<CHUNK_SIZE && listeVoxels[k*1024+32*j+i]->getID()==19){
+                        for(int m=1;m<tailleFilon;m++){
+                            for(int n=1;m<tailleFilon;m++){
+                                for(int l=1;l<tailleFilon;l++){
+                                    if(rand()%m<=4)listeVoxels[k*1024+32*(j-m)+i]->setId(19);
+                                    if(rand()%m<=4)listeVoxels[k*1024+32*j+(i-n)]->setId(19);
+                                    if(rand()%m<=4)listeVoxels[k*1024+32*(j-m)+(i-n)]->setId(19);
+                                    if(rand()%m<=4)listeVoxels[(k-l)*1024+32*j+i]->setId(19);
+                                    if(rand()%m<=4)listeVoxels[(k-l)*1024+32*(j-m)+i]->setId(19);
+                                    if(rand()%m<=4)listeVoxels[(k-l)*1024+32*j+(i-n)]->setId(19);
+                                    if(rand()%m<=4)listeVoxels[(k-l)*1024+32*(j-m)+(i-n)]->setId(19);
+                                }
+                            }
+                        }
+                    }
                 }else{
                     this->listeVoxels.push_back(nullptr);
                 }
@@ -105,54 +151,99 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
         }
     }
 
-    // Pour l'instant c'est pas terrible on lit le fichier à chaque fois qu'on veut placer une structure, il faudrait conserver les infos pour les réutiliser
+    // On complète les trous de la génération
+    for (int j=0;j<CHUNK_SIZE;j++){     
+        for (int i=0;i<CHUNK_SIZE;i++){ 
+            int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
+            int indInText2 = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + (i+1)*4;
+            int indInText3 = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + (i-1)*4;
+            int indInText4 = posLengthChunk*4 + posWidthChunk*4 + (j+1)*widthHeightmap*4 + i*4;
+            int indInText5 = posLengthChunk*4 + posWidthChunk*4 + (j-1)*widthHeightmap*4 + i*4;
 
-    //std::ifstream treeStructureFile("../Structures/Tree.txt");
-    //std::ifstream treeStructureFile("../Structures/Tree_2.txt");
-    std::ifstream houseStructureFile("../Structures/House_1.txt");
-    if (!houseStructureFile) {
-        std::cerr << "Erreur lors de l'ouverture du fichier. Aucune structure construite" << std::endl;
-        return;
+            if(i<CHUNK_SIZE-1){
+
+                if(dataPixels[indInText]-dataPixels[indInText2]>1){
+                    for(int k=dataPixels[indInText]-1;k>dataPixels[indInText2];k--){
+                        listeVoxels[k*1024+32*j+i]->setVisible(true);
+                        
+                    }
+                }
+            }
+
+            if(i>0){
+                if(dataPixels[indInText]-dataPixels[indInText3]>1){
+                    for(int k=dataPixels[indInText]-1;k>dataPixels[indInText3];k--){
+                        listeVoxels[k*1024+32*j+i]->setVisible(true);
+                    }
+                }
+            }
+
+            if(j<CHUNK_SIZE-1){
+                if(dataPixels[indInText]-dataPixels[indInText4]>1){
+                    for(int k=dataPixels[indInText]-1;k>dataPixels[indInText4];k--){
+                        listeVoxels[k*1024+32*j+i]->setVisible(true);
+                    }
+                }
+            }
+
+            if(j>0){
+                if(dataPixels[indInText]-dataPixels[indInText5]>1){
+                    for(int k=dataPixels[indInText]-1;k>dataPixels[indInText5];k--){
+                        listeVoxels[k*1024+32*j+i]->setVisible(true);
+                    }
+                }
+            }
+        }
     }
 
-    // On génère les structures (seulement après avoir générer le terrain pour l'instant, à voir si il ne vaut pas mieux le faire en même temps que le terrain)
-    // for (int k=0;k<CHUNK_SIZE;k++){
-    //     for (int j=0;j<CHUNK_SIZE;j++){     
-    //         for (int i=0;i<CHUNK_SIZE;i++){ 
-    //             // On s'assure que la structure pourra rentrer dans le chunk
-    //             int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
-    //             if (k == ((int)dataPixels[indInText])+1 && i>1 && i<CHUNK_SIZE-2 && j>1 && j<CHUNK_SIZE-2 && rand()%10 == 0){ // Pour l'instant, les arbres apparaissent aléatoirement, mais sans utiliser la seed alors que c'est ce qu'on voudrait
-    //                 Voxel *blockStructure = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),1); 
-    //                 blockStructure->setVisible(true);
-    //                 this->listeVoxels[k *1024 + (j%32) * 32 + (i%32)] = blockStructure;
-    //                 buildStructure(houseStructureFile,i,j,k);
-    //                 houseStructureFile.clear(); // Pour la prochaine fois, il faudra reprendre la lecture du fichier depuis le début
-    //                 houseStructureFile.seekg(0);
-    //             }
-    //         }
-    //     }
-    // }
-    // houseStructureFile.close();
+
+
+    // On génère les structures (seulement après avoir généré le terrain)
+    for (int k=0;k<CHUNK_SIZE;k++){
+        for (int j=0;j<CHUNK_SIZE;j++){     
+            for (int i=0;i<CHUNK_SIZE;i++){ 
+                // On s'assure que la structure pourra rentrer dans le chunk
+                int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
+                if (k == ((int)dataPixels[indInText])+1 && i>1 && i<CHUNK_SIZE-2 && j>1 && j<CHUNK_SIZE-2 && rand()%100 == 0){ // Pour l'instant, les structures apparaissent aléatoirement, mais sans utiliser la seed alors que c'est ce qu'on voudrait
+                    buildStructure(i,j,k);
+                }
+            }
+        }
+    }
 }
 
-void Chunk::buildStructure(std::ifstream &file, int i, int j, int k){
+Structure Chunk::readFile(std::ifstream &file){
+    Structure resStructure;
     std::string line;
+
     while (std::getline(file, line)) { 
         std::istringstream flux(line);
-
-        int infoBlock[4];
+        BlockStructure bs;
         for (int i = 0 ; i < 4 ; i++){
-            int v;
-            flux >> v;
-            infoBlock[i] = v;
+            flux >> bs.infoBlock[i];
         }
+        resStructure.blocks.push_back(bs);
+    }
+    return resStructure;
+}
+
+void Chunk::setListeStructures(std::vector<Structure> liste){
+    structures = liste;
+}
+
+void Chunk::buildStructure(int i, int j, int k){
+    Structure to_build = structures[rand()%structures.size()]; // On construit l'une des structures disponibles 
+    for (int n = 0 ; n < to_build.blocks.size() ; n++){
         
-        // Attention à bien vérifier si un des blocs de la structure ne rentre pas dans le chunk (si c'est le cas il n'est pas généré)
-        // Bon ça marche mais c'est pas terrible parce qu'on ne peut pas avoir une structure à cheval sur 2 chunks (ou plus), ça coupe aux bords des chunks
-        if (!(i+infoBlock[1]<0||j+infoBlock[3]<0||k+infoBlock[2]<0||i+infoBlock[1]>31||j+infoBlock[3]>31||k+infoBlock[2]>31)){
-            Voxel *blockStructure = new Voxel(glm::vec3(this->position[0]+i+infoBlock[1],this->position[1]+k+infoBlock[2],this->position[2]+j+infoBlock[3]),infoBlock[0]); 
-            blockStructure->setVisible(true);
-            this->listeVoxels[(k + infoBlock[2])*1024 + ((j+infoBlock[3])%32) * 32 + ((i+infoBlock[1])%32)] = blockStructure;
+        int *infoBlock = to_build.blocks[n].infoBlock;
+        if (!(i+infoBlock[1]<0||j+infoBlock[3]<0||k+infoBlock[2]<0||i+infoBlock[1]>=CHUNK_SIZE||j+infoBlock[3]>=CHUNK_SIZE||k+infoBlock[2]>=CHUNK_SIZE)){
+            Voxel *actual_voxel = this->listeVoxels[(k + infoBlock[2])*1024 + ((j+infoBlock[3])%32) * 32 + ((i+infoBlock[1])%32)];
+            if (actual_voxel != nullptr){ // Si lun voxel du terrain est généré à cet endroit, on le supprime pour le remplacer par celui de la structure
+                delete actual_voxel;
+            }
+            Voxel *block = new Voxel(glm::vec3(this->position[0]+i+infoBlock[1],this->position[1]+k+infoBlock[2],this->position[2]+j+infoBlock[3]),infoBlock[0]); 
+            block->setVisible(true);
+            this->listeVoxels[(k + infoBlock[2])*1024 + ((j+infoBlock[3])%32) * 32 + ((i+infoBlock[1])%32)] = block;
         }
     }
 }
@@ -200,12 +291,13 @@ void Chunk::loadChunk(){
 
 void Chunk::drawChunk(){
 
-     // Pour les ID des blocs, on utilise des shaders storage buffers
+    // Pour les ID des blocs, on utilise des shaders storage buffers
     glGenBuffers(1, &(this->shaderstoragebuffer));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->shaderstoragebuffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, this->objectIDs.size()*sizeof(int), this->objectIDs.data(), GL_STATIC_DRAW);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->shaderstoragebuffer); // Attention : Dans le shader binding doit valoir la même chose que le 2è paramètre
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this->shaderstoragebuffer); // Attention : Dans le shader, binding doit valoir la même chose que le 2è paramètre
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
     
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, this->vertexbuffer);
@@ -230,6 +322,8 @@ void Chunk::drawChunk(){
                     );
 
     glDisableVertexAttribArray(0);
+
+    glDeleteBuffers(1, &(this->shaderstoragebuffer)); // Attention à bien le supprimer, c'est ça qui causait la chute de FPS au bout d'un certain temps
 }
 
 std::vector<Voxel*> Chunk::getListeVoxels(){

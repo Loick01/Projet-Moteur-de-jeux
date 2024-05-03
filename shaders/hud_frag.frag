@@ -6,7 +6,6 @@ flat in int inHotbar;
 
 uniform sampler2D hudTexture;
 uniform sampler2D atlasTexture;
-uniform sampler2D inventoryTexture;
 
 void main(){
     if (inHotbar == 1){

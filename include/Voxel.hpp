@@ -4,13 +4,13 @@
 
 class Voxel {
     private:
-        
         std::vector<glm::vec3> vertices;
         int objectID;
         bool isVisible;
     public:
         glm::vec3 backBottomLeftCorner;
         Voxel(glm::vec3 position, int objectID);
+        ~Voxel();
         void buildVoxel();
         glm::vec3 getPoint();
         //void updateVertices(glm::vec3 motion);

@@ -7,6 +7,10 @@ Voxel::Voxel(glm::vec3 position, int objectID){
     this->isVisible = false;
 }
 
+Voxel::~Voxel(){
+    //std::cout << "Destructeur de Voxel\n";
+}
+
 // Voxel de taille 1.0
 void Voxel::buildVoxel(){
     for (int i = 0 ; i < 6 ; i++){

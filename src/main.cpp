@@ -30,10 +30,16 @@ float FoV = 45.0f;
 // Ces 3 tailles sont en nombre de chunk
 int planeWidth = 3; // De 1 à 32
 int planeLength = 3; // De 1 à 32
-int planeHeight = 1; // De 1 à 8
+int planeHeight = 1; // Pour simplifier on bloque cette valeur à 1
+
+int seedTerrain = 1000;
+int octave = 4;
 
 Player *player;
-float playerSpeed = 6.0f;
+float playerSpeed = 7.0f;
+float forceJump;
+float forceJumpInitial = 7.0f;
+float gravity = 18.0f;
 
 int blockInHotbar[9] = {23,29,1,11,12,13,20,26,28}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
@@ -48,7 +54,7 @@ void buildPlanChunks(unsigned char* dataPixels, int widthHeightmap, int heightHe
     for (int i = 0 ; i < planeWidth ; i++){
         for (int j = 0 ; j < planeLength ; j++){
             for (int k = 0 ; k < planeHeight ; k++){
-                Chunk *c = new Chunk(glm::vec3((planeWidth*32)/2*(-1.f) + i*32,(planeHeight*32)/2*(-1.f) + k*32,(planeLength*32)/2*(-1.f) + j*32), typeChunk, dataPixels, widthHeightmap, heightHeightmap, i*32,j*32*planeWidth*32); 
+                Chunk *c = new Chunk(glm::vec3((planeWidth*32)/2*(-1.f) + i*32,(planeHeight*32)/2*(-1.f) + k*32,(planeLength*32)/2*(-1.f) + j*32), typeChunk, dataPixels, widthHeightmap, heightHeightmap, i*32,j*32*planeWidth*32, seedTerrain); 
                 c->loadChunk();
                 listeChunks.push_back(c);
             }
@@ -58,6 +64,15 @@ void buildPlanChunks(unsigned char* dataPixels, int widthHeightmap, int heightHe
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){ 
     glViewport(0,0,width,height);
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
+    if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS){
+        playerSpeed *= 1.4;
+    }
+    if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE){
+        playerSpeed /= 1.4;
+    }
 }
 
 void processInput(GLFWwindow* window){ 
@@ -79,6 +94,7 @@ void processInput(GLFWwindow* window){
     if(cameraMousePlayer){
         bool x_axis = false;
         bool z_axis = false;
+
         // On est obligé de vérifier que le joueur n'appuie pas sur 2 touches opposées en même temps (sinon motion est nulle et ça fait des valeurs NaN)
 
         glm::vec3 motion = glm::vec3(0.0f,0.0f,0.0f); // On accumule les déplacements pour que le joueur puisse se déplacer en diagonale
@@ -103,13 +119,12 @@ void processInput(GLFWwindow* window){
         }
 
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
-            // On initie le saut du joueur
             if (player->getCanJump()){
-                player->couldJump(false);
-                player->addToSpeed(0.23f);
-                player->move(glm::vec3(0.f,0.23f,0.f));
+                player->setCanJump(false);
+                forceJump = forceJumpInitial;
             }
         }
+
     }else{
         // Avancer/Reculer la caméra
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
@@ -186,6 +201,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 if (listeVoxels[indiceV] == nullptr){
                     continue;
                 }else{
+                    delete listeVoxels[indiceV]; // Ne pas oublier de bien libérer la mémoire
                     listeVoxels[indiceV] = nullptr;
 
                     // Rendre visible les 6 cubes adjacents (s'ils existent et s'ils ne sont pas déjà visible)
@@ -258,23 +274,151 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     handBlock = blockInHotbar[indexHandBlock];
 }
 
+
+struct Node{
+    std::vector<unsigned short> indices;
+    std::vector<std::vector<unsigned short> > triangles;
+    std::vector<glm::vec3> indexed_vertices;
+    std::vector<Node*> son;
+
+    Transform *transformation;
+
+    int ID;
+
+    GLuint vbuffer;
+    GLuint ebuffer;
+};
+
+// Fonction pour créer un pavé
+void setPave(Node *node, glm::vec3 dimensions, glm::vec3 position) {
+    //initialisation du maillage
+    node->indices.clear();
+    node->triangles.clear();
+    node->indexed_vertices.clear();
+
+    float x = dimensions.x;
+    float y = dimensions.y;
+    float z = dimensions.z;
+
+    // Sommets d'un pavé
+    node->indexed_vertices.push_back(position + glm::vec3(-x / 2, -y / 2, -z / 2));
+    node->indexed_vertices.push_back(position + glm::vec3(x / 2, -y / 2, -z / 2));
+    node->indexed_vertices.push_back(position + glm::vec3(x / 2, y / 2, -z / 2));
+    node->indexed_vertices.push_back(position + glm::vec3(-x / 2, y / 2, -z / 2));
+    node->indexed_vertices.push_back(position + glm::vec3(-x / 2, -y / 2, z / 2));
+    node->indexed_vertices.push_back(position + glm::vec3(x / 2, -y / 2, z / 2));
+    node->indexed_vertices.push_back(position + glm::vec3(x / 2, y / 2, z / 2));
+    node->indexed_vertices.push_back(position + glm::vec3(-x / 2, y / 2, z / 2));
+
+    // Index pour les arêtes du pavé
+    node->indices.push_back(0);
+    node->indices.push_back(1);
+    node->indices.push_back(1);
+    node->indices.push_back(2);
+    node->indices.push_back(2);
+    node->indices.push_back(3);
+    node->indices.push_back(3);
+    node->indices.push_back(0);
+
+    node->indices.push_back(4);
+    node->indices.push_back(5);
+    node->indices.push_back(5);
+    node->indices.push_back(6);
+    node->indices.push_back(6);
+    node->indices.push_back(7);
+    node->indices.push_back(7);
+    node->indices.push_back(4);
+
+    node->indices.push_back(0);
+    node->indices.push_back(4);
+    node->indices.push_back(1);
+    node->indices.push_back(5);
+    node->indices.push_back(2);
+    node->indices.push_back(6);
+    node->indices.push_back(3);
+    node->indices.push_back(7);
+}
+
+
+void loadBufferNode(Node *node){
+    glGenBuffers(1, &(node->vbuffer));
+    glBindBuffer(GL_ARRAY_BUFFER, node->vbuffer);
+    glBufferData(GL_ARRAY_BUFFER, node->indexed_vertices.size() * sizeof(glm::vec3), &(node->indexed_vertices[0]), GL_STATIC_DRAW);
+
+    glGenBuffers(1, &(node->ebuffer));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, node->ebuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, node->indices.size() * sizeof(unsigned short), &(node->indices[0]) , GL_STATIC_DRAW);
+    for(int i=0;i<node->son.size();i++){
+        loadBufferNode(node->son[i]);
+    }
+    printf("je load\n");
+}
+
+
+
+// a appelé en continu
+void sendNodeToBuffer(Node *node,GLuint programID,glm::mat4 parent){
+    glm::mat4 matI = glm::mat4(1);
+    matI=parent*node->transformation->getMatrix4();
+
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, node->vbuffer);
+    glUniformMatrix4fv(glGetUniformLocation(programID, "model"), 1, GL_FALSE, &matI[0][0]);
+    glUniform1i(glGetUniformLocation(programID,"planet"), node->ID);
+    
+    
+    glVertexAttribPointer(
+                0,                  // attribute
+                3,                  // size
+                GL_FLOAT,           // type
+                GL_FALSE,           // normalized?
+                0,                  // stride
+                (void*)0            // array buffer offset
+                );
+
+    // Index buffer
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, node->ebuffer);
+    // Draw the triangles !
+    glDrawElements(
+                GL_TRIANGLES,      // mode
+                node->indices.size(),    // count
+                GL_UNSIGNED_SHORT,   // type
+                (void*)0           // element array buffer offset
+                );
+
+    glDisableVertexAttribArray(0);
+    for(int i=0;i<node->son.size();i++){
+        sendNodeToBuffer(node->son[i],programID,matI);
+    }
+}
+
 int main(){
+    Node *center = new Node;
+    Node *chestZombie = new Node;
+
+    setPave(chestZombie,glm::vec3(2,2,2), glm::vec3(0,16,0));
+
+    center->son.push_back(chestZombie);
+
+
+    loadBufferNode(center);
+
+
+
     if( !glfwInit()){
         fprintf( stderr, "Failed to initialize GLFW\n" );
-        getchar();
+        //getchar();
         return -1;
     }
-     glfwSwapInterval(1);
-
     glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    Window window_object(3, 3, SCREEN_WIDTH, SCREEN_HEIGHT, "Projet Moteur de jeux");
-    window_object.setup_GLFW();
-    GLFWwindow* window = window_object.get_window();
+    
+    Window *window_object = new Window(3, 3, SCREEN_WIDTH, SCREEN_HEIGHT, "Projet Moteur de jeux");
+    window_object->setup_GLFW();
+    GLFWwindow* window = window_object->get_window();
     glfwMakeContextCurrent(window);
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // On définit le callback à appeler lors du redimensionnement de la fenêtre
@@ -291,7 +435,7 @@ int main(){
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-
+    glfwSetKeyCallback(window, key_callback);
     glfwSetCursorPosCallback(window, mouse_cursor_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
@@ -302,19 +446,27 @@ int main(){
 
     programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
     programID_HUD = LoadShaders("../shaders/hud_vertex.vert", "../shaders/hud_frag.frag");
-    glUseProgram(programID_HUD); // Attention à bien laisser cette ligne (apparemment il faut un glUseProgram initialement sinon ça cause des problèmes quand on essaye de charger des textures)
+    glUseProgram(programID_HUD);
 
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
-
-    MapGenerator *mg = new MapGenerator(planeWidth, planeLength, 21345); 
+    
+    MapGenerator *mg = new MapGenerator(planeWidth, planeLength, seedTerrain, octave); 
     mg->generateImage();
     int widthHeightmap, heightHeightmap, channels;
     unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
 
-    if (widthHeightmap != planeWidth*32 || heightHeightmap != planeLength*32 ){ // On s'assure que la carte de hauteur chargée est bien adapté au terrain
-        std::cout << "La carte de hauteur n'est pas adapté au terrain\n";
-        return -1;
-    }
+    std::vector<Structure> structures;
+    // Chargement des structures
+    std::ifstream tree_1_StructureFile("../Structures/Tree.txt");
+    structures.push_back(Chunk::readFile(tree_1_StructureFile));
+    std::ifstream tree_2_StructureFile("../Structures/Tree_2.txt");
+    structures.push_back(Chunk::readFile(tree_2_StructureFile));
+    std::ifstream houseStructureFile("../Structures/House_1.txt");
+    structures.push_back(Chunk::readFile(houseStructureFile));
+    Chunk::setListeStructures(structures);
+    tree_1_StructureFile.close();
+    tree_2_StructureFile.close();
+    houseStructureFile.close();
 
     buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
 
@@ -331,6 +483,7 @@ int main(){
     bool renduFilaire = false;
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+    
     // Setup ImGui binding
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -338,13 +491,11 @@ int main(){
     ImGui_ImplOpenGL3_Init("#version 330");
     ImGui::StyleColorsLight();
 
-    // Temporaire (plus tard il faudra envoyer aux shaders le tableau des blocs dans la hotbar à chaque fois que celle-ci changera)
     glUniform1iv(glGetUniformLocation(programID_HUD, "blockHotbar"), 9, blockInHotbar);
 
     // Chargement des textures
     GLint atlasTexture = loadTexture2DFromFilePath("../Textures/Blocks/atlas.png");
     GLint hudTexture = loadTexture2DFromFilePath("../Textures/HUD/hud.png");
-    GLint inventoryTexture = loadTexture2DFromFilePath("../Textures/HUD/inventory.png");
 
     if (atlasTexture != -1) {
         glActiveTexture(GL_TEXTURE0);
@@ -359,19 +510,16 @@ int main(){
         glUniform1i(glGetUniformLocation(programID_HUD, "hudTexture"), 1);
     }
 
-    if (inventoryTexture != -1) {
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, inventoryTexture);
-        glUniform1i(glGetUniformLocation(programID_HUD, "inventoryTexture"), 1);
-    }
-
     skybox->bindCubemap(GL_TEXTURE2, 2); 
-    
+
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        center->transformation = new Transform(glm::rotate(glm::mat4(1.0f), glm::radians(0.f),glm::vec3(0.f,0.f,0.f))); // Appliquer la rotation à la matrice
+        chestZombie->transformation = new Transform(glm::rotate(glm::mat4(1.0f), glm::radians(0.f),glm::vec3(0.f,0.f,0.f))); // Appliquer la rotation à la matrice
 
         processInput(window);
 
@@ -394,61 +542,40 @@ int main(){
         glUniformMatrix4fv(ViewMatrix,1,GL_FALSE,&View[0][0]);
         glUniformMatrix4fv(ProjectionMatrix,1,GL_FALSE,&Projection[0][0]);
 
-
         for (int i = 0 ; i < listeChunks.size() ; i++){
             listeChunks[i]->drawChunk();
         }
 
         // Affichage de la skybox
         skybox->drawSkybox(Model, Projection, View);
-
+        
         // Affichage de l'hud
         if (showHud){
             glUseProgram(programID_HUD);
             hud->drawHud();
         }
 
-        // Pour les collisions, voir peut être swept aabb
+        if (!player->getCanJump()){ // Le joueur ne peut pas sauter, donc il tombe
+            player->move(glm::vec3(0.0,forceJump*deltaTime,0.0));
+            forceJump -= gravity*deltaTime;
+        }
+
         // Détermine la cellule ou se trouve le joueur
         glm::vec3 pPlayer = player->getBottomPoint();
+        
         int numLongueur = floor(pPlayer[0]) + 16*planeWidth;
         int numHauteur = floor(pPlayer[1]-0.001) + 16;
         int numProfondeur = floor(pPlayer[2]) + 16*planeLength;
         if (numLongueur < 0 || numLongueur > (planeWidth*32)-1 || numProfondeur < 0 || numProfondeur > (planeLength*32)-1 || numHauteur < 0 || numHauteur > 31){
-            player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
-            player->addToSpeed(-0.02);
+            player->move(glm::vec3(0.0,forceJump*deltaTime,0.0));
+            forceJump -= gravity*deltaTime;
+            player->setCanJump(false);
         }else{
             int indiceBlock = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel dans lequel on considère que le joueur se trouve
             Voxel *v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
-            Voxel *vLeft = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock+1023];
-            // glm::vec3 pLeftBottomPlayer=player->getLeftBottomPoint();
-            // int numLongueur2 = floor(pPlayer[0]) + 16*planeWidth;
-            // int numHauteur2 = floor(pPlayer[1]-0.001) + 16;
-            // int numProfondeur2 = floor(pPlayer[2]) + 16*planeLength;
-            
-            // printf("indice: %d\n",indiceBlock);
-            // printf("indice gauche: %d\n",indiceBlock+1023);
-            if(player->getCanJump()==false){
-                Voxel *vTop = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock+1024*2];
-                if(vTop != nullptr){
-                    //printf("block au dessus \n");
-                    //if(pTopPlayer[1]==vTopPos[1])printf("collision\n");
-                    player->couldJump(false);
-                    float actualJumpSpeed=player->getJumpSpeed();
-                    player->resetJumpSpeed();
-                    player->move(glm::vec3(0.f,-0.01,0.f));
-                    //player->move(glm::vec3(0.0f,3.8-((indiceBlock+2048)/1024),0.0f));
-                    //player->addToSpeed(-2*actualJumpSpeed);
-                }
-            }
-
-            if(vLeft!=nullptr){
-                glm::vec3 pos = vLeft->backBottomLeftCorner;
-            }
             
             if (v == nullptr){
-                player->move(glm::vec3(0.f,player->getJumpSpeed(),0.f));
-                player->addToSpeed(-0.02);
+                player->setCanJump(false);
 
                 // On fait attention à ne pas afficher le joueur à l'intérieur d'un bloc (même pendant une frame, c'est plus propre)
                 pPlayer = player->getBottomPoint();
@@ -459,16 +586,12 @@ int main(){
                     player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
                 }
             }else{
-                // Quand le joueur est au sommet du chunk, il ne faut pas qu'il rentre dans le bloc
                 if (pPlayer[1] != ceil(pPlayer[1])){
                     player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
                 }
-                player->resetJumpSpeed();
-                player->couldJump(true);
+                player->setCanJump(true);
             }
         }
-        
-        
         
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -489,7 +612,7 @@ int main(){
 
         ImGui::Spacing();
 
-        ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 0.0, 100.0);
+        ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 0.0, 50.0);
 
         ImGui::Spacing();
 
@@ -541,21 +664,46 @@ int main(){
 
         ImGui::Spacing();
 
-        if (ImGui::SliderInt("Longueur", &planeWidth, 1, 32)){
+        if (ImGui::SliderInt("Longueur terrain", &planeWidth, 1, 32)){
+            mg->setWidthMap(planeWidth);
+            mg->generateImage();
+            dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
             buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
         }
 
         ImGui::Spacing();
 
         if (ImGui::SliderInt("Largeur", &planeLength, 1, 32)){
+            mg->setHeightMap(planeLength);
+            mg->generateImage();
+            dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
             buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
         }
 
         ImGui::Spacing();
 
-        if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
+        if(ImGui::SliderInt("Seed de génération", &seedTerrain, 0, 10000)){
+            mg->setSeed(seedTerrain);
+        }
+
+        ImGui::Spacing();
+
+        if(ImGui::SliderInt("Nombre d'octaves", &octave, 1, 10)){
+            mg->setOctave(octave);
+        }
+
+        ImGui::Spacing();
+
+        if (ImGui::Button("Utiliser la seed et le nombre d'octaves")){
+            mg->generateImage();
+            dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
             buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
         }
+
+        // Pour simplifier, on limite à un seul chunk de haut
+        //if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
+        //    buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+        //}
 
         ImGui::Spacing();
 
@@ -569,6 +717,8 @@ int main(){
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+        sendNodeToBuffer(center,programID,glm::mat4(1));
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -581,7 +731,15 @@ int main(){
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    glfwDestroyWindow(window);
+    for (int i = 0 ; i < listeChunks.size() ; i++){
+        delete listeChunks[i];
+    }
+    stbi_image_free(dataPixels);
+    delete skybox;
+    delete mg;
+    delete hud;
+    delete player;
+    delete window_object;
     glfwTerminate();
     return 0;
 

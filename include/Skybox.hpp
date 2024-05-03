@@ -16,6 +16,7 @@ class Skybox {
 
     public:
         Skybox();
+        ~Skybox();
         void createSkybox();
         void drawSkybox(glm::mat4 Model, glm::mat4 Projection, glm::mat4 View);
 

@@ -4,11 +4,17 @@
 
 class MapGenerator{
     private:
-        int widthMap;
-        int heightMap;
-        unsigned int seed;
+        int widthMap; // Nombre de chunk en longueur du terrain
+        int heightMap; // Nombre de chunk en largeur du terrain
+        int seed;
+        int octave;
     public:
-        MapGenerator(int wMap, int hMap, unsigned int seed);
-        float generatePerlinNoise(float x, float y, unsigned int seed);
+        MapGenerator(int wMap, int hMap, int seed, int octave);
+        ~MapGenerator();
+        float generatePerlinNoise(float x, float y);
         void generateImage();
+        void setWidthMap(int widthMap);
+        void setHeightMap(int heightMap);
+        void setSeed(int seed);
+        void setOctave(int octave);
 };
