@@ -19,7 +19,7 @@ bool cameraOrbitale = false;
 bool cameraLibre = false; // Caméra libre par défaut
 bool cameraMouseLibre = false;
 bool cameraMousePlayer = true;
-int speedCam = 15;
+int speedCam = 50;
 double previousX = SCREEN_WIDTH / 2;
 double previousY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
@@ -37,9 +37,10 @@ int octave = 4;
 
 Player *player;
 float playerSpeed = 7.0f;
-float forceJump;
+float forceJump = 0.0f;
 float forceJumpInitial = 7.0f;
 float gravity = 20.0f;
+bool hasUpdate;
 
 int blockInHotbar[9] = {23,29,1,11,12,13,20,26,28}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
@@ -73,6 +74,20 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE){
         playerSpeed /= 1.4;
     }
+    // Pour sortir de la caméra à la souris (plus tard ce sera la touche qui ouvre l'inventaire, et donc affiche la souris dans la fenêtre)
+    if (key == GLFW_KEY_E && action == GLFW_PRESS){ 
+            if (cameraMousePlayer){
+                cameraMouseLibre = false;
+                cameraMousePlayer = false;
+                cameraOrbitale = false;
+                cameraLibre = true;
+            }else{
+                cameraMouseLibre = false;
+                cameraMousePlayer = true;
+                cameraOrbitale = false;
+                cameraLibre = false;
+            }
+    }
 }
 
 void processInput(GLFWwindow* window){ 
@@ -80,14 +95,6 @@ void processInput(GLFWwindow* window){
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window,true);
-    }
-
-    // Pour sortir de la caméra à la souris (plus tard ce sera la touche qui ouvre l'inventaire, et donc affiche la souris dans la fenêtre)
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS){ 
-            cameraMouseLibre = false;
-            cameraMousePlayer = false;
-            cameraOrbitale = false;
-            cameraLibre = true;
     }
     
     // Déplacement du joueur
@@ -382,6 +389,8 @@ int main(){
 
     skybox->bindCubemap(GL_TEXTURE2, 2); 
 
+    lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
+
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
         float currentFrame = glfwGetTime();
@@ -422,9 +431,12 @@ int main(){
             hud->drawHud();
         }
 
-        if (!player->getCanJump()){ // Le joueur ne peut pas sauter, donc il tombe
+        hasUpdate = false;
+
+        if (!player->getCanJump()){ // Le joueur est en train de sauter
             player->move(glm::vec3(0.0,forceJump*deltaTime,0.0));
             forceJump -= gravity*deltaTime;
+            hasUpdate = true;
         }
 
         // Détermine la cellule ou se trouve le joueur
@@ -434,27 +446,24 @@ int main(){
         int numHauteur = floor(pPlayer[1]-0.001) + 16;
         int numProfondeur = floor(pPlayer[2]) + 16*planeLength;
         if (numLongueur < 0 || numLongueur > (planeWidth*32)-1 || numProfondeur < 0 || numProfondeur > (planeLength*32)-1 || numHauteur < 0 || numHauteur > 31){
-            player->move(glm::vec3(0.0,forceJump*deltaTime,0.0));
-            forceJump -= gravity*deltaTime;
-            player->setCanJump(false);
+            // C'est contre_intuitif, mais on ne peut pas juste vérifier si le joueur a déjà sauté.
+            // On est obligé d'utiliser un nouveau booléen si on veut l'empêcher de sauter + ne pas le faire subir la gravité 2 fois
+            if (!hasUpdate){
+                player->move(glm::vec3(0.0,forceJump*deltaTime,0.0));
+                forceJump -= gravity*deltaTime;
+                player->setCanJump(false);
+            }
         }else{
             int indiceBlock = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel dans lequel on considère que le joueur se trouve
             Voxel *v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
-            
-            /*
-            if(!player->getCanJump()){
-                int numHauteurTop = floor(pPlayer[1]+1.8) + 16;
-                int indiceBlock = numHauteurTop *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel dans lequel on considère que le joueur se trouve
-                Voxel *vTop = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
-                if(vTop != nullptr){
-                    player->move(glm::vec3(0.f,numHauteurTop,0.f));
-                }
-            }
-            */
 
             if (v == nullptr){
                 player->setCanJump(false);
-
+                if (!hasUpdate){ // Pour ne pas faire subir 2 fois la gravité au joueur
+                    player->move(glm::vec3(0.0,forceJump*deltaTime,0.0));
+                    forceJump -= gravity*deltaTime;
+                }
+                
                 // On fait attention à ne pas afficher le joueur à l'intérieur d'un bloc (même pendant une frame, c'est plus propre)
                 pPlayer = player->getBottomPoint();
                 numHauteur = floor(pPlayer[1]-0.001) + 16;
@@ -462,10 +471,13 @@ int main(){
                 v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
                 if (v != nullptr){
                     player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
+                    forceJump = 0.0f;
+                    player->setCanJump(true);
                 }
             }else{
                 if (pPlayer[1] != ceil(pPlayer[1])){
                     player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
+                    forceJump = 0.0f;
                 }
                 player->setCanJump(true);
             }
