@@ -39,7 +39,7 @@ Player *player;
 float playerSpeed = 7.0f;
 float forceJump;
 float forceJumpInitial = 7.0f;
-float gravity = 18.0f;
+float gravity = 20.0f;
 
 int blockInHotbar[9] = {23,29,1,11,12,13,20,26,28}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
@@ -441,6 +441,17 @@ int main(){
             int indiceBlock = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel dans lequel on considère que le joueur se trouve
             Voxel *v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
             
+            /*
+            if(!player->getCanJump()){
+                int numHauteurTop = floor(pPlayer[1]+1.8) + 16;
+                int indiceBlock = numHauteurTop *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel dans lequel on considère que le joueur se trouve
+                Voxel *vTop = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
+                if(vTop != nullptr){
+                    player->move(glm::vec3(0.f,numHauteurTop,0.f));
+                }
+            }
+            */
+
             if (v == nullptr){
                 player->setCanJump(false);
 

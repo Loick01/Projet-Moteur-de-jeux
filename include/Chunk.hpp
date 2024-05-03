@@ -7,6 +7,9 @@
 #define NB_BLOCK 33
 #define GRASS_BLOCK 13
 #define DIRT_BLOCK 32
+#define DIAMOND_ORE 19
+#define IRON_ORE 21
+#define STONE_BLOCK 0
 
 struct BlockStructure{
     int infoBlock[4];
