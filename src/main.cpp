@@ -36,11 +36,14 @@ int seedTerrain = 1000;
 int octave = 4;
 
 Player *player;
-float playerSpeed = 7.0f;
+float playerSpeed = 6.0f;
+float coeffAcceleration = 1.5f;
 float forceJump = 0.0f;
-float forceJumpInitial = 7.0f;
+float forceJumpInitial = 7.5f;
 float gravity = 20.0f;
 bool hasUpdate;
+bool isRunning = false;
+bool isHolding = false;
 
 int blockInHotbar[9] = {23,29,1,11,12,13,20,26,28}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
@@ -69,10 +72,15 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS){
-        playerSpeed *= 1.4;
+        playerSpeed *= coeffAcceleration;
+        isRunning = true;
     }
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE){
-        playerSpeed /= 1.4;
+        if (!isHolding){
+            playerSpeed /= coeffAcceleration;
+        }
+        isHolding = false;
+        isRunning = false;
     }
     // Pour sortir de la caméra à la souris (plus tard ce sera la touche qui ouvre l'inventaire, et donc affiche la souris dans la fenêtre)
     if (key == GLFW_KEY_E && action == GLFW_PRESS){ 
@@ -399,6 +407,21 @@ int main(){
 
         processInput(window);
 
+        // Courir consomme de l'endurance
+        if (isRunning){
+            if (player->getStamina() > 0.0){
+                player->addStamina(-1.0);
+            }else{
+                playerSpeed /= coeffAcceleration;
+                isRunning = false;
+                isHolding = true;
+            }
+        }else if (player->getStamina() < 100.0f){
+            if (!isHolding){
+                player->addStamina(1.0);
+            }
+        }
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(programID);
@@ -485,12 +508,26 @@ int main(){
                 v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
                 if (v != nullptr){
                     player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
+                    if (forceJump <= -14.0f){
+                        player->takeDamage(pow(forceJump + 14.0, 2)); // On reverra plus le calcul des dégâts si on a le temps
+                        if (player->getLife() <= 0.0){
+                            std::cout << "Vous êtes mort !\n";
+                            return -1; // Le joueur est mort, le programme s'arrête 
+                        }
+                    }
                     forceJump = 0.0f;
                     player->setCanJump(true);
                 }
             }else{
                 if (pPlayer[1] != ceil(pPlayer[1])){
                     player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
+                    if (forceJump <= -14.0f){
+                        player->takeDamage(pow(forceJump + 14.0, 2)); // On reverra plus le calcul des dégâts si on a le temps
+                        if (player->getLife() <= 0.0){
+                            std::cout << "Vous êtes mort !\n";
+                            return -1; // Le joueur est mort, le programme s'arrête 
+                        }
+                    }
                     forceJump = 0.0f;
                 }
                 player->setCanJump(true);
