@@ -409,7 +409,7 @@ int main(){
         if (cameraOrbitale){
             camera_target = -1.0f * camera_position;
         }else if (cameraMousePlayer){
-            camera_position = player->getBottomPoint() + glm::vec3(0.0f,1.8f,0.f); // Positionne la caméra sur le joueur
+            camera_position = player->getBottomPoint() + glm::vec3(0.0f,1.7f,0.f); // Positionne la caméra sur le joueur (du coup attention à la taille qu'on donne à la hitbox)
         }
 
         glm::mat4 View = glm::lookAt(camera_position, camera_position + camera_target, camera_up);
@@ -456,6 +456,20 @@ int main(){
         }else{
             int indiceBlock = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel dans lequel on considère que le joueur se trouve
             Voxel *v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
+
+            if (!player->getCanJump()){ // Collision vers le haut (temporaire, il faudra faire plus propre)
+                glm::vec3 pPlayerTop = pPlayer;
+                pPlayerTop[1] += 1.8; // Attention à bien mettre une hitbox plus haute que la position de la caméra (sinon on peut voir parfois à travers des blocs)
+                int NL = floor(pPlayerTop[0]) + 16*planeWidth;
+                int NH = floor(pPlayerTop[1]) + 16;
+                int NP = floor(pPlayerTop[2]) + 16*planeLength;
+                int index = NH *1024 + (NP%32) * 32 + (NL%32); // Indice du voxel dans lequel on considère que le joueur se trouve
+                Voxel *vTop = listeChunks[(NL/32) * planeLength + NP/32]->getListeVoxels()[index];
+                if (vTop != nullptr){
+                    forceJump = 0.0f;
+                    player->move(glm::vec3(0.0f,floor(pPlayerTop[1]) - pPlayerTop[1] - 0.01,0.0f)); // Le 0.01 assure que le joueur ne rentre pas dans le bloc
+                }
+            }
 
             if (v == nullptr){
                 player->setCanJump(false);

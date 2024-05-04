@@ -101,28 +101,30 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
             for (int i=0;i<CHUNK_SIZE;i++){ 
                 int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
                 if (k <= ((int)dataPixels[indInText])){ 
-                    int typeBlock = rand() % 1000;
-                    int tailleFilon = rand() % 3;
-                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k>=(int)dataPixels[indInText]-3 ? DIRT_BLOCK : (typeBlock==0?DIAMOND_ORE:(typeBlock<10?IRON_ORE:STONE_BLOCK))); 
+                    int typeBlock = rand() % 500;
+                    int sizeVein = rand() % 3;
+                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k>=(int)dataPixels[indInText]-(2+rand()%4) ? DIRT_BLOCK : (typeBlock==0?DIAMOND_ORE:(typeBlock<10?IRON_ORE:STONE_BLOCK))); 
                     if (k==(int)dataPixels[indInText]){
                         vox->setVisible(true);
                         vox->setId(GRASS_BLOCK);
-                    }else if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1 ){
+                    }else if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1){
                         vox->setVisible(true);
                     }
                     this->listeVoxels.push_back(vox);
 
-                    if(j>=tailleFilon && i>=tailleFilon && k>=tailleFilon && j<CHUNK_SIZE && listeVoxels[k*1024+32*j+i]->getID()==DIAMOND_ORE){
-                        for(int m=1;m<=tailleFilon;m++){
-                            for(int n=1;n<=tailleFilon;n++){
-                                for(int l=1;l<=tailleFilon;l++){
-                                    if(rand()%m==0)listeVoxels[k*1024+32*(j-m)+i]->setId(DIAMOND_ORE);
-                                    if(rand()%n==0)listeVoxels[k*1024+32*j+(i-n)]->setId(DIAMOND_ORE);
-                                    if(rand()%n==0)listeVoxels[k*1024+32*(j-m)+(i-n)]->setId(DIAMOND_ORE);
-                                    if(rand()%l==0)listeVoxels[(k-l)*1024+32*j+i]->setId(DIAMOND_ORE);
-                                    if(rand()%m==0)listeVoxels[(k-l)*1024+32*(j-m)+i]->setId(DIAMOND_ORE);
-                                    if(rand()%l==0)listeVoxels[(k-l)*1024+32*j+(i-n)]->setId(DIAMOND_ORE);
-                                    if(rand()%m==0)listeVoxels[(k-l)*1024+32*(j-m)+(i-n)]->setId(DIAMOND_ORE);
+                    // Génération des filons de minerais
+                    int idToGenerate = listeVoxels[k*1024+32*j+i]->getID();
+                    if((idToGenerate==DIAMOND_ORE || idToGenerate==IRON_ORE) && j>=sizeVein && i>=sizeVein && k>=sizeVein && j<CHUNK_SIZE){
+                        for(int l=1;l<=sizeVein;l++){
+                            for(int m=1;m<=sizeVein;m++){
+                                for(int n=1;n<=sizeVein;n++){
+                                    if(rand()%(m*4)==0)listeVoxels[k*1024+32*(j-m)+i]->setId(idToGenerate);
+                                    if(rand()%(n*4)==0)listeVoxels[k*1024+32*j+(i-n)]->setId(idToGenerate);
+                                    if(rand()%(n*4)==0)listeVoxels[k*1024+32*(j-m)+(i-n)]->setId(idToGenerate);
+                                    if(rand()%(l*4)==0)listeVoxels[(k-l)*1024+32*j+i]->setId(idToGenerate);
+                                    if(rand()%(m*4)==0)listeVoxels[(k-l)*1024+32*(j-m)+i]->setId(idToGenerate);
+                                    if(rand()%(l*4)==0)listeVoxels[(k-l)*1024+32*j+(i-n)]->setId(idToGenerate);
+                                    if(rand()%(m*4)==0)listeVoxels[(k-l)*1024+32*(j-m)+(i-n)]->setId(idToGenerate);
                                 }
                             }
                         }
@@ -134,44 +136,39 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
         }
     }
 
-    // On complète les trous de la génération
+    // On complète les trous de la génération (quand la différence de hauteur entre 2 blocs adjacents est > 1)
     for (int j=0;j<CHUNK_SIZE;j++){     
         for (int i=0;i<CHUNK_SIZE;i++){ 
-            int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
-            int indInText2 = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + (i+1)*4;
-            int indInText3 = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + (i-1)*4;
-            int indInText4 = posLengthChunk*4 + posWidthChunk*4 + (j+1)*widthHeightmap*4 + i*4;
-            int indInText5 = posLengthChunk*4 + posWidthChunk*4 + (j-1)*widthHeightmap*4 + i*4;
+            int indexVoxel = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
 
             if(i<CHUNK_SIZE-1){
-
-                if(dataPixels[indInText]-dataPixels[indInText2]>1){
-                    for(int k=dataPixels[indInText]-1;k>dataPixels[indInText2];k--){
+                int indexRightNeighbour = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + (i+1)*4;
+                if(dataPixels[indexVoxel]-dataPixels[indexRightNeighbour]>1){
+                    for(int k=dataPixels[indexVoxel]-1;k>dataPixels[indexRightNeighbour];k--){
                         listeVoxels[k*1024+32*j+i]->setVisible(true);
-                        
                     }
                 }
             }
-
             if(i>0){
-                if(dataPixels[indInText]-dataPixels[indInText3]>1){
-                    for(int k=dataPixels[indInText]-1;k>dataPixels[indInText3];k--){
+                int indexLeftNeighbour = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + (i-1)*4;
+                if(dataPixels[indexVoxel]-dataPixels[indexLeftNeighbour]>1){
+                    for(int k=dataPixels[indexVoxel]-1;k>dataPixels[indexLeftNeighbour];k--){
                         listeVoxels[k*1024+32*j+i]->setVisible(true);
                     }
                 }
             }
-
             if(j<CHUNK_SIZE-1){
-                if(dataPixels[indInText]-dataPixels[indInText4]>1){
-                    for(int k=dataPixels[indInText]-1;k>dataPixels[indInText4];k--){
+                int indexFrontNeighbour = posLengthChunk*4 + posWidthChunk*4 + (j+1)*widthHeightmap*4 + i*4;
+                if(dataPixels[indexVoxel]-dataPixels[indexFrontNeighbour]>1){
+                    for(int k=dataPixels[indexVoxel]-1;k>dataPixels[indexFrontNeighbour];k--){
                         listeVoxels[k*1024+32*j+i]->setVisible(true);
                     }
                 }
             }
-
             if(j>0){
-                if(dataPixels[indInText]-dataPixels[indInText5]>1){
-                    for(int k=dataPixels[indInText]-1;k>dataPixels[indInText5];k--){
+                int indexBackNeighbour = posLengthChunk*4 + posWidthChunk*4 + (j-1)*widthHeightmap*4 + i*4;
+                if(dataPixels[indexVoxel]-dataPixels[indexBackNeighbour]>1){
+                    for(int k=dataPixels[indexVoxel]-1;k>dataPixels[indexBackNeighbour];k--){
                         listeVoxels[k*1024+32*j+i]->setVisible(true);
                     }
                 }
@@ -187,7 +184,7 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
             for (int i=0;i<CHUNK_SIZE;i++){ 
                 // On s'assure que la structure pourra rentrer dans le chunk
                 int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
-                if (k == ((int)dataPixels[indInText])+1 && i>1 && i<CHUNK_SIZE-2 && j>1 && j<CHUNK_SIZE-2 && rand()%100 == 0){ // Pour l'instant, les structures apparaissent aléatoirement, mais sans utiliser la seed alors que c'est ce qu'on voudrait
+                if (k == ((int)dataPixels[indInText])+1 && i>1 && i<CHUNK_SIZE-2 && j>1 && j<CHUNK_SIZE-2 && rand()%100 == 0){ // Pour l'instant, les structures apparaissent aléatoirement
                     buildStructure(i,j,k);
                 }
             }
