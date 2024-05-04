@@ -8,7 +8,7 @@ layout(location = 0) in vec2 position;
 uniform int selectLocation;
 
 out vec2 uv_coord;
-out int inHotbar;
+out int stateHud;
 
 uniform int blockHotbar[9];
 
@@ -39,7 +39,7 @@ vec2 texCoords[12] = vec2[12](
 );
 
 void main() {
-    inHotbar = 0;
+    stateHud = 0;
     vec2 vertPosition = position;
     if (gl_VertexID < 4){ // Pour le select uniquement (pour faire en sorte qu'il se positionne selon la molette de la souris)
         vertPosition[0] += selectLocation * 80.0;
@@ -49,9 +49,13 @@ void main() {
 
     if (gl_VertexID < 12){
         uv_coord = texCoords[gl_VertexID];
+    }else if (gl_VertexID < 16){ // Pour la ligne de vie
+        stateHud = 2;
+    }else if (gl_VertexID < 20){ // Pour la ligne d'endurance
+        stateHud = 3;
     }else{
-        inHotbar = 1;
-        int objectID = blockHotbar[gl_VertexID/4 - 3];
+        stateHud = 1;
+        int objectID = blockHotbar[gl_VertexID/4 - 5]; // Ici, 5 c'est le nombre de PlaneHud chargé avant les items de la hotbar (donc si on en rajoute il faut modifier cette valeur)
         uv_coord = texCoordsBlock[gl_VertexID%4];
         uv_coord[0] += objectID%5*0.2;
         uv_coord[1] += objectID/5*0.1;

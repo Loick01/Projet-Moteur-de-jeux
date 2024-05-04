@@ -11,6 +11,8 @@ struct PlaneHud{
 
 class Hud{
     private:
+        int screen_width;
+        float hotbarWidth;
         std::vector<PlaneHud> elements;
         GLuint vertexbuffer;
         GLuint elementbuffer;
@@ -18,10 +20,14 @@ class Hud{
         PlaneHud hotbar;
         PlaneHud select;
         PlaneHud cursor;
+        PlaneHud lifeLine;
+        PlaneHud staminaLine;
     public:
         Hud(int screen_width, int screen_height);
         ~Hud();
         PlaneHud createPlaneHud(glm::vec2 refPoint, float widthPlane, float heightPlane, int decalage);
         void loadHud();
         void drawHud();
+        void updateLife(float new_life);
+        void updateStamina(float new_stamina);
 };

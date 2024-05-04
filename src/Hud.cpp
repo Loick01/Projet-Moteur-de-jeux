@@ -24,20 +24,25 @@ PlaneHud Hud::createPlaneHud(glm::vec2 refPoint, float widthPlane, float heightP
 }
 
 Hud::Hud(int screen_width, int screen_height){
-    float hotbarWidth = 724.0f;
+    this->screen_width = screen_width; // On en a besoin dans d'autres fonctions, donc on le met en attribut de la classe (idem pour hotbarWidth)
+    this->hotbarWidth = 724.0f; 
     float hotbarHeight = 84.0f;
     float selectSize = 92.0f;
     float cursorSize =36.0f;
     this->select = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 - 4.0,6.0),selectSize,selectSize,0); // Par défaut, le sélecteur est placé sur le premier élément de la hotbar
     this->hotbar = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 ,10.0),hotbarWidth,hotbarHeight,4);
     this->cursor = createPlaneHud(glm::vec2(screen_width/2.0 - cursorSize/2.0 ,screen_height/2.0 - cursorSize/2.0),cursorSize,cursorSize,8);
+    this->lifeLine = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 ,20.0 + hotbarHeight),hotbarWidth/2,30.0,12);
+    this->staminaLine = createPlaneHud(glm::vec2(screen_width/2.0  ,20.0 + hotbarHeight),hotbarWidth/2,30.0,16);
 
     this->elements.push_back(this->select);
     this->elements.push_back(this->hotbar);
     this->elements.push_back(this->cursor);
+    this->elements.push_back(this->lifeLine);
+    this->elements.push_back(this->staminaLine);
 
     for (int i = 0 ; i < 9 ; i++){ // On génère les 9 emplacements de la hotbar
-        PlaneHud ei = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 + 80.0 * i + 8.0, 18.0),68,68,12+i*4);
+        PlaneHud ei = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 + 80.0 * i + 8.0, 18.0),68,68,this->elements.size()*4);
         this->elements.push_back(ei);
     }
 }
@@ -93,4 +98,42 @@ void Hud::drawHud(){
                     );
 
     glDisableVertexAttribArray(0);
+}
+
+void Hud::updateLife(float new_life){
+    glDeleteBuffers(1, &(this->vertexbuffer)); // Ne pas oublier de supprimer le précédent buffer
+    float new_x = this->screen_width/2.0 - this->hotbarWidth/2.0 + (new_life*this->hotbarWidth/200);
+    this->elements[3].vertices[1].x = new_x;
+    this->elements[3].vertices[3].x = new_x;
+
+    std::vector<glm::vec2> acc_vertices;
+    for (int i = 0 ; i < this->elements.size() ; i++){
+        for (int v = 0 ; v < 4 ; v++){
+            acc_vertices.push_back(elements[i].vertices[v]);
+        }
+    }
+
+    // On prend en compte les nouveaux sommets
+    glGenBuffers(1, &(this->vertexbuffer));
+    glBindBuffer(GL_ARRAY_BUFFER, this->vertexbuffer);
+    glBufferData(GL_ARRAY_BUFFER, acc_vertices.size() * sizeof(glm::vec2), &(acc_vertices[0]), GL_STATIC_DRAW);
+}
+
+void Hud::updateStamina(float new_stamina){
+    glDeleteBuffers(1, &(this->vertexbuffer)); // Ne pas oublier de supprimer le précédent buffer
+    float new_x = this->screen_width/2.0 + (new_stamina*this->hotbarWidth/200);
+    this->elements[4].vertices[1].x = new_x;
+    this->elements[4].vertices[3].x = new_x;
+
+    std::vector<glm::vec2> acc_vertices;
+    for (int i = 0 ; i < this->elements.size() ; i++){
+        for (int v = 0 ; v < 4 ; v++){
+            acc_vertices.push_back(elements[i].vertices[v]);
+        }
+    }
+
+    // On prend en compte les nouveaux sommets
+    glGenBuffers(1, &(this->vertexbuffer));
+    glBindBuffer(GL_ARRAY_BUFFER, this->vertexbuffer);
+    glBufferData(GL_ARRAY_BUFFER, acc_vertices.size() * sizeof(glm::vec2), &(acc_vertices[0]), GL_STATIC_DRAW);
 }

@@ -411,6 +411,7 @@ int main(){
         if (isRunning){
             if (player->getStamina() > 0.0){
                 player->addStamina(-1.0);
+                hud->updateStamina(player->getStamina());
             }else{
                 playerSpeed /= coeffAcceleration;
                 isRunning = false;
@@ -419,6 +420,7 @@ int main(){
         }else if (player->getStamina() < 100.0f){
             if (!isHolding){
                 player->addStamina(1.0);
+                hud->updateStamina(player->getStamina());
             }
         }
 
@@ -479,18 +481,21 @@ int main(){
         }else{
             int indiceBlock = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel dans lequel on considère que le joueur se trouve
             Voxel *v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
-
+        
             if (!player->getCanJump()){ // Collision vers le haut (temporaire, il faudra faire plus propre)
                 glm::vec3 pPlayerTop = pPlayer;
                 pPlayerTop[1] += 1.8; // Attention à bien mettre une hitbox plus haute que la position de la caméra (sinon on peut voir parfois à travers des blocs)
                 int NL = floor(pPlayerTop[0]) + 16*planeWidth;
                 int NH = floor(pPlayerTop[1]) + 16;
                 int NP = floor(pPlayerTop[2]) + 16*planeLength;
-                int index = NH *1024 + (NP%32) * 32 + (NL%32); // Indice du voxel dans lequel on considère que le joueur se trouve
-                Voxel *vTop = listeChunks[(NL/32) * planeLength + NP/32]->getListeVoxels()[index];
-                if (vTop != nullptr){
-                    forceJump = 0.0f;
-                    player->move(glm::vec3(0.0f,floor(pPlayerTop[1]) - pPlayerTop[1] - 0.01,0.0f)); // Le 0.01 assure que le joueur ne rentre pas dans le bloc
+                // Il ne faut pas oublier de vérifier si le point au sommet de la hitbox du joueur se trouve bien dans le chunk
+                if (!(NL < 0 || NL > (planeWidth*32)-1 || NP < 0 || NP > (planeLength*32)-1 || NH < 0 || NH > 31)){
+                    int index = NH *1024 + (NP%32) * 32 + (NL%32); // Indice du voxel dans lequel on considère que le joueur se trouve
+                    Voxel *vTop = listeChunks[(NL/32) * planeLength + NP/32]->getListeVoxels()[index];
+                    if (vTop != nullptr){
+                        forceJump = 0.0f;
+                        player->move(glm::vec3(0.0f,floor(pPlayerTop[1]) - pPlayerTop[1] - 0.01,0.0f)); // Le 0.01 assure que le joueur ne rentre pas dans le bloc
+                    }
                 }
             }
 
@@ -510,6 +515,7 @@ int main(){
                     player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
                     if (forceJump <= -14.0f){
                         player->takeDamage(pow(forceJump + 14.0, 2)); // On reverra plus le calcul des dégâts si on a le temps
+                        hud->updateLife(player->getLife());
                         if (player->getLife() <= 0.0){
                             std::cout << "Vous êtes mort !\n";
                             return -1; // Le joueur est mort, le programme s'arrête 
@@ -523,6 +529,7 @@ int main(){
                     player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
                     if (forceJump <= -14.0f){
                         player->takeDamage(pow(forceJump + 14.0, 2)); // On reverra plus le calcul des dégâts si on a le temps
+                        hud->updateLife(player->getLife());
                         if (player->getLife() <= 0.0){
                             std::cout << "Vous êtes mort !\n";
                             return -1; // Le joueur est mort, le programme s'arrête 

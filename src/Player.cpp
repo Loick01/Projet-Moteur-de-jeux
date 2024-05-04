@@ -36,7 +36,7 @@ void Player::addStamina(float add){
 }
 
 void Player::takeDamage(float damage){
-    std::cout << "Vous prenez des dégâts : " << damage << "\n";
+    // std::cout << "Vous prenez des dégâts : " << damage << "\n";
     this->life -= damage;
 }
 
