@@ -22,6 +22,8 @@ class Hud{
         PlaneHud cursor;
         PlaneHud lifeLine;
         PlaneHud staminaLine;
+        PlaneHud lifeBar;
+        PlaneHud staminaBar;
     public:
         Hud(int screen_width, int screen_height);
         ~Hud();
