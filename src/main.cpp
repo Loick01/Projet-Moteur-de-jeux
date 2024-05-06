@@ -36,9 +36,10 @@ int seedTerrain = 1000;
 int octave = 4;
 
 Player *player;
+Hitbox *hitboxPlayer;
 float playerSpeed = 6.0f;
 float coeffAcceleration = 1.5f;
-bool hasUpdate;
+bool hasUpdate; // A rentrer dans la classe Hitbox plus tard
 bool isRunning = false;
 bool isHolding = false;
 
@@ -108,44 +109,44 @@ void processInput(GLFWwindow* window){
         // C'est à ça que servent x_axis et z_axis
         bool x_axis = false;
         bool z_axis = false;
-        glm::vec3 bottomPlayer = player->getBottomPoint();
+        glm::vec3 bottomPlayer = hitboxPlayer->getBottomPoint();
 
         glm::vec3 motion = glm::vec3(0.0f,0.0f,0.0f); // On accumule les déplacements pour que le joueur puisse se déplacer en diagonale
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
-            if (player->canGoFrontOrBack(0.3f, bottomPlayer, camera_target, planeWidth, planeLength, listeChunks)){
+            if (hitboxPlayer->canGoFrontOrBack(0.3f, bottomPlayer, camera_target, planeWidth, planeLength, listeChunks)){
                 motion += glm::vec3(camera_target[0],0.0f,camera_target[2]);
                 z_axis = true;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){ // Déplacement vers la gauche
             glm::vec3 cross_point;
-            if (player->canGoLeftOrRight(-0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
+            if (hitboxPlayer->canGoLeftOrRight(-0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
                 motion += glm::normalize(cross_point);
                 x_axis = true;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-            if (player->canGoFrontOrBack(-0.3f, bottomPlayer, camera_target, planeWidth, planeLength, listeChunks)){
+            if (hitboxPlayer->canGoFrontOrBack(-0.3f, bottomPlayer, camera_target, planeWidth, planeLength, listeChunks)){
                 motion += glm::vec3(camera_target[0],0.0f,camera_target[2])*-1.0f;
                 z_axis = !z_axis;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){ // Déplacement vers la droite
             glm::vec3 cross_point;
-            if (player->canGoLeftOrRight(0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
+            if (hitboxPlayer->canGoLeftOrRight(0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
                 motion += glm::normalize(cross_point);
                 x_axis = !x_axis;
             }
         }
 
         if (x_axis || z_axis){
-            player->move(glm::normalize(motion)*playerSpeed*deltaTime); // Attention à bien normaliser le vecteur de déplacement final (ça règle le problème de sqrt(2))
+            hitboxPlayer->move(glm::normalize(motion)*playerSpeed*deltaTime); // Attention à bien normaliser le vecteur de déplacement final (ça règle le problème de sqrt(2))
         }
 
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
-            if (player->getCanJump()){
-                player->resetJumpForce();
-                player->setCanJump(false);
+            if (hitboxPlayer->getCanJump()){
+                hitboxPlayer->resetJumpForce();
+                hitboxPlayer->setCanJump(false);
             }
         }
 
@@ -343,6 +344,7 @@ int main(){
     glUseProgram(programID_HUD);
 
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
+    hitboxPlayer = player->getHitbox();
     
     MapGenerator *mg = new MapGenerator(planeWidth, planeLength, seedTerrain, octave); 
     mg->generateImage();
@@ -416,7 +418,7 @@ int main(){
 
         processInput(window);
 
-        glm::vec3 bottomPointPlayer = player->getBottomPoint();
+        glm::vec3 bottomPointPlayer = hitboxPlayer->getBottomPoint();
 
         // Courir consomme de l'endurance
         if (isRunning){
@@ -469,8 +471,8 @@ int main(){
 
         // Gestion des collisions
         hasUpdate = false;
-        player->checkJump(&hasUpdate, deltaTime);
-        player->checkTopAndBottomCollision(hasUpdate, planeWidth, planeLength, deltaTime, listeChunks, hud);
+        hitboxPlayer->checkJump(&hasUpdate, deltaTime);
+        hitboxPlayer->checkTopAndBottomCollision(hasUpdate, planeWidth, planeLength, deltaTime, listeChunks, hud, player);
         
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
