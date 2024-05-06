@@ -38,9 +38,6 @@ int octave = 4;
 Player *player;
 float playerSpeed = 6.0f;
 float coeffAcceleration = 1.5f;
-float forceJump = 0.0f;
-float forceJumpInitial = 7.5f;
-float gravity = 20.0f;
 bool hasUpdate;
 bool isRunning = false;
 bool isHolding = false;
@@ -107,144 +104,48 @@ void processInput(GLFWwindow* window){
     
     // Déplacement du joueur
     if(cameraMousePlayer){
+        // On est obligé de vérifier que le joueur n'appuie pas sur 2 touches opposées en même temps (sinon motion est nulle et ça fait des valeurs NaN)
+        // C'est à ça que servent x_axis et z_axis
         bool x_axis = false;
         bool z_axis = false;
         glm::vec3 bottomPlayer = player->getBottomPoint();
-        // On est obligé de vérifier que le joueur n'appuie pas sur 2 touches opposées en même temps (sinon motion est nulle et ça fait des valeurs NaN)
 
         glm::vec3 motion = glm::vec3(0.0f,0.0f,0.0f); // On accumule les déplacements pour que le joueur puisse se déplacer en diagonale
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
-            std::vector<glm::vec3> front_points; // On crée les 3 points qui serviront à la détection de la collision
-            glm::vec3 ct = camera_target;
-            ct[1] = 0.0f;
-            glm::vec3 cross_point = glm::normalize(ct)*0.3f;
-            glm::vec3 collision_point = bottomPlayer+cross_point;
-            for (int i = 0 ; i < 3 ; i++){
-                front_points.push_back(collision_point);
-                collision_point[1] += 0.9;
-            }
-
-            bool canMove = true;
-            for (int i = 0 ; i < 3 ; i++){ // On regarde si l'un des points cause une collision
-                int NL = floor(front_points[i][0]) + 16*planeWidth;
-                int NH = floor(front_points[i][1]) + 16;
-                int NP = floor(front_points[i][2]) + 16*planeLength;
-                // Il ne faut pas oublier de vérifier si ce point se trouve bien dans le chunk
-                if (!(NL < 0 || NL > (planeWidth*32)-1 || NP < 0 || NP > (planeLength*32)-1 || NH < 0 || NH > 31)){
-                    int index = NH *1024 + (NP%32) * 32 + (NL%32); // Indice du voxel dans lequel on considère que le point se trouve
-                    Voxel *v = listeChunks[(NL/32) * planeLength + NP/32]->getListeVoxels()[index];
-                    if (v != nullptr){ // Il y a une collision qui est détectée
-                        canMove = false;
-                        break; // Inutile de regarder pour les autres points
-                    }
-                }
-            }
-
-            if (canMove){
+            if (player->canGoFrontOrBack(0.3f, bottomPlayer, camera_target, planeWidth, planeLength, listeChunks)){
                 motion += glm::vec3(camera_target[0],0.0f,camera_target[2]);
                 z_axis = true;
             }
         }
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
-            std::vector<glm::vec3> left_points; // On crée les 3 points qui serviront à la détection de la collision
-            glm::vec3 cross_point = glm::normalize(glm::cross(camera_target,camera_up))*-0.3f;
-            glm::vec3 collision_point = bottomPlayer+cross_point;
-            for (int i = 0 ; i < 3 ; i++){
-                left_points.push_back(collision_point);
-                collision_point[1] += 0.9;
-            }
-
-            bool canMove = true;
-            for (int i = 0 ; i < 3 ; i++){ // On regarde si l'un des points cause une collision
-                int NL = floor(left_points[i][0]) + 16*planeWidth;
-                int NH = floor(left_points[i][1]) + 16;
-                int NP = floor(left_points[i][2]) + 16*planeLength;
-                // Il ne faut pas oublier de vérifier si ce point se trouve bien dans le chunk
-                if (!(NL < 0 || NL > (planeWidth*32)-1 || NP < 0 || NP > (planeLength*32)-1 || NH < 0 || NH > 31)){
-                    int index = NH *1024 + (NP%32) * 32 + (NL%32); // Indice du voxel dans lequel on considère que le point se trouve
-                    Voxel *v = listeChunks[(NL/32) * planeLength + NP/32]->getListeVoxels()[index];
-                    if (v != nullptr){ // Il y a une collision qui est détectée
-                        canMove = false;
-                        break; // Inutile de regarder pour les autres points
-                    }
-                }
-            }
-
-            if (canMove){
-                motion += glm::cross(camera_target,camera_up)*-1.0f;
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){ // Déplacement vers la gauche
+            glm::vec3 cross_point;
+            if (player->canGoLeftOrRight(-0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
+                motion += glm::normalize(cross_point);
                 x_axis = true;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-            std::vector<glm::vec3> back_points; // On crée les 3 points qui serviront à la détection de la collision
-            glm::vec3 ct = camera_target;
-            ct[1] = 0.0f;
-            glm::vec3 cross_point = glm::normalize(ct)*-0.3f;
-            glm::vec3 collision_point = bottomPlayer+cross_point;
-            for (int i = 0 ; i < 3 ; i++){
-                back_points.push_back(collision_point);
-                collision_point[1] += 0.9;
-            }
-
-            bool canMove = true;
-            for (int i = 0 ; i < 3 ; i++){ // On regarde si l'un des points cause une collision
-                int NL = floor(back_points[i][0]) + 16*planeWidth;
-                int NH = floor(back_points[i][1]) + 16;
-                int NP = floor(back_points[i][2]) + 16*planeLength;
-                // Il ne faut pas oublier de vérifier si ce point se trouve bien dans le chunk
-                if (!(NL < 0 || NL > (planeWidth*32)-1 || NP < 0 || NP > (planeLength*32)-1 || NH < 0 || NH > 31)){
-                    int index = NH *1024 + (NP%32) * 32 + (NL%32); // Indice du voxel dans lequel on considère que le point se trouve
-                    Voxel *v = listeChunks[(NL/32) * planeLength + NP/32]->getListeVoxels()[index];
-                    if (v != nullptr){ // Il y a une collision qui est détectée
-                        canMove = false;
-                        break; // Inutile de regarder pour les autres points
-                    }
-                }
-            }
-
-            if (canMove){
+            if (player->canGoFrontOrBack(-0.3f, bottomPlayer, camera_target, planeWidth, planeLength, listeChunks)){
                 motion += glm::vec3(camera_target[0],0.0f,camera_target[2])*-1.0f;
                 z_axis = !z_axis;
             }
         }
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
-            std::vector<glm::vec3> right_points; // On crée les 3 points qui serviront à la détection de la collision
-            glm::vec3 cross_point = glm::normalize(glm::cross(camera_target,camera_up))*0.3f;
-            glm::vec3 collision_point = bottomPlayer+cross_point;
-            for (int i = 0 ; i < 3 ; i++){
-                right_points.push_back(collision_point);
-                collision_point[1] += 0.9;
-            }
-
-            bool canMove = true;
-            for (int i = 0 ; i < 3 ; i++){ // On regarde si l'un des points cause une collision
-                int NL = floor(right_points[i][0]) + 16*planeWidth;
-                int NH = floor(right_points[i][1]) + 16;
-                int NP = floor(right_points[i][2]) + 16*planeLength;
-                // Il ne faut pas oublier de vérifier si ce point se trouve bien dans le chunk
-                if (!(NL < 0 || NL > (planeWidth*32)-1 || NP < 0 || NP > (planeLength*32)-1 || NH < 0 || NH > 31)){
-                    int index = NH *1024 + (NP%32) * 32 + (NL%32); // Indice du voxel dans lequel on considère que le point se trouve
-                    Voxel *v = listeChunks[(NL/32) * planeLength + NP/32]->getListeVoxels()[index];
-                    if (v != nullptr){ // Il y a une collision qui est détectée
-                        canMove = false;
-                        break; // Inutile de regarder pour les autres points
-                    }
-                }
-            }
-
-            if (canMove){
-                motion += cross_point;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){ // Déplacement vers la droite
+            glm::vec3 cross_point;
+            if (player->canGoLeftOrRight(0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
+                motion += glm::normalize(cross_point);
                 x_axis = !x_axis;
             }
         }
+
         if (x_axis || z_axis){
             player->move(glm::normalize(motion)*playerSpeed*deltaTime); // Attention à bien normaliser le vecteur de déplacement final (ça règle le problème de sqrt(2))
         }
 
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
             if (player->getCanJump()){
+                player->resetJumpForce();
                 player->setCanJump(false);
-                forceJump = forceJumpInitial;
             }
         }
 
@@ -515,6 +416,8 @@ int main(){
 
         processInput(window);
 
+        glm::vec3 bottomPointPlayer = player->getBottomPoint();
+
         // Courir consomme de l'endurance
         if (isRunning){
             if (player->getStamina() > 0.0){
@@ -542,7 +445,7 @@ int main(){
         if (cameraOrbitale){
             camera_target = -1.0f * camera_position;
         }else if (cameraMousePlayer){
-            camera_position = player->getBottomPoint() + glm::vec3(0.0f,1.7f,0.f); // Positionne la caméra sur le joueur (du coup attention à la taille qu'on donne à la hitbox)
+            camera_position = bottomPointPlayer + glm::vec3(0.0f,1.7f,0.f); // Positionne la caméra sur le joueur (du coup attention à la taille qu'on donne à la hitbox)
         }
 
         glm::mat4 View = glm::lookAt(camera_position, camera_position + camera_target, camera_up);
@@ -564,90 +467,10 @@ int main(){
             hud->drawHud();
         }
 
+        // Gestion des collisions
         hasUpdate = false;
-
-        if (!player->getCanJump()){ // Le joueur est en train de sauter
-            player->move(glm::vec3(0.0,forceJump*deltaTime,0.0));
-            forceJump -= gravity*deltaTime;
-            hasUpdate = true;
-        }
-
-        // Détermine la cellule ou se trouve le joueur
-        glm::vec3 pPlayer = player->getBottomPoint();
-        
-        int numLongueur = floor(pPlayer[0]) + 16*planeWidth;
-        int numHauteur = floor(pPlayer[1]-0.001) + 16;
-        int numProfondeur = floor(pPlayer[2]) + 16*planeLength;
-        if (numLongueur < 0 || numLongueur > (planeWidth*32)-1 || numProfondeur < 0 || numProfondeur > (planeLength*32)-1 || numHauteur < 0 || numHauteur > 31){
-            // C'est contre_intuitif, mais on ne peut pas juste vérifier si le joueur a déjà sauté.
-            // On est obligé d'utiliser un nouveau booléen si on veut l'empêcher de sauter + ne pas le faire subir la gravité 2 fois
-            if (!hasUpdate){
-                player->move(glm::vec3(0.0,forceJump*deltaTime,0.0));
-                forceJump -= gravity*deltaTime;
-                player->setCanJump(false);
-            }
-        }else{
-            int indiceBlock = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel dans lequel on considère que le joueur se trouve
-            Voxel *v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
-        
-            if (!player->getCanJump()){ // Collision vers le haut (temporaire, il faudra faire plus propre)
-                glm::vec3 pPlayerTop = pPlayer;
-                pPlayerTop[1] += 1.8; // Attention à bien mettre une hitbox plus haute que la position de la caméra (sinon on peut voir parfois à travers des blocs)
-                int NL = floor(pPlayerTop[0]) + 16*planeWidth;
-                int NH = floor(pPlayerTop[1]) + 16;
-                int NP = floor(pPlayerTop[2]) + 16*planeLength;
-                // Il ne faut pas oublier de vérifier si le point au sommet de la hitbox du joueur se trouve bien dans le chunk
-                if (!(NL < 0 || NL > (planeWidth*32)-1 || NP < 0 || NP > (planeLength*32)-1 || NH < 0 || NH > 31)){
-                    int index = NH *1024 + (NP%32) * 32 + (NL%32); // Indice du voxel dans lequel on considère que le joueur se trouve
-                    Voxel *vTop = listeChunks[(NL/32) * planeLength + NP/32]->getListeVoxels()[index];
-                    if (vTop != nullptr){
-                        forceJump = 0.0f;
-                        player->move(glm::vec3(0.0f,floor(pPlayerTop[1]) - pPlayerTop[1] - 0.01,0.0f)); // Le 0.01 assure que le joueur ne rentre pas dans le bloc
-                    }
-                }
-            }
-
-            if (v == nullptr){
-                player->setCanJump(false);
-                if (!hasUpdate){ // Pour ne pas faire subir 2 fois la gravité au joueur
-                    player->move(glm::vec3(0.0,forceJump*deltaTime,0.0));
-                    forceJump -= gravity*deltaTime;
-                }
-                
-                // On fait attention à ne pas afficher le joueur à l'intérieur d'un bloc (même pendant une frame, c'est plus propre)
-                pPlayer = player->getBottomPoint();
-                numHauteur = floor(pPlayer[1]-0.001) + 16;
-                indiceBlock = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32);
-                v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
-                if (v != nullptr){
-                    player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
-                    if (forceJump <= -14.0f){
-                        player->takeDamage(pow(forceJump + 14.0, 2)); // On reverra plus le calcul des dégâts si on a le temps
-                        hud->updateLife(player->getLife());
-                        if (player->getLife() <= 0.0){
-                            std::cout << "Vous êtes mort !\n";
-                            return -1; // Le joueur est mort, le programme s'arrête 
-                        }
-                    }
-                    forceJump = 0.0f;
-                    player->setCanJump(true);
-                }
-            }else{
-                if (pPlayer[1] != ceil(pPlayer[1])){
-                    player->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
-                    if (forceJump <= -14.0f){
-                        player->takeDamage(pow(forceJump + 14.0, 2)); // On reverra plus le calcul des dégâts si on a le temps
-                        hud->updateLife(player->getLife());
-                        if (player->getLife() <= 0.0){
-                            std::cout << "Vous êtes mort !\n";
-                            return -1; // Le joueur est mort, le programme s'arrête 
-                        }
-                    }
-                    forceJump = 0.0f;
-                }
-                player->setCanJump(true);
-            }
-        }
+        player->checkJump(&hasUpdate, deltaTime);
+        player->checkTopAndBottomCollision(hasUpdate, planeWidth, planeLength, deltaTime, listeChunks, hud);
         
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -660,7 +483,7 @@ int main(){
 
         ImGui::Spacing();
 
-        ImGui::Text("Position : %.2f / %.2f / %.2f", pPlayer[0], pPlayer[1], pPlayer[2]);
+        ImGui::Text("Position : %.2f / %.2f / %.2f", bottomPointPlayer[0], bottomPointPlayer[1], bottomPointPlayer[2]);
 
         ImGui::Spacing();
 

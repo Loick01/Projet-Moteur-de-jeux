@@ -33,3 +33,4 @@
 #include <Skybox.hpp>
 #include <Hud.hpp>
 #include <MapGenerator.hpp>
+#include <Hitbox.hpp>

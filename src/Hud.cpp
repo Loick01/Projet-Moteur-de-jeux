@@ -34,8 +34,8 @@ Hud::Hud(int screen_width, int screen_height){
     this->cursor = createPlaneHud(glm::vec2(screen_width/2.0 - cursorSize/2.0 ,screen_height/2.0 - cursorSize/2.0),cursorSize,cursorSize,8);
     this->lifeBar = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 ,20.0 + hotbarHeight),hotbarWidth/2-10.0,16.0,12);
     this->staminaBar = createPlaneHud(glm::vec2(screen_width/2.0+10.0 ,20.0 + hotbarHeight),hotbarWidth/2-10.0,16.0,16);
-    this->lifeLine = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 + 4.0 , 20.0 + hotbarHeight),hotbarWidth/2 - 18.0,16.0,20);
-    this->staminaLine = createPlaneHud(glm::vec2(screen_width/2.0+14.0 ,20.0 + hotbarHeight),hotbarWidth/2-18.0,16.0,24);
+    this->lifeLine = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 + 4.0 , 20.0 + hotbarHeight),hotbarWidth/2 - 18.0,14.0,20);
+    this->staminaLine = createPlaneHud(glm::vec2(screen_width/2.0+14.0 ,20.0 + hotbarHeight),hotbarWidth/2-18.0,14.0,24);
 
     this->elements.push_back(this->select);
     this->elements.push_back(this->hotbar);
