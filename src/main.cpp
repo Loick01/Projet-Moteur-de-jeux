@@ -8,7 +8,7 @@
 float deltaTime = 0.0f;	
 float lastFrame = 0.0f;
 
-GLuint programID, programID_HUD;
+GLuint programID, programID_HUD,programID_Entity;
 
 // Caméra
 glm::vec3 camera_position  = glm::vec3(0.0f, 5.0f, 5.0f);
@@ -40,6 +40,9 @@ float playerSpeed = 7.0f;
 float forceJump;
 float forceJumpInitial = 7.0f;
 float gravity = 18.0f;
+
+//tmp
+float angle=0.0f;
 
 int blockInHotbar[9] = {23,29,1,11,12,13,20,26,28}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
@@ -283,6 +286,8 @@ struct Node{
 
     Transform *transformation;
 
+    glm::vec3 centerNode;
+
     int ID;
 
     GLuint vbuffer;
@@ -290,53 +295,137 @@ struct Node{
 };
 
 // Fonction pour créer un pavé
-void setPave(Node *node, glm::vec3 dimensions, glm::vec3 position) {
-    //initialisation du maillage
+void setPave(Node* node, glm::vec3 dimensions, glm::vec3 position) {
+    // Effacer les anciens éléments
     node->indices.clear();
-    node->triangles.clear();
     node->indexed_vertices.clear();
 
-    float x = dimensions.x;
-    float y = dimensions.y;
-    float z = dimensions.z;
+    // Dimensions du pavé
+    float dimX = dimensions.x;
+    float dimY = dimensions.y;
+    float dimZ = dimensions.z;
 
-    // Sommets d'un pavé
-    node->indexed_vertices.push_back(position + glm::vec3(-x / 2, -y / 2, -z / 2));
-    node->indexed_vertices.push_back(position + glm::vec3(x / 2, -y / 2, -z / 2));
-    node->indexed_vertices.push_back(position + glm::vec3(x / 2, y / 2, -z / 2));
-    node->indexed_vertices.push_back(position + glm::vec3(-x / 2, y / 2, -z / 2));
-    node->indexed_vertices.push_back(position + glm::vec3(-x / 2, -y / 2, z / 2));
-    node->indexed_vertices.push_back(position + glm::vec3(x / 2, -y / 2, z / 2));
-    node->indexed_vertices.push_back(position + glm::vec3(x / 2, y / 2, z / 2));
-    node->indexed_vertices.push_back(position + glm::vec3(-x / 2, y / 2, z / 2));
+    for (int i = 0 ; i < 6 ; i++){
+        for (int h = 0; h < 2 ; h++) {
+            for (int w = 0; w < 2; w++) {
+                float x, y, z;
 
-    // Index pour les arêtes du pavé
-    node->indices.push_back(0);
-    node->indices.push_back(1);
-    node->indices.push_back(1);
-    node->indices.push_back(2);
-    node->indices.push_back(2);
-    node->indices.push_back(3);
-    node->indices.push_back(3);
-    node->indices.push_back(0);
+                if (i==0){ // Faces bottom
+                    x = -dimX/2 + w*dimX + position[0];
+                    y = -dimY/2 + position[1];
+                    z = -dimZ/2 + h*dimZ + position[2];
+                }else if (i==1){ // Faces top
+                    x = -dimX/2 + w*dimX + position[0];
+                    y = dimY/2 + position[1];
+                    z = -dimZ/2 + (1-h)*dimZ + position[2];
+                }else if (i == 2){ // Faces back
+                    x = -dimX/2 + (1-w)*dimX + position[0];
+                    y = -dimY/2 + h*dimY + position[1];
+                    z = -dimZ/2 + position[2];
+                }else if (i == 3){ // Faces front
+                    x = -dimX/2 + w*dimX + position[0];
+                    y = -dimY/2 + h*dimY + position[1];
+                    z = dimZ/2 + position[2];
+                }else if (i == 4){ // Face left
+                    x = -dimX/2 + position[0];
+                    y = -dimY/2 + h*dimY + position[1];
+                    z = -dimZ/2 + w*dimZ + position[2];
+                }else if (i == 5){ // Face right
+                    x = dimX/2 + position[0];
+                    y = -dimY/2 + h*dimY + position[1];
+                    z = -dimZ/2 + (1-w)*dimZ + position[2]; 
+                }
+                node->indexed_vertices.push_back(glm::vec3(x,y,z));
+            }
+        }
+    }
 
-    node->indices.push_back(4);
-    node->indices.push_back(5);
-    node->indices.push_back(5);
-    node->indices.push_back(6);
-    node->indices.push_back(6);
-    node->indices.push_back(7);
-    node->indices.push_back(7);
-    node->indices.push_back(4);
+    // Indices pour les triangles des faces du pavé
+    node->indices.insert(node->indices.end(), {
+        //Face bas (y négatif)
+        0,1,2,
+        2,1,3,
 
-    node->indices.push_back(0);
-    node->indices.push_back(4);
-    node->indices.push_back(1);
-    node->indices.push_back(5);
-    node->indices.push_back(2);
-    node->indices.push_back(6);
-    node->indices.push_back(3);
-    node->indices.push_back(7);
+        //face haut
+        6,7,4,
+        4,7,5,
+
+        //face arrière
+        9,8,11,
+        11,8,10,
+
+        //face devant
+        12,13,14,
+        14,13,15,
+
+        //face gauche
+        16,17,18,
+        18,17,19,
+
+        //face droite
+        21,20,23,
+        23,20,22
+        
+    });
+}
+
+void createZombie(Node* node, glm::vec3 position){
+    Node *headZombie = new Node;
+    Node *chestZombie = new Node;
+    Node *leftArmZombie = new Node;
+    Node *rightArmZombie = new Node;
+    Node *leftLegZombie = new Node;
+    Node *rightLegZombie = new Node;
+    leftArmZombie->ID=3;
+    rightArmZombie->ID=2;
+    headZombie->ID=0;
+    chestZombie->ID=1;
+    rightLegZombie->ID=4;
+    leftLegZombie->ID=5;
+    setPave(chestZombie,glm::vec3(0.6,0.8,0.3), glm::vec3(0,0.8,0)+ position);
+    setPave(headZombie,glm::vec3(0.6,0.6,0.6), glm::vec3(0,1.5,0)+ position);
+    setPave(leftArmZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(0.45,0.8,0)+ position);
+    setPave(rightArmZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(-0.45,0.8,0)+ position);
+    setPave(leftLegZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(0.15,0,0)+ position);
+    setPave(rightLegZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(-0.15,0,0)+ position);
+
+    chestZombie->centerNode=glm::vec3(0,0.8,0)+ position;
+    headZombie->centerNode=glm::vec3(0,1.5,0)+ position;
+    rightArmZombie->centerNode=glm::vec3(0.45,0.8,0)+ position;
+    leftArmZombie->centerNode=glm::vec3(0.15,0,0)+ position;
+    rightLegZombie->centerNode=glm::vec3(0.15,0,0)+ position;
+    leftLegZombie->centerNode=glm::vec3(-0.15,0,0)+ position;
+
+    chestZombie->transformation = new Transform(); // Appliquer la rotation à la matrice
+    headZombie->transformation = new Transform(); // Appliquer la rotation à la matrice
+    rightArmZombie->transformation = new Transform(); // Appliquer la rotation à la matrice
+    leftArmZombie->transformation = new Transform(); // Appliquer la rotation à la matrice
+    rightLegZombie->transformation = new Transform(); // Appliquer la rotation à la matrice
+    leftLegZombie->transformation = new Transform(); // Appliquer la rotation à la matrice
+
+
+    node->son.push_back(chestZombie);
+    node->son.push_back(headZombie);
+    node->son.push_back(leftArmZombie);
+    node->son.push_back(rightArmZombie);
+    node->son.push_back(leftLegZombie);
+    node->son.push_back(rightLegZombie);
+}
+
+void zombieWalk(Node* node,float angle){// node doit être un zombie dans le graphe de scène
+    
+    if(node->son[0]!=nullptr && node->transformation!=nullptr){
+        //node->transformation->addVelocity(glm::vec3(0,0,0.01f));
+        glm::mat4 transfoLeg = glm::mat4(1);
+        transfoLeg = glm::translate(transfoLeg,-node->son[4]->centerNode-glm::vec3(0.15,0.4,0.15));
+        transfoLeg=glm::rotate(transfoLeg, glm::radians(angle),glm::vec3(1.f,0.0f,0.0f));
+        //transfoLeg = glm::translate(transfoLeg,+node->son[4]->centerNode+glm::vec3(0.15,0.4,0.15));
+        
+        //printf("test : %f %f %f \n",node->son[4]->centerNode[0],node->son[4]->centerNode[1],node->son[4]->centerNode[2]);
+        //transfoLeg=glm::rotate(glm::mat4(1), glm::radians(angle),glm::vec3(1.f,0.0f,0.0f));
+
+        node->son[4]->transformation = new Transform(transfoLeg);
+    }
 }
 
 
@@ -357,14 +446,14 @@ void loadBufferNode(Node *node){
 
 
 // a appelé en continu
-void sendNodeToBuffer(Node *node,GLuint programID,glm::mat4 parent){
+void sendNodeToBuffer(Node *node,GLuint programID_Entity,glm::mat4 parent){
     glm::mat4 matI = glm::mat4(1);
     matI=parent*node->transformation->getMatrix4();
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, node->vbuffer);
-    glUniformMatrix4fv(glGetUniformLocation(programID, "model"), 1, GL_FALSE, &matI[0][0]);
-    glUniform1i(glGetUniformLocation(programID,"planet"), node->ID);
+    glUniformMatrix4fv(glGetUniformLocation(programID_Entity, "Model"), 1, GL_FALSE, &matI[0][0]);
+    glUniform1i(glGetUniformLocation(programID_Entity,"ID"), node->ID);
     
     
     glVertexAttribPointer(
@@ -388,20 +477,11 @@ void sendNodeToBuffer(Node *node,GLuint programID,glm::mat4 parent){
 
     glDisableVertexAttribArray(0);
     for(int i=0;i<node->son.size();i++){
-        sendNodeToBuffer(node->son[i],programID,matI);
+        sendNodeToBuffer(node->son[i],programID_Entity,matI);
     }
 }
 
 int main(){
-    Node *center = new Node;
-    Node *chestZombie = new Node;
-
-    setPave(chestZombie,glm::vec3(2,2,2), glm::vec3(0,16,0));
-
-    center->son.push_back(chestZombie);
-
-
-    loadBufferNode(center);
 
 
 
@@ -429,7 +509,7 @@ int main(){
     // Accept fragment if it closer to the camera than the former one
     glDepthFunc(GL_LESS);
 
-    glEnable(GL_CULL_FACE); // Attention à la construction des triangles
+    //glEnable(GL_CULL_FACE); // Attention à la construction des triangles
 
     // Pour utiliser de la transparence dans le fragment shader (par exemple pour le bloc de glace)
     glEnable(GL_BLEND);
@@ -446,7 +526,37 @@ int main(){
 
     programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
     programID_HUD = LoadShaders("../shaders/hud_vertex.vert", "../shaders/hud_frag.frag");
+    programID_Entity = LoadShaders("../shaders/entity_vertex.vert", "../shaders/entity_frag.frag");
     glUseProgram(programID_HUD);
+
+
+
+    Node *center = new Node;
+    Node *zombie1 = new Node;
+    center->ID=1;
+    center->transformation = new Transform(); // Appliquer la rotation à la matrice
+
+    zombie1->ID=88;
+    zombie1->transformation = new Transform();
+
+    Node *Cube = new Node;
+    Cube->ID=84;
+    Cube->transformation = new Transform();
+
+    setPave(Cube,glm::vec3(0.8,0.8,0.8),glm::vec3(0,0,0));
+
+    
+    createZombie(zombie1,glm::vec3(3,1.4,3));
+
+    center->son.push_back(zombie1);
+    center->son.push_back(Cube);
+
+
+    loadBufferNode(center);
+
+
+
+
 
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
     
@@ -480,6 +590,10 @@ int main(){
     GLuint ViewMatrix = glGetUniformLocation(programID,"View");
     GLuint ProjectionMatrix = glGetUniformLocation(programID,"Projection");
 
+    GLuint ModelEntity = glGetUniformLocation(programID_Entity,"Model");
+    GLuint ViewEntity = glGetUniformLocation(programID_Entity,"View");
+    GLuint ProjectionEntity = glGetUniformLocation(programID_Entity,"Projection");
+
     bool renduFilaire = false;
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -496,13 +610,8 @@ int main(){
     // Chargement des textures
     GLint atlasTexture = loadTexture2DFromFilePath("../Textures/Blocks/atlas.png");
     GLint hudTexture = loadTexture2DFromFilePath("../Textures/HUD/hud.png");
-
-    if (atlasTexture != -1) {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, atlasTexture);
-        glUniform1i(glGetUniformLocation(programID, "atlasTexture"), GL_TEXTURE0);
-        glUniform1i(glGetUniformLocation(programID_HUD, "atlasTexture"), GL_TEXTURE0);
-    }
+    GLint entity_Texture = loadTexture2DFromFilePath("../Textures/Entity/entity.png");
+    
 
     if (hudTexture != -1) {
         glActiveTexture(GL_TEXTURE1);
@@ -510,7 +619,26 @@ int main(){
         glUniform1i(glGetUniformLocation(programID_HUD, "hudTexture"), 1);
     }
 
-    skybox->bindCubemap(GL_TEXTURE2, 2); 
+    if (atlasTexture != -1) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, atlasTexture);
+        glUniform1i(glGetUniformLocation(programID_HUD, "atlasTexture"), GL_TEXTURE0);
+        glUseProgram(programID);
+        glUniform1i(glGetUniformLocation(programID, "atlasTexture"), GL_TEXTURE0);
+    }
+
+
+    glUseProgram(programID_Entity);
+
+    if (entity_Texture != -1) {
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, entity_Texture);
+        glUniform1i(glGetUniformLocation(programID_Entity, "entityTexture"), 2);
+    }
+
+    skybox->bindCubemap(GL_TEXTURE3, 3); 
+
+
 
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -518,8 +646,8 @@ int main(){
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        center->transformation = new Transform(glm::rotate(glm::mat4(1.0f), glm::radians(0.f),glm::vec3(0.f,0.f,0.f))); // Appliquer la rotation à la matrice
-        chestZombie->transformation = new Transform(glm::rotate(glm::mat4(1.0f), glm::radians(0.f),glm::vec3(0.f,0.f,0.f))); // Appliquer la rotation à la matrice
+        
+
 
         processInput(window);
 
@@ -538,6 +666,7 @@ int main(){
 
         glm::mat4 View = glm::lookAt(camera_position, camera_position + camera_target, camera_up);
 
+
         glUniformMatrix4fv(ModelMatrix,1,GL_FALSE,&Model[0][0]);
         glUniformMatrix4fv(ViewMatrix,1,GL_FALSE,&View[0][0]);
         glUniformMatrix4fv(ProjectionMatrix,1,GL_FALSE,&Projection[0][0]);
@@ -548,12 +677,26 @@ int main(){
 
         // Affichage de la skybox
         skybox->drawSkybox(Model, Projection, View);
+
+        glUseProgram(programID_Entity);
+
+        zombieWalk(zombie1,angle);
+        angle +=0.5f;
+
+        glUniformMatrix4fv(ModelEntity,1,GL_FALSE,&Model[0][0]);
+        glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
+        glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
+
+
+        sendNodeToBuffer(center,programID_Entity,glm::mat4(1));
         
         // Affichage de l'hud
         if (showHud){
             glUseProgram(programID_HUD);
             hud->drawHud();
         }
+
+
 
         if (!player->getCanJump()){ // Le joueur ne peut pas sauter, donc il tombe
             player->move(glm::vec3(0.0,forceJump*deltaTime,0.0));
@@ -592,6 +735,7 @@ int main(){
                 player->setCanJump(true);
             }
         }
+
         
         // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -642,11 +786,7 @@ int main(){
             cameraMousePlayer = false;
         }
 
-        if (ImGui::Checkbox("Caméra player", &cameraMousePlayer)){
-            cameraLibre = false;
-            cameraOrbitale = false;
-            cameraMouseLibre = false;
-        }
+        
 
         ImGui::Spacing();
 
@@ -717,7 +857,7 @@ int main(){
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        sendNodeToBuffer(center,programID,glm::mat4(1));
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -725,6 +865,7 @@ int main(){
 
     glDeleteProgram(programID);
     glDeleteProgram(programID_HUD);
+    glDeleteProgram(programID_Entity);
     glDeleteVertexArrays(1, &VertexArrayID);
 
     ImGui_ImplOpenGL3_Shutdown();

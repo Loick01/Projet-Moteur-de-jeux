@@ -45,4 +45,8 @@ glm::mat4 Transform::getMatrix4(){
     matrix[3]= glm::vec4(this->translation[0],this->translation[1],this->translation[2],1);
     return matrix;
 }
+void Transform::addVelocity(glm::vec3 t){
+    translation +=t;
+}
+
 

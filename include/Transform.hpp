@@ -26,5 +26,7 @@ public:
 
     glm::mat4 getMatrix4();
 
+    void addVelocity(glm::vec3 t);
+
 };
 
