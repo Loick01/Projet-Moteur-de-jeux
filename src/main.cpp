@@ -109,25 +109,133 @@ void processInput(GLFWwindow* window){
     if(cameraMousePlayer){
         bool x_axis = false;
         bool z_axis = false;
-
+        glm::vec3 bottomPlayer = player->getBottomPoint();
         // On est obligé de vérifier que le joueur n'appuie pas sur 2 touches opposées en même temps (sinon motion est nulle et ça fait des valeurs NaN)
 
         glm::vec3 motion = glm::vec3(0.0f,0.0f,0.0f); // On accumule les déplacements pour que le joueur puisse se déplacer en diagonale
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
-            motion += glm::vec3(camera_target[0],0.0f,camera_target[2]);
-            z_axis = true;
+            std::vector<glm::vec3> front_points; // On crée les 3 points qui serviront à la détection de la collision
+            glm::vec3 ct = camera_target;
+            ct[1] = 0.0f;
+            glm::vec3 cross_point = glm::normalize(ct)*0.3f;
+            glm::vec3 collision_point = bottomPlayer+cross_point;
+            for (int i = 0 ; i < 3 ; i++){
+                front_points.push_back(collision_point);
+                collision_point[1] += 0.9;
+            }
+
+            bool canMove = true;
+            for (int i = 0 ; i < 3 ; i++){ // On regarde si l'un des points cause une collision
+                int NL = floor(front_points[i][0]) + 16*planeWidth;
+                int NH = floor(front_points[i][1]) + 16;
+                int NP = floor(front_points[i][2]) + 16*planeLength;
+                // Il ne faut pas oublier de vérifier si ce point se trouve bien dans le chunk
+                if (!(NL < 0 || NL > (planeWidth*32)-1 || NP < 0 || NP > (planeLength*32)-1 || NH < 0 || NH > 31)){
+                    int index = NH *1024 + (NP%32) * 32 + (NL%32); // Indice du voxel dans lequel on considère que le point se trouve
+                    Voxel *v = listeChunks[(NL/32) * planeLength + NP/32]->getListeVoxels()[index];
+                    if (v != nullptr){ // Il y a une collision qui est détectée
+                        canMove = false;
+                        break; // Inutile de regarder pour les autres points
+                    }
+                }
+            }
+
+            if (canMove){
+                motion += glm::vec3(camera_target[0],0.0f,camera_target[2]);
+                z_axis = true;
+            }
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
-            motion += glm::cross(camera_target,camera_up)*-1.0f;
-            x_axis = true;
+            std::vector<glm::vec3> left_points; // On crée les 3 points qui serviront à la détection de la collision
+            glm::vec3 cross_point = glm::normalize(glm::cross(camera_target,camera_up))*-0.3f;
+            glm::vec3 collision_point = bottomPlayer+cross_point;
+            for (int i = 0 ; i < 3 ; i++){
+                left_points.push_back(collision_point);
+                collision_point[1] += 0.9;
+            }
+
+            bool canMove = true;
+            for (int i = 0 ; i < 3 ; i++){ // On regarde si l'un des points cause une collision
+                int NL = floor(left_points[i][0]) + 16*planeWidth;
+                int NH = floor(left_points[i][1]) + 16;
+                int NP = floor(left_points[i][2]) + 16*planeLength;
+                // Il ne faut pas oublier de vérifier si ce point se trouve bien dans le chunk
+                if (!(NL < 0 || NL > (planeWidth*32)-1 || NP < 0 || NP > (planeLength*32)-1 || NH < 0 || NH > 31)){
+                    int index = NH *1024 + (NP%32) * 32 + (NL%32); // Indice du voxel dans lequel on considère que le point se trouve
+                    Voxel *v = listeChunks[(NL/32) * planeLength + NP/32]->getListeVoxels()[index];
+                    if (v != nullptr){ // Il y a une collision qui est détectée
+                        canMove = false;
+                        break; // Inutile de regarder pour les autres points
+                    }
+                }
+            }
+
+            if (canMove){
+                motion += glm::cross(camera_target,camera_up)*-1.0f;
+                x_axis = true;
+            }
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-            motion += glm::vec3(camera_target[0],0.0f,camera_target[2])*-1.0f;
-            z_axis = !z_axis;
+            std::vector<glm::vec3> back_points; // On crée les 3 points qui serviront à la détection de la collision
+            glm::vec3 ct = camera_target;
+            ct[1] = 0.0f;
+            glm::vec3 cross_point = glm::normalize(ct)*-0.3f;
+            glm::vec3 collision_point = bottomPlayer+cross_point;
+            for (int i = 0 ; i < 3 ; i++){
+                back_points.push_back(collision_point);
+                collision_point[1] += 0.9;
+            }
+
+            bool canMove = true;
+            for (int i = 0 ; i < 3 ; i++){ // On regarde si l'un des points cause une collision
+                int NL = floor(back_points[i][0]) + 16*planeWidth;
+                int NH = floor(back_points[i][1]) + 16;
+                int NP = floor(back_points[i][2]) + 16*planeLength;
+                // Il ne faut pas oublier de vérifier si ce point se trouve bien dans le chunk
+                if (!(NL < 0 || NL > (planeWidth*32)-1 || NP < 0 || NP > (planeLength*32)-1 || NH < 0 || NH > 31)){
+                    int index = NH *1024 + (NP%32) * 32 + (NL%32); // Indice du voxel dans lequel on considère que le point se trouve
+                    Voxel *v = listeChunks[(NL/32) * planeLength + NP/32]->getListeVoxels()[index];
+                    if (v != nullptr){ // Il y a une collision qui est détectée
+                        canMove = false;
+                        break; // Inutile de regarder pour les autres points
+                    }
+                }
+            }
+
+            if (canMove){
+                motion += glm::vec3(camera_target[0],0.0f,camera_target[2])*-1.0f;
+                z_axis = !z_axis;
+            }
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
-            motion += glm::cross(camera_target,camera_up);
-            x_axis = !x_axis;
+            std::vector<glm::vec3> right_points; // On crée les 3 points qui serviront à la détection de la collision
+            glm::vec3 cross_point = glm::normalize(glm::cross(camera_target,camera_up))*0.3f;
+            glm::vec3 collision_point = bottomPlayer+cross_point;
+            for (int i = 0 ; i < 3 ; i++){
+                right_points.push_back(collision_point);
+                collision_point[1] += 0.9;
+            }
+
+            bool canMove = true;
+            for (int i = 0 ; i < 3 ; i++){ // On regarde si l'un des points cause une collision
+                int NL = floor(right_points[i][0]) + 16*planeWidth;
+                int NH = floor(right_points[i][1]) + 16;
+                int NP = floor(right_points[i][2]) + 16*planeLength;
+                // Il ne faut pas oublier de vérifier si ce point se trouve bien dans le chunk
+                if (!(NL < 0 || NL > (planeWidth*32)-1 || NP < 0 || NP > (planeLength*32)-1 || NH < 0 || NH > 31)){
+                    int index = NH *1024 + (NP%32) * 32 + (NL%32); // Indice du voxel dans lequel on considère que le point se trouve
+                    Voxel *v = listeChunks[(NL/32) * planeLength + NP/32]->getListeVoxels()[index];
+                    if (v != nullptr){ // Il y a une collision qui est détectée
+                        canMove = false;
+                        break; // Inutile de regarder pour les autres points
+                    }
+                }
+            }
+
+            if (canMove){
+                motion += cross_point;
+                x_axis = !x_axis;
+            }
         }
         if (x_axis || z_axis){
             player->move(glm::normalize(motion)*playerSpeed*deltaTime); // Attention à bien normaliser le vecteur de déplacement final (ça règle le problème de sqrt(2))
@@ -410,7 +518,7 @@ int main(){
         // Courir consomme de l'endurance
         if (isRunning){
             if (player->getStamina() > 0.0){
-                player->addStamina(-1.0);
+                player->addStamina(-30.0*deltaTime);
                 hud->updateStamina(player->getStamina());
             }else{
                 playerSpeed /= coeffAcceleration;
@@ -419,7 +527,7 @@ int main(){
             }
         }else if (player->getStamina() < 100.0f){
             if (!isHolding){
-                player->addStamina(1.0);
+                player->addStamina(30.0*deltaTime);
                 hud->updateStamina(player->getStamina());
             }
         }
