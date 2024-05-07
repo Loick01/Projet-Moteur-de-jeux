@@ -20,8 +20,7 @@ class Hitbox{
         void setCanJump(bool canJump);
         void checkJump(bool *hasUpdate, float deltaTime);
         void resetJumpForce();
-        // Les 2 fonctions ci-dessous, il faudrait essayer de les condenser en une seule
-        bool canGoLeftOrRight(float directionCheck, glm::vec3 bottomPlayer, glm::vec3 camera_target, glm::vec3 camera_up, int planeWidth, int planeLength, std::vector<Chunk*> listeChunks, glm::vec3 *cross_point);
-        bool canGoFrontOrBack(float directionCheck, glm::vec3 bottomPlayer, glm::vec3 camera_target, int planeWidth, int planeLength, std::vector<Chunk*> listeChunks);
+        // La fonction ci-dessous vérifie si le déplacement latéral demandé est possible ou non
+        bool getLateralMovePossible(bool axisToCheck, float directionCheck, glm::vec3 bottomPlayer, glm::vec3 camera_target, glm::vec3 camera_up, int planeWidth, int planeLength, std::vector<Chunk*> listeChunks, glm::vec3 *cross_point);
         void checkTopAndBottomCollision(bool hasUpdate, int planeWidth, int planeLength, float deltaTime, std::vector<Chunk*> listeChunks, Hud *hud, Player *player);
 };

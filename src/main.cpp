@@ -10,6 +10,8 @@ float lastFrame = 0.0f;
 
 GLuint programID, programID_HUD;
 
+bool isImGuiShow = true;
+
 // Caméra
 glm::vec3 camera_position  = glm::vec3(0.0f, 5.0f, 5.0f);
 glm::vec3 camera_target = glm::vec3(1.0f,0.0f,-1.0f);
@@ -69,6 +71,9 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
+    if (key == GLFW_KEY_F && action == GLFW_PRESS){
+        isImGuiShow = !isImGuiShow;
+    }
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS){
         playerSpeed *= coeffAcceleration;
         isRunning = true;
@@ -110,30 +115,29 @@ void processInput(GLFWwindow* window){
         bool x_axis = false;
         bool z_axis = false;
         glm::vec3 bottomPlayer = hitboxPlayer->getBottomPoint();
+        glm::vec3 motion = glm::vec3(0.0f,0.0f,0.0f); // On va accumuler les déplacements pour que le joueur puisse se déplacer en diagonale
+        glm::vec3 cross_point;
 
-        glm::vec3 motion = glm::vec3(0.0f,0.0f,0.0f); // On accumule les déplacements pour que le joueur puisse se déplacer en diagonale
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
-            if (hitboxPlayer->canGoFrontOrBack(0.3f, bottomPlayer, camera_target, planeWidth, planeLength, listeChunks)){
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){ // Déplacement en avant
+            if (hitboxPlayer->getLateralMovePossible(false,0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
                 motion += glm::vec3(camera_target[0],0.0f,camera_target[2]);
                 z_axis = true;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){ // Déplacement vers la gauche
-            glm::vec3 cross_point;
-            if (hitboxPlayer->canGoLeftOrRight(-0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
+            if (hitboxPlayer->getLateralMovePossible(true,-0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
                 motion += glm::normalize(cross_point);
                 x_axis = true;
             }
         }
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-            if (hitboxPlayer->canGoFrontOrBack(-0.3f, bottomPlayer, camera_target, planeWidth, planeLength, listeChunks)){
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){ // Déplacement en arrière
+            if (hitboxPlayer->getLateralMovePossible(false,-0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
                 motion += glm::vec3(camera_target[0],0.0f,camera_target[2])*-1.0f;
                 z_axis = !z_axis;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){ // Déplacement vers la droite
-            glm::vec3 cross_point;
-            if (hitboxPlayer->canGoLeftOrRight(0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
+            if (hitboxPlayer->getLateralMovePossible(true,0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
                 motion += glm::normalize(cross_point);
                 x_axis = !x_axis;
             }
@@ -474,129 +478,131 @@ int main(){
         hitboxPlayer->checkJump(&hasUpdate, deltaTime);
         hitboxPlayer->checkTopAndBottomCollision(hasUpdate, planeWidth, planeLength, deltaTime, listeChunks, hud, player);
         
-        // Start the ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        float fps = ImGui::GetIO().Framerate;
+        if (isImGuiShow){
+            // Start the ImGui frame
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            float fps = ImGui::GetIO().Framerate;
 
-        ImGui::NewFrame();
-        ImGui::Begin("Panneau de contrôle");
-        ImGui::Text("FPS : %.2f", fps);
+            ImGui::NewFrame();
+            ImGui::Begin("Panneau de contrôle");
+            ImGui::Text("FPS : %.2f", fps);
 
-        ImGui::Spacing();
+            ImGui::Spacing();
 
-        ImGui::Text("Position : %.2f / %.2f / %.2f", bottomPointPlayer[0], bottomPointPlayer[1], bottomPointPlayer[2]);
+            ImGui::Text("Position : %.2f / %.2f / %.2f", bottomPointPlayer[0], bottomPointPlayer[1], bottomPointPlayer[2]);
 
-        ImGui::Spacing();
+            ImGui::Spacing();
 
-        ImGui::SliderInt("Vitesse caméra", &speedCam, 5, 100);
+            ImGui::SliderInt("Vitesse caméra", &speedCam, 5, 100);
 
-        ImGui::Spacing();
+            ImGui::Spacing();
 
-        ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 0.0, 50.0);
+            ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 0.0, 50.0);
 
-        ImGui::Spacing();
+            ImGui::Spacing();
 
-        ImGui::SliderFloat("FoV", &FoV, 1.0, 179.9);
+            ImGui::SliderFloat("FoV", &FoV, 1.0, 179.9);
 
-        ImGui::Spacing();
+            ImGui::Spacing();
 
-        if (ImGui::Checkbox("Caméra orbitale", &cameraOrbitale)){
-            cameraLibre = false;
-            cameraMouseLibre = false;
-            cameraMousePlayer = false;
-        }
-
-        ImGui::Spacing();
-        
-        if (ImGui::Checkbox("Caméra libre", &cameraLibre)){
-            cameraOrbitale = false;
-            cameraMouseLibre = false;
-            cameraMousePlayer = false;
-        }
-
-        ImGui::Spacing();
-        
-        if (ImGui::Checkbox("Caméra souris", &cameraMouseLibre)){
-            cameraLibre = false;
-            cameraOrbitale = false;
-            cameraMousePlayer = false;
-        }
-
-        if (ImGui::Checkbox("Caméra player", &cameraMousePlayer)){
-            cameraLibre = false;
-            cameraOrbitale = false;
-            cameraMouseLibre = false;
-        }
-
-        ImGui::Spacing();
-
-        if (ImGui::Checkbox("Rendu filaire", &renduFilaire)) {
-            if (renduFilaire) {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            } else {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            if (ImGui::Checkbox("Caméra orbitale", &cameraOrbitale)){
+                cameraLibre = false;
+                cameraMouseLibre = false;
+                cameraMousePlayer = false;
             }
+
+            ImGui::Spacing();
+            
+            if (ImGui::Checkbox("Caméra libre", &cameraLibre)){
+                cameraOrbitale = false;
+                cameraMouseLibre = false;
+                cameraMousePlayer = false;
+            }
+
+            ImGui::Spacing();
+            
+            if (ImGui::Checkbox("Caméra souris", &cameraMouseLibre)){
+                cameraLibre = false;
+                cameraOrbitale = false;
+                cameraMousePlayer = false;
+            }
+
+            if (ImGui::Checkbox("Caméra player", &cameraMousePlayer)){
+                cameraLibre = false;
+                cameraOrbitale = false;
+                cameraMouseLibre = false;
+            }
+
+            ImGui::Spacing();
+
+            if (ImGui::Checkbox("Rendu filaire", &renduFilaire)) {
+                if (renduFilaire) {
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                } else {
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                }
+            }
+
+            ImGui::Spacing();
+
+            ImGui::Checkbox("Afficher l'hud", &showHud);
+
+            ImGui::Spacing();
+
+            if (ImGui::SliderInt("Longueur terrain", &planeWidth, 1, 32)){
+                mg->setWidthMap(planeWidth);
+                mg->generateImage();
+                dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
+                buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+            }
+
+            ImGui::Spacing();
+
+            if (ImGui::SliderInt("Largeur", &planeLength, 1, 32)){
+                mg->setHeightMap(planeLength);
+                mg->generateImage();
+                dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
+                buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+            }
+
+            ImGui::Spacing();
+
+            if(ImGui::SliderInt("Seed de génération", &seedTerrain, 0, 10000)){
+                mg->setSeed(seedTerrain);
+            }
+
+            ImGui::Spacing();
+
+            if(ImGui::SliderInt("Nombre d'octaves", &octave, 1, 10)){
+                mg->setOctave(octave);
+            }
+
+            ImGui::Spacing();
+
+            if (ImGui::Button("Utiliser la seed et le nombre d'octaves")){
+                mg->generateImage();
+                dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
+                buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+            }
+
+            // Pour simplifier, on limite à un seul chunk de haut
+            //if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
+            //    buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+            //}
+
+            ImGui::Spacing();
+
+            // Type 0 = Plein ; Type 1 = Sinus ; Type 2 = Flat ; Type 3 = Procedural
+            if (ImGui::SliderInt("Type de chunk", &typeChunk, 0, 3)){
+                buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+            }
+
+            ImGui::End();
+
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
-
-        ImGui::Spacing();
-
-        ImGui::Checkbox("Afficher l'hud", &showHud);
-
-        ImGui::Spacing();
-
-        if (ImGui::SliderInt("Longueur terrain", &planeWidth, 1, 32)){
-            mg->setWidthMap(planeWidth);
-            mg->generateImage();
-            dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
-            buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
-        }
-
-        ImGui::Spacing();
-
-        if (ImGui::SliderInt("Largeur", &planeLength, 1, 32)){
-            mg->setHeightMap(planeLength);
-            mg->generateImage();
-            dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
-            buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
-        }
-
-        ImGui::Spacing();
-
-        if(ImGui::SliderInt("Seed de génération", &seedTerrain, 0, 10000)){
-            mg->setSeed(seedTerrain);
-        }
-
-        ImGui::Spacing();
-
-        if(ImGui::SliderInt("Nombre d'octaves", &octave, 1, 10)){
-            mg->setOctave(octave);
-        }
-
-        ImGui::Spacing();
-
-        if (ImGui::Button("Utiliser la seed et le nombre d'octaves")){
-            mg->generateImage();
-            dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
-            buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
-        }
-
-        // Pour simplifier, on limite à un seul chunk de haut
-        //if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
-        //    buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
-        //}
-
-        ImGui::Spacing();
-
-        // Type 0 = Plein ; Type 1 = Sinus ; Type 2 = Flat ; Type 3 = Procedural
-        if (ImGui::SliderInt("Type de chunk", &typeChunk, 0, 3)){
-            buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
-        }
-
-        ImGui::End();
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
         glfwPollEvents();

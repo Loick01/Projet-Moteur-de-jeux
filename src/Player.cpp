@@ -3,7 +3,7 @@
 Player::Player(glm::vec3 position){
     this->stamina = 100.0f;
     this->life = 100.0f;
-    this->hitbox = new Hitbox(position, 20.0f, 7.5f);
+    this->hitbox = new Hitbox(position, 21.0f, 7.5f);
 }
 
 Player::~Player(){

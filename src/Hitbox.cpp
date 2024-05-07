@@ -40,40 +40,17 @@ void Hitbox::resetJumpForce(){
     this->forceJump = this->forceJumpInitial;
 }
 
-
-bool Hitbox::canGoLeftOrRight(float directionCheck, glm::vec3 bottomPlayer, glm::vec3 camera_target, glm::vec3 camera_up, int planeWidth, int planeLength, std::vector<Chunk*> listeChunks,glm::vec3 *cross_point){
+// axisToCheck --> true pour Left/Right, false pour Front/Back
+bool Hitbox::getLateralMovePossible(bool axisToCheck,float directionCheck, glm::vec3 bottomPlayer, glm::vec3 camera_target, glm::vec3 camera_up, int planeWidth, int planeLength, std::vector<Chunk*> listeChunks,glm::vec3 *cross_point){
     std::vector<glm::vec3> points; // On crée les 3 points qui serviront à la détection de la collision
-    *cross_point = glm::normalize(glm::cross(camera_target,camera_up))*directionCheck;
+    if (axisToCheck){
+        *cross_point = glm::normalize(glm::cross(camera_target,camera_up))*directionCheck;
+    }else{
+        glm::vec3 ct = camera_target;
+        ct[1] = 0.0f;
+        *cross_point = glm::normalize(ct)*directionCheck;
+    }
     glm::vec3 collision_point = bottomPlayer+*cross_point;
-    for (int i = 0 ; i < 3 ; i++){
-        points.push_back(collision_point);
-        collision_point[1] += 0.9;
-    }
-
-    bool canMove = true;
-    for (int i = 0 ; i < 3 ; i++){ // On regarde si l'un des points cause une collision
-        int NL = floor(points[i][0]) + 16*planeWidth;
-        int NH = floor(points[i][1]) + 16;
-        int NP = floor(points[i][2]) + 16*planeLength;
-        // Il ne faut pas oublier de vérifier si ce point se trouve bien dans le chunk
-        if (!(NL < 0 || NL > (planeWidth*32)-1 || NP < 0 || NP > (planeLength*32)-1 || NH < 0 || NH > 31)){
-            int index = NH *1024 + (NP%32) * 32 + (NL%32); // Indice du voxel dans lequel on considère que le point se trouve
-            Voxel *v = listeChunks[(NL/32) * planeLength + NP/32]->getListeVoxels()[index];
-            if (v != nullptr){ // Il y a une collision qui est détectée
-                canMove = false;
-                break; // Inutile de regarder pour les autres points
-            }
-        }
-    }
-    return canMove;
-}
-
-bool Hitbox::canGoFrontOrBack(float directionCheck, glm::vec3 bottomPlayer, glm::vec3 camera_target, int planeWidth, int planeLength, std::vector<Chunk*> listeChunks){
-    std::vector<glm::vec3> points; // On crée les 3 points qui serviront à la détection de la collision
-    glm::vec3 ct = camera_target;
-    ct[1] = 0.0f;
-    glm::vec3 cross_point = glm::normalize(ct)*directionCheck;
-    glm::vec3 collision_point = bottomPlayer+cross_point;
     for (int i = 0 ; i < 3 ; i++){
         points.push_back(collision_point);
         collision_point[1] += 0.9;
