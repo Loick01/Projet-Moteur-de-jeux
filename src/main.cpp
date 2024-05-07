@@ -43,6 +43,10 @@ float gravity = 18.0f;
 
 //tmp
 float angle=0.0f;
+bool walk=false;
+bool attack=false;
+bool die=false;
+int time_Animation=0;
 
 int blockInHotbar[9] = {23,29,1,11,12,13,20,26,28}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
@@ -75,6 +79,22 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE){
         playerSpeed /= 1.4;
+    }
+    // zombiewalk
+    if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){ 
+            if(walk==true)walk=false;
+            else walk=true;
+    }
+    // zombieattack)
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS){ 
+            if(attack==true)attack=false;
+            else attack=true;
+    }
+
+    // zombieDie
+    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){ 
+            if(die==true)die=false;
+            else die=true;
     }
 }
 
@@ -386,8 +406,8 @@ void createZombie(Node* node, glm::vec3 position){
     setPave(headZombie,glm::vec3(0.6,0.6,0.6), glm::vec3(0,1.5,0)+ position);
     setPave(leftArmZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(0.45,0.8,0)+ position);
     setPave(rightArmZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(-0.45,0.8,0)+ position);
-    setPave(leftLegZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(0.15,0,0)+ position);
-    setPave(rightLegZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(-0.15,0,0)+ position);
+    setPave(leftLegZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(0.15,0.05,0)+ position);
+    setPave(rightLegZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(-0.15,0.05,0)+ position);
 
     chestZombie->centerNode=glm::vec3(0,0.8,0)+ position;
     headZombie->centerNode=glm::vec3(0,1.5,0)+ position;
@@ -412,21 +432,181 @@ void createZombie(Node* node, glm::vec3 position){
     node->son.push_back(rightLegZombie);
 }
 
-void zombieWalk(Node* node,float angle){// node doit être un zombie dans le graphe de scène
+void zombieWalk(Node* node,float angle,float deltatime){// node doit être un zombie dans le graphe de scène
+    float angle2;
+    float angleArm;
+    angle2 = sin(angle/20+(M_PI))*5400*deltaTime;;
+    angle = sin(angle/20)*5400*deltaTime;
     
-    if(node->son[0]!=nullptr && node->transformation!=nullptr){
-        //node->transformation->addVelocity(glm::vec3(0,0,0.01f));
-        glm::mat4 transfoLeg = glm::mat4(1);
-        transfoLeg = glm::translate(transfoLeg,-node->son[4]->centerNode-glm::vec3(0.15,0.4,0.15));
-        transfoLeg=glm::rotate(transfoLeg, glm::radians(angle),glm::vec3(1.f,0.0f,0.0f));
-        //transfoLeg = glm::translate(transfoLeg,+node->son[4]->centerNode+glm::vec3(0.15,0.4,0.15));
-        
-        //printf("test : %f %f %f \n",node->son[4]->centerNode[0],node->son[4]->centerNode[1],node->son[4]->centerNode[2]);
-        //transfoLeg=glm::rotate(glm::mat4(1), glm::radians(angle),glm::vec3(1.f,0.0f,0.0f));
+    glm::mat4 transfoLeg = glm::mat4(1);
+    glm::mat4 transfoLeg2 = glm::mat4(1);
+    glm::mat4 transfoArm = glm::mat4(1);
 
-        node->son[4]->transformation = new Transform(transfoLeg);
+    transfoArm = glm::translate(transfoArm,node->son[2]->centerNode+glm::vec3(0.45,1.2,0));
+    transfoArm = glm::rotate(transfoArm,80.0f,glm::vec3(1.f,0.0f,0.0f));
+    transfoArm = glm::translate(transfoArm,-node->son[2]->centerNode-glm::vec3(0.45,1.2,0));
+    
+    transfoLeg = glm::translate(transfoLeg,node->son[4]->centerNode+glm::vec3(0.15,0.4,0));
+    transfoLeg = glm::rotate(transfoLeg, glm::radians(angle),glm::vec3(1.f,0.0f,0.0f));
+    transfoLeg = glm::translate(transfoLeg,-node->son[4]->centerNode-glm::vec3(0.15,0.4,0));
+
+    transfoLeg2 = glm::translate(transfoLeg2,node->son[5]->centerNode+glm::vec3(0.15,0.4,0));
+    transfoLeg2 = glm::rotate(transfoLeg2, glm::radians(angle2),glm::vec3(1.f,0.0f,0.0f));
+    transfoLeg2 = glm::translate(transfoLeg2,-node->son[5]->centerNode-glm::vec3(0.15,0.4,0));
+    node->transformation->addVelocity(glm::vec3(0,0,0.01f));
+            
+    node->son[4]->transformation = new Transform(transfoLeg);
+    node->son[5]->transformation = new Transform(transfoLeg2);
+    node->son[3]->transformation = new Transform(transfoArm);
+    node->son[2]->transformation = new Transform(transfoArm);
+}
+
+void zombieReset(Node* node){// node doit être un zombie dans le graphe de scène
+ 
+    float angle = sin(0);
+    
+    glm::mat4 transfoLeg = glm::mat4(1);
+    glm::mat4 transfoLeg2 = glm::mat4(1);
+    glm::mat4 transfoArm = glm::mat4(1);
+
+    transfoArm = glm::translate(transfoArm,node->son[2]->centerNode+glm::vec3(0.45,1.2,0));
+    transfoArm = glm::rotate(transfoArm,angle,glm::vec3(1.f,0.0f,0.0f));
+    transfoArm = glm::translate(transfoArm,-node->son[2]->centerNode-glm::vec3(0.45,1.2,0));
+    
+    transfoLeg = glm::translate(transfoLeg,node->son[4]->centerNode+glm::vec3(0.15,0.4,0));
+    transfoLeg = glm::rotate(transfoLeg,angle,glm::vec3(1.f,0.0f,0.0f));
+    transfoLeg = glm::translate(transfoLeg,-node->son[4]->centerNode-glm::vec3(0.15,0.4,0));
+
+    transfoLeg2 = glm::translate(transfoLeg2,node->son[5]->centerNode+glm::vec3(0.15,0.4,0));
+    transfoLeg2 = glm::rotate(transfoLeg2,angle,glm::vec3(1.f,0.0f,0.0f));
+    transfoLeg2 = glm::translate(transfoLeg2,-node->son[5]->centerNode-glm::vec3(0.15,0.4,0));
+            
+    node->son[4]->transformation = new Transform(transfoLeg);
+    node->son[5]->transformation = new Transform(transfoLeg2);
+    node->son[3]->transformation = new Transform(transfoArm);
+    node->son[2]->transformation = new Transform(transfoArm);
+}
+
+void zombieAttack(Node* node,bool *attack,int *time_Animation){// node doit être un zombie dans le graphe de scène
+ 
+    float angle = 79.8f;
+    
+    glm::mat4 transfoLeg = glm::mat4(1);
+    glm::mat4 transfoLeg2 = glm::mat4(1);
+    glm::mat4 transfoArm = glm::mat4(1);
+
+    transfoArm = glm::translate(transfoArm,node->son[2]->centerNode+glm::vec3(0.45,1.2,0));
+    transfoArm = glm::rotate(transfoArm,angle,glm::vec3(1.f,0.0f,0.0f));
+    transfoArm = glm::translate(transfoArm,-node->son[2]->centerNode-glm::vec3(0.45,1.2,0));
+    
+            
+    node->son[3]->transformation = new Transform(transfoArm);
+    node->son[2]->transformation = new Transform(transfoArm);
+    
+    if(*time_Animation>50){
+        *attack=false;
+        *time_Animation=0;
     }
 }
+
+void zombieDie(Node* node,bool *die,int *time_Animation){// node doit être un zombie dans le graphe de scène
+    glm::mat4 transfoNode = node->transformation->getMatrix4();
+    transfoNode = glm::translate(transfoNode,node->son[0]->centerNode-glm::vec3(0,1.6,0));
+    transfoNode = glm::rotate(transfoNode,0.02f,glm::vec3(0.f,0.0f,1.0f));
+    transfoNode = glm::translate(transfoNode,-node->son[0]->centerNode+glm::vec3(0,1.6,0));
+    
+    if(*time_Animation<3){
+        transfoNode = glm::translate(transfoNode,glm::vec3(0,0.2,0));;
+    }
+    if(*time_Animation<70){
+        node->transformation = new Transform(transfoNode);
+    }
+    if(*time_Animation>140){
+        *die=false;
+        *time_Animation=0;
+    }
+}
+
+void createPig(Node* node, glm::vec3 position){
+    Node *head = new Node;
+    Node *chest = new Node;
+    Node *leftArm = new Node;
+    Node *rightArm = new Node;
+    Node *leftLeg = new Node;
+    Node *rightLeg = new Node;
+    leftArm->ID=3;
+    rightArm->ID=2;
+    head->ID=0;
+    chest->ID=1;
+    rightLeg->ID=4;
+    leftLeg->ID=5;
+    setPave(chest,glm::vec3(0.9,0.5,0.5), glm::vec3(0,0.2,0)+ position);
+    setPave(head,glm::vec3(0.45,0.45,0.45), glm::vec3(0.6,0.3,0)+ position);
+    setPave(leftArm,glm::vec3(0.25,0.4,0.25), glm::vec3(-0.32,-0.1,0.14)+ position);
+    setPave(rightArm,glm::vec3(0.25,0.4,0.25), glm::vec3(-0.32,-0.1,-0.14)+ position);
+    setPave(leftLeg,glm::vec3(0.25,0.4,0.25), glm::vec3(0.4,-0.1,0.14)+ position);
+    setPave(rightLeg,glm::vec3(0.25,0.4,0.25), glm::vec3(0.4,-0.1,-0.14)+ position);
+
+    chest->centerNode=glm::vec3(0,0.8,0)+ position;
+    head->centerNode=glm::vec3(0,1.5,0)+ position;
+    rightArm->centerNode=glm::vec3(0.45,0.8,0)+ position;
+    leftArm->centerNode=glm::vec3(0.15,0,0)+ position;
+    rightLeg->centerNode=glm::vec3(0.15,0,0)+ position;
+    leftLeg->centerNode=glm::vec3(-0.15,0,0)+ position;
+
+    chest->transformation = new Transform(); // Appliquer la rotation à la matrice
+    head->transformation = new Transform(); // Appliquer la rotation à la matrice
+    rightArm->transformation = new Transform(); // Appliquer la rotation à la matrice
+    leftArm->transformation = new Transform(); // Appliquer la rotation à la matrice
+    rightLeg->transformation = new Transform(); // Appliquer la rotation à la matrice
+    leftLeg->transformation = new Transform(); // Appliquer la rotation à la matrice
+
+    node->son.push_back(chest);
+    node->son.push_back(head);
+    node->son.push_back(leftArm);
+    node->son.push_back(rightArm);
+    node->son.push_back(leftLeg);
+    node->son.push_back(rightLeg);
+}
+
+void pigWalk(Node* node,float angle,float deltatime){// node doit être un zombie dans le graphe de scène
+    float angle2;
+    float angleArm;
+    angle = sin(angle/20)*6400*deltaTime;
+    angle2 = sin(angle/20+(M_PI))*6400*deltaTime;;
+    
+    glm::mat4 transfoLeg = glm::mat4(1);
+    glm::mat4 transfoLeg2 = glm::mat4(1);
+    glm::mat4 transfoLeg3 = glm::mat4(1);
+    glm::mat4 transfoLeg4 = glm::mat4(1);
+
+    
+    transfoLeg = glm::translate(transfoLeg,node->son[4]->centerNode+glm::vec3(0.525f,0.1,0.0));
+    transfoLeg = glm::rotate(transfoLeg, glm::radians(angle),glm::vec3(0.f,0.0f,1.0f));
+    transfoLeg = glm::translate(transfoLeg,-node->son[4]->centerNode-glm::vec3(0.525f,0.1,0.0));
+
+    transfoLeg2 = glm::translate(transfoLeg2,node->son[5]->centerNode+glm::vec3(0.4-0.125,0.1,0.0));
+    transfoLeg2 = glm::rotate(transfoLeg2, glm::radians(angle2),glm::vec3(0.f,0.0f,1.0f));
+    transfoLeg2 = glm::translate(transfoLeg2,-node->son[5]->centerNode-glm::vec3(0.4-0.125,0.1,0.0));
+
+    transfoLeg3 = glm::translate(transfoLeg3,node->son[3]->centerNode+glm::vec3(-0.76f,-0.8,0.0));
+    transfoLeg3 = glm::rotate(transfoLeg3, glm::radians(angle),glm::vec3(0.f,0.0f,1.0f));
+    transfoLeg3 = glm::translate(transfoLeg3,-node->son[3]->centerNode-glm::vec3(-0.76f,-0.8,0.0));
+
+    transfoLeg4 = glm::translate(transfoLeg4,node->son[2]->centerNode+glm::vec3(-0.34-0.125f,0.0f,0.0));
+    transfoLeg4 = glm::rotate(transfoLeg4, glm::radians(angle2),glm::vec3(0.f,0.0f,1.0f));
+    transfoLeg4 = glm::translate(transfoLeg4,-node->son[2]->centerNode-glm::vec3(-0.34-0.125f,0.0f,0.0));
+    node->transformation->addVelocity(glm::vec3(0.008f,0,0.0f));
+            
+    node->son[4]->transformation = new Transform(transfoLeg);
+    node->son[5]->transformation = new Transform(transfoLeg2);
+    node->son[3]->transformation = new Transform(transfoLeg3);
+    node->son[2]->transformation = new Transform(transfoLeg4);
+}
+
+
+
+
 
 
 void loadBufferNode(Node *node){
@@ -533,23 +713,31 @@ int main(){
 
     Node *center = new Node;
     Node *zombie1 = new Node;
+    Node *pig = new Node;
     center->ID=1;
     center->transformation = new Transform(); // Appliquer la rotation à la matrice
 
     zombie1->ID=88;
     zombie1->transformation = new Transform();
+    
+    pig->ID=45;
+    pig->transformation = new Transform();
 
     Node *Cube = new Node;
     Cube->ID=84;
     Cube->transformation = new Transform();
 
-    setPave(Cube,glm::vec3(0.8,0.8,0.8),glm::vec3(0,0,0));
+    setPave(Cube,glm::vec3(0.8,0.8,0.8),glm::vec3(0,1,0));
 
     
     createZombie(zombie1,glm::vec3(3,1.4,3));
 
+    createPig(pig,glm::vec3(5,1.4,3));
+
     center->son.push_back(zombie1);
     center->son.push_back(Cube);
+
+    center->son.push_back(pig);
 
 
     loadBufferNode(center);
@@ -680,8 +868,20 @@ int main(){
 
         glUseProgram(programID_Entity);
 
-        zombieWalk(zombie1,angle);
-        angle +=0.5f;
+        if(walk==true){
+            pigWalk(pig,angle,deltaTime);
+            angle +=0.5f;
+        }else zombieReset(zombie1);
+
+        if(attack==true){
+            time_Animation++;
+            zombieAttack(zombie1,&attack,&time_Animation);
+        }
+
+        if(die==true){
+            time_Animation++;
+            zombieDie(zombie1,&die,&time_Animation);
+        }
 
         glUniformMatrix4fv(ModelEntity,1,GL_FALSE,&Model[0][0]);
         glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
