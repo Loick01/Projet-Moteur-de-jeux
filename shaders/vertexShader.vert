@@ -4,6 +4,8 @@ layout(location = 0) in vec3 aPos;
 
 out vec2 uv_coord;
 
+out float shadow_value;
+
 uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
@@ -15,10 +17,19 @@ layout(std430, binding = 0) buffer layoutObjectID
 
 // Atlas de 5x10 images
 vec2 texCoords[4] = vec2[4](
-        vec2(0.0,64.0/676.0),
-        vec2(64.0/336.0,64.0/676.0),
+        vec2(0.0,0.098),
+        vec2(0.198,0.098),
         vec2(0.0,0.0),
-        vec2(64.0/336.0,0.0)
+        vec2(0.198,0.0)
+);
+
+float shadows[24] = float[24](
+        0.2,0.2,0.2,0.2, // Face du dessous
+        1.2,1.2,1.2,1.2, // Face du dessus
+        0.8,0.8,0.8,0.8, // Face arrière
+        0.8,0.8,0.8,0.8, // Face de devant
+        0.5,0.5,0.5,0.5, // Face de gauche
+        0.5,0.5,0.5,0.5 // Face de droite
 );
 
 void main(){
@@ -29,8 +40,9 @@ void main(){
                 objectID = min(objectID + (gl_VertexID % 24)/4,objectID+2);
         }
         uv_coord = texCoords[gl_VertexID%4];
-        uv_coord[0] += objectID%5*(68.0/336.0);
-        uv_coord[1] += objectID/5*(68.0/676.0);
+        uv_coord[0] += objectID%5*0.2003;
+        uv_coord[1] += objectID/5*0.1003;
+        shadow_value = shadows[gl_VertexID%24];
 }
 
 

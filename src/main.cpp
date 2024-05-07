@@ -8,7 +8,7 @@
 float deltaTime = 0.0f;	
 float lastFrame = 0.0f;
 
-GLuint programID, programID_HUD;
+GLuint programID, programID_HUD,programID_Entity;
 
 bool isImGuiShow = true;
 
@@ -46,7 +46,14 @@ bool hasUpdate; // A rentrer dans la classe Hitbox plus tard
 bool isRunning = false;
 bool isHolding = false;
 
-int blockInHotbar[9] = {23,29,1,11,12,13,20,26,28}; // Blocs qui sont dans la hotbar
+//tmp
+float angle=0.0f;
+bool walk=false;
+bool fight=false;
+bool die=false;
+int time_Animation=0;
+
+int blockInHotbar[9] = {23,29,1,11,12,13,20,26,33}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
 int handBlock = blockInHotbar[indexHandBlock]; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris)
 
@@ -99,6 +106,24 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 cameraOrbitale = false;
                 cameraLibre = false;
             }
+    }
+
+    //a bouger
+    // zombiewalk
+    if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){ 
+            if(walk==true)walk=false;
+            else walk=true;
+    }
+    // zombieattack)
+    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){ 
+            if(fight==true)fight=false;
+            else fight=true;
+    }
+
+    // zombieDie
+    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){ 
+            if(die==true)die=false;
+            else die=true;
     }
 }
 
@@ -346,6 +371,7 @@ int main(){
 
     programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
     programID_HUD = LoadShaders("../shaders/hud_vertex.vert", "../shaders/hud_frag.frag");
+    programID_Entity = LoadShaders("../shaders/entity_vertex.vert", "../shaders/entity_frag.frag");
     glUseProgram(programID_HUD);
 
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
@@ -381,6 +407,10 @@ int main(){
     GLuint ViewMatrix = glGetUniformLocation(programID,"View");
     GLuint ProjectionMatrix = glGetUniformLocation(programID,"Projection");
 
+    GLuint ModelEntity = glGetUniformLocation(programID_Entity,"Model");
+    GLuint ViewEntity = glGetUniformLocation(programID_Entity,"View");
+    GLuint ProjectionEntity = glGetUniformLocation(programID_Entity,"Projection");
+
     bool renduFilaire = false;
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -395,8 +425,9 @@ int main(){
     glUniform1iv(glGetUniformLocation(programID_HUD, "blockHotbar"), 9, blockInHotbar);
 
     // Chargement des textures
-    GLint atlasTexture = loadTexture2DFromFilePath("../Textures/Blocks/atlas_no_bleeding.png");
+    GLint atlasTexture = loadTexture2DFromFilePath("../Textures/Blocks/atlas.png");
     GLint hudTexture = loadTexture2DFromFilePath("../Textures/HUD/hud.png");
+    
 
     if (atlasTexture != -1) {
         glActiveTexture(GL_TEXTURE0);
@@ -413,7 +444,14 @@ int main(){
 
     skybox->bindCubemap(GL_TEXTURE2, 2); 
 
+    glUseProgram(programID_Entity);
+
     lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
+
+    Zombie *zombie = new Zombie(1,glm::vec3(3,1.4,3));
+
+    zombie->loadZombie();
+
 
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -470,6 +508,35 @@ int main(){
         // Affichage de la skybox
         skybox->drawSkybox(Model, Projection, View);
         
+
+        // Gestion des collisions
+        hasUpdate = false;
+        hitboxPlayer->checkJump(&hasUpdate, deltaTime);
+        hitboxPlayer->checkTopAndBottomCollision(hasUpdate, planeWidth, planeLength, deltaTime, listeChunks, hud, player);
+
+        glUseProgram(programID_Entity);
+
+         if(walk==true){
+            zombie->walk(zombie->getParentNode(),angle,deltaTime);
+            angle +=0.5f;
+        }else zombie->reset(zombie->getParentNode());
+
+        if(fight==true){
+            time_Animation++;
+            zombie->attack(zombie->getParentNode(),&fight,&time_Animation);
+        }
+
+        if(die==true){
+            time_Animation++;
+            zombie->die(zombie->getParentNode(),&die,&time_Animation);
+        }
+
+        glUniformMatrix4fv(ModelEntity,1,GL_FALSE,&Model[0][0]);
+        glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
+        glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
+
+        zombie->drawZombie(programID_Entity);
+
         // Affichage de l'hud
         if (showHud){
             glDisable(GL_DEPTH_TEST);
@@ -477,11 +544,6 @@ int main(){
             hud->drawHud();
             glEnable(GL_DEPTH_TEST);
         }
-
-        // Gestion des collisions
-        hasUpdate = false;
-        hitboxPlayer->checkJump(&hasUpdate, deltaTime);
-        hitboxPlayer->checkTopAndBottomCollision(hasUpdate, planeWidth, planeLength, deltaTime, listeChunks, hud, player);
         
         if (isImGuiShow){
             // Start the ImGui frame

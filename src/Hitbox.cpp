@@ -123,32 +123,41 @@ void Hitbox::checkTopAndBottomCollision(bool hasUpdate, int planeWidth, int plan
             indiceBlock = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32);
             v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
             if (v != nullptr){
-                this->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
-                if (this->forceJump <= -14.0f){
-                    player->takeDamage(pow(this->forceJump + 14.0, 2)); // On reverra plus le calcul des dégâts si on a le temps
-                    hud->updateLife(player->getLife());
-                    if (player->getLife() <= 0.0){
-                        std::cout << "Vous êtes mort !\n";
-                        //return -1; Le joueur est mort, le programme s'arrête 
+                if(v->getID()==33 && this->forceJump<-0.1){
+                    this->forceJump*=-0.8;
+
+                }else{
+                    this->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
+                    if (this->forceJump <= -14.0f){
+                        player->takeDamage(pow(this->forceJump + 14.0, 2)); // On reverra plus le calcul des dégâts si on a le temps
+                        hud->updateLife(player->getLife());
+                        if (player->getLife() <= 0.0){
+                            std::cout << "Vous êtes mort !\n";
+                            //return -1; Le joueur est mort, le programme s'arrête 
+                        }
                     }
+                    this->forceJump = 0.0f;
+                    this->setCanJump(true);
                 }
-                this->forceJump = 0.0f;
-                this->setCanJump(true);
             }
         }else{
-            if (pPlayer[1] != ceil(pPlayer[1])){
-                this->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
-                if (this->forceJump <= -14.0f){
-                    player->takeDamage(pow(this->forceJump + 14.0, 2)); // On reverra plus le calcul des dégâts si on a le temps
-                    hud->updateLife(player->getLife());
-                    if (player->getLife() <= 0.0){
-                        std::cout << "Vous êtes mort !\n";
-                        //return -1; Le joueur est mort, le programme s'arrête 
+            if(v->getID()==33 && this->forceJump<-0.1){
+                this->forceJump*=-0.8;
+            }else{
+                if (pPlayer[1] != ceil(pPlayer[1])){
+                    this->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
+                    if (this->forceJump <= -14.0f){
+                        player->takeDamage(pow(this->forceJump + 14.0, 2)); // On reverra plus le calcul des dégâts si on a le temps
+                        hud->updateLife(player->getLife());
+                        if (player->getLife() <= 0.0){
+                            std::cout << "Vous êtes mort !\n";
+                            //return -1; Le joueur est mort, le programme s'arrête 
+                        }
                     }
+                    this->forceJump = 0.0f;
                 }
-                this->forceJump = 0.0f;
+                this->setCanJump(true);
             }
-            this->setCanJump(true);
         }
     }
 }

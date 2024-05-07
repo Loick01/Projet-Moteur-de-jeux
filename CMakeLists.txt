@@ -56,6 +56,8 @@ add_executable(main
     src/MapGenerator.cpp
     src/FastNoise.cpp
     src/Hitbox.cpp
+    src/Zombie.cpp
+    src/Transform.cpp
     )
 
 # Include directories for our project

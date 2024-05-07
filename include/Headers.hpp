@@ -34,3 +34,5 @@
 #include <Hud.hpp>
 #include <MapGenerator.hpp>
 #include <Hitbox.hpp>
+#include <Zombie.hpp>
+#include <Transform.hpp>

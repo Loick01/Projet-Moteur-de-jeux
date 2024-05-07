@@ -4,7 +4,7 @@
 
 #include <fstream>
 
-#define NB_BLOCK 33
+#define NB_BLOCK 34
 #define GRASS_BLOCK 13
 #define DIRT_BLOCK 32
 #define DIAMOND_ORE 19
