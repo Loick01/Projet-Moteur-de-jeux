@@ -108,23 +108,25 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             }
     }
 
-    //a bouger
-    // zombiewalk
+    // ---------------------------------------------------------
+    // Joue les animations du zombie (temporaire)
+    // Marche
     if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){ 
             if(walk==true)walk=false;
             else walk=true;
     }
-    // zombieattack)
+    // Attaque
     if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){ 
             if(fight==true)fight=false;
             else fight=true;
     }
 
-    // zombieDie
+    // Meurt
     if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){ 
             if(die==true)die=false;
             else die=true;
     }
+    // ---------------------------------------------------------
 }
 
 void processInput(GLFWwindow* window){ 
@@ -427,7 +429,7 @@ int main(){
     // Chargement des textures
     GLint atlasTexture = loadTexture2DFromFilePath("../Textures/Blocks/atlas.png");
     GLint hudTexture = loadTexture2DFromFilePath("../Textures/HUD/hud.png");
-    
+    GLint entityTexture = loadTexture2DFromFilePath("../Textures/Entity/entity.png");
 
     if (atlasTexture != -1) {
         glActiveTexture(GL_TEXTURE0);
@@ -442,14 +444,19 @@ int main(){
         glUniform1i(glGetUniformLocation(programID_HUD, "hudTexture"), 1);
     }
 
-    skybox->bindCubemap(GL_TEXTURE2, 2); 
-
     glUseProgram(programID_Entity);
+    if (entityTexture != -1) {
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, entityTexture);
+        glUniform1i(glGetUniformLocation(programID_Entity, "entityTexture"), 2);
+    }
+
+    skybox->bindCubemap(GL_TEXTURE3, 3); 
 
     lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
 
+    // Temporaire : Création des entités
     Zombie *zombie = new Zombie(1,glm::vec3(3,1.4,3));
-
     zombie->loadZombie();
 
 

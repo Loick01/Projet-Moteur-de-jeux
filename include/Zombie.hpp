@@ -32,7 +32,7 @@ class Zombie{
         void loadZombie();
         void drawZombie(GLuint programID_Entity);
 
-        //a retiré d'ici
+        // A retirer d'ici
         void setPave(Node* node, glm::vec3 dimensions, glm::vec3 position);
         void loadBufferNode(Node *node);
         void sendNodeToBuffer(Node *node,GLuint programID_Entity,glm::mat4 parent);

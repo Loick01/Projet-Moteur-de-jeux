@@ -74,41 +74,29 @@ void Zombie::setPave(Node* node, glm::vec3 dimensions, glm::vec3 position) {
 
     // Indices pour les triangles des faces du pavé
     node->indices.insert(node->indices.end(), {
-        //Face bas (y négatif)
+        // Face du bas (y négatif)
         0,1,2,
         2,1,3,
 
-        //face haut
-        // 6,7,4,
-        // 4,7,5,
-
+        // Face du haut (y positif)
         4,7,6,
         5,7,4,
 
-        //face arrière
-        // 9,8,11,
-        // 11,8,10,
+        // Face arrière (z négatif)
         11,8,9,
         10,8,11,
 
-        // //face devant
+        // Face avant (z positif)
         12,13,14,
         14,13,15,
 
-        // 14,13,12,
-        // 15,13,14,
-
-        //face gauche
+        // Face de gauche
         16,17,18,
         18,17,19,
 
-        //face droite
-        // 21,20,23,
-        // 23,20,22
-
+        // Face de droite
         23,20,21,
         22,20,23
-        
     });
 }
 
@@ -123,12 +111,8 @@ void Zombie::loadBufferNode(Node *node){
     for(int i=0;i<node->son.size();i++){
         loadBufferNode(node->son[i]);
     }
-    printf("je load\n");
 }
 
-
-
-// a appelé en continu
 void Zombie::sendNodeToBuffer(Node *node,GLuint programID_Entity,glm::mat4 parent){
     glm::mat4 matI = glm::mat4(1);
     matI=parent*node->transformation->getMatrix4();
@@ -171,18 +155,18 @@ void Zombie::createZombie(Node* node, glm::vec3 position){
     Node *rightArmZombie = new Node;
     Node *leftLegZombie = new Node;
     Node *rightLegZombie = new Node;
-    leftArmZombie->ID=3;
-    rightArmZombie->ID=2;
     headZombie->ID=0;
     chestZombie->ID=1;
-    rightLegZombie->ID=4;
-    leftLegZombie->ID=5;
-    setPave(chestZombie,glm::vec3(0.6,0.8,0.3), glm::vec3(0,0.8,0)+ position);
-    setPave(headZombie,glm::vec3(0.6,0.6,0.6), glm::vec3(0,1.5,0)+ position);
-    setPave(leftArmZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(0.45,0.8,0)+ position);
-    setPave(rightArmZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(-0.45,0.8,0)+ position);
-    setPave(leftLegZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(0.15,0.05,0)+ position);
-    setPave(rightLegZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(-0.15,0.05,0)+ position);
+    leftArmZombie->ID=2;
+    rightArmZombie->ID=3;
+    leftLegZombie->ID=4;
+    rightLegZombie->ID=5;
+    this->setPave(chestZombie,glm::vec3(0.6,0.8,0.3), glm::vec3(0,0.8,0)+ position);
+    this->setPave(headZombie,glm::vec3(0.6,0.6,0.6), glm::vec3(0,1.5,0)+ position);
+    this->setPave(leftArmZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(0.45,0.8,0)+ position);
+    this->setPave(rightArmZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(-0.45,0.8,0)+ position);
+    this->setPave(leftLegZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(0.15,0.05,0)+ position);
+    this->setPave(rightLegZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(-0.15,0.05,0)+ position);
 
     chestZombie->centerNode=glm::vec3(0,0.8,0)+ position;
     headZombie->centerNode=glm::vec3(0,1.5,0)+ position;
@@ -206,7 +190,7 @@ void Zombie::createZombie(Node* node, glm::vec3 position){
     node->son.push_back(rightLegZombie);
 }
 
-void Zombie::walk(Node* node,float angle,float deltatime){// node doit être un zombie dans le graphe de scène
+void Zombie::walk(Node* node,float angle,float deltatime){ // Le paramètre node doit être un zombie dans le graphe de scène
     float angle2;
     float angleArm;
     angle2 = sin(angle/20+(M_PI))*5400*deltatime;;
@@ -235,7 +219,7 @@ void Zombie::walk(Node* node,float angle,float deltatime){// node doit être un 
     node->son[2]->transformation = new Transform(transfoArm);
 }
 
-void Zombie::reset(Node* node){// node doit être un zombie dans le graphe de scène
+void Zombie::reset(Node* node){ // Le paramètre node doit être un zombie dans le graphe de scène
  
     float angle = sin(0);
     
@@ -261,7 +245,7 @@ void Zombie::reset(Node* node){// node doit être un zombie dans le graphe de sc
     node->son[2]->transformation = new Transform(transfoArm);
 }
 
-void Zombie::attack(Node* node,bool *attack,int *time_Animation){// node doit être un zombie dans le graphe de scène
+void Zombie::attack(Node* node,bool *attack,int *time_Animation){ // Le paramètre node doit être un zombie dans le graphe de scène
  
     float angle = 79.8f;
     
@@ -283,7 +267,7 @@ void Zombie::attack(Node* node,bool *attack,int *time_Animation){// node doit ê
     }
 }
 
-void Zombie::die(Node* node,bool *die,int *time_Animation){// node doit être un zombie dans le graphe de scène
+void Zombie::die(Node* node,bool *die,int *time_Animation){ // Le paramètre node doit être un zombie dans le graphe de scène
     glm::mat4 transfoNode = node->transformation->getMatrix4();
     transfoNode = glm::translate(transfoNode,node->son[0]->centerNode-glm::vec3(0,1.6,0));
     transfoNode = glm::rotate(transfoNode,0.02f,glm::vec3(0.f,0.0f,1.0f));
