@@ -27,7 +27,8 @@ double previousY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
 float phi = -90.0f;
 float theta = 0.0f;
-float FoV = 45.0f;
+float FoV = 75.0f;
+float FoV_running = 80.0f;
 
 // Ces 3 tailles sont en nombre de chunk
 int planeWidth = 3; // De 1 à 32
@@ -394,7 +395,7 @@ int main(){
     glUniform1iv(glGetUniformLocation(programID_HUD, "blockHotbar"), 9, blockInHotbar);
 
     // Chargement des textures
-    GLint atlasTexture = loadTexture2DFromFilePath("../Textures/Blocks/atlas.png");
+    GLint atlasTexture = loadTexture2DFromFilePath("../Textures/Blocks/atlas_no_bleeding.png");
     GLint hudTexture = loadTexture2DFromFilePath("../Textures/HUD/hud.png");
 
     if (atlasTexture != -1) {
@@ -429,6 +430,7 @@ int main(){
             if (player->getStamina() > 0.0){
                 player->addStamina(-30.0*deltaTime);
                 hud->updateStamina(player->getStamina());
+                FoV = FoV_running;
             }else{
                 playerSpeed /= coeffAcceleration;
                 isRunning = false;
@@ -439,6 +441,7 @@ int main(){
                 player->addStamina(30.0*deltaTime);
                 hud->updateStamina(player->getStamina());
             }
+            FoV = 75.0f;
         }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -469,8 +472,10 @@ int main(){
         
         // Affichage de l'hud
         if (showHud){
+            glDisable(GL_DEPTH_TEST);
             glUseProgram(programID_HUD);
             hud->drawHud();
+            glEnable(GL_DEPTH_TEST);
         }
 
         // Gestion des collisions

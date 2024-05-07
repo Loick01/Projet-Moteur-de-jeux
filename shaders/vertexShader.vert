@@ -15,10 +15,10 @@ layout(std430, binding = 0) buffer layoutObjectID
 
 // Atlas de 5x10 images
 vec2 texCoords[4] = vec2[4](
-        vec2(0.0f,0.1f),
-        vec2(0.2f,0.1f),
-        vec2(0.0f,0.0f),
-        vec2(0.2f,0.0f)
+        vec2(0.0,64.0/676.0),
+        vec2(64.0/336.0,64.0/676.0),
+        vec2(0.0,0.0),
+        vec2(64.0/336.0,0.0)
 );
 
 void main(){
@@ -29,8 +29,8 @@ void main(){
                 objectID = min(objectID + (gl_VertexID % 24)/4,objectID+2);
         }
         uv_coord = texCoords[gl_VertexID%4];
-        uv_coord[0] += objectID%5*0.2;
-        uv_coord[1] += objectID/5*0.1;
+        uv_coord[0] += objectID%5*(68.0/336.0);
+        uv_coord[1] += objectID/5*(68.0/676.0);
 }
 
 

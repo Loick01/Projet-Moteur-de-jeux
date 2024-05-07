@@ -21,16 +21,16 @@ vec2 texCoordsBlock[4] = vec2[4](
 );
 
 vec2 texCoords[20] = vec2[20](
-	// Select
-    vec2(0.001953,0.994565),
-    vec2(0.091796,0.994565),
-    vec2(0.001953,0.494565),
-    vec2(0.091796,0.494565),
     // Hotbar
     vec2(0.001953,0.467391),
     vec2(0.708984,0.467391),
     vec2(0.001953,0.0108695),
     vec2(0.708984,0.0108695),
+    // Select
+    vec2(0.001953,0.994565),
+    vec2(0.091796,0.994565),
+    vec2(0.001953,0.494565),
+    vec2(0.091796,0.494565),
     // Cursor
     vec2(0.949218,0.260869),
     vec2(0.984375,0.260869),
@@ -51,18 +51,20 @@ vec2 texCoords[20] = vec2[20](
 void main() {
     stateHud = 0;
     vec2 vertPosition = position;
-    if (gl_VertexID < 4){ // Pour le select uniquement (pour faire en sorte qu'il se positionne selon la molette de la souris)
+    if (gl_VertexID > 3 && gl_VertexID < 8){ // Pour le select uniquement (pour faire en sorte qu'il se positionne selon la molette de la souris)
         vertPosition[0] += selectLocation * 80.0;
     }
     vec2 coords = vec2(vertPosition[0] / 1280 , vertPosition[1] / 720); // Du coup j'ai mis en dur les dimensions de la fenêtre pour l'instant
-    gl_Position = vec4(coords * 2.0 - 1.0, gl_VertexID > 11 ? -0.1 : 0.0, 1.0);
+    gl_Position = vec4(coords * 2.0 - 1.0, 0.0, 1.0);
 
-    if (gl_VertexID < 20){
+    if (gl_VertexID < 12){
         uv_coord = texCoords[gl_VertexID];
-    }else if (gl_VertexID < 24){ // Pour la ligne de vie
+    }else if (gl_VertexID < 16){ // Pour la ligne de vie
         stateHud = 2;
-    }else if (gl_VertexID < 28){ // Pour la ligne d'endurance
+    }else if (gl_VertexID < 20){ // Pour la ligne d'endurance
         stateHud = 3;
+    }else if (gl_VertexID < 28){ // Pour les textures des barres de vie et d'endurance
+        uv_coord = texCoords[gl_VertexID-8];
     }else{
         stateHud = 1;
         int objectID = blockHotbar[gl_VertexID/4 - 7]; // Ici, 7 c'est le nombre de PlaneHud chargé avant les items de la hotbar (donc si on en rajoute il faut modifier cette valeur)
