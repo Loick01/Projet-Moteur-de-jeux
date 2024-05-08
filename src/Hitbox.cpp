@@ -124,7 +124,7 @@ void Hitbox::checkTopAndBottomCollision(bool hasUpdate, int planeWidth, int plan
             v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
             if (v != nullptr){
                 if(v->getID()==33 && this->forceJump<-0.1){
-                    this->forceJump*=-0.8;
+                    this->forceJump*=-0.5;
 
                 }else{
                     this->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
@@ -142,7 +142,7 @@ void Hitbox::checkTopAndBottomCollision(bool hasUpdate, int planeWidth, int plan
             }
         }else{
             if(v->getID()==33 && this->forceJump<-0.1){
-                this->forceJump*=-0.8;
+                this->forceJump*=-0.5;
             }else{
                 if (pPlayer[1] != ceil(pPlayer[1])){
                     this->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));

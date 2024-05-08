@@ -1,52 +1,52 @@
 #include <Transform.hpp>
 
-// Constructeur par défaut
 Transform::Transform() {
-    matrix = glm::mat3(1.0f); 
-    translation = glm::vec3(0.0f); 
+    this->m = glm::mat3(1.0f); // Neutre
+    this->t = glm::vec3(0.0f);  // Neutre
 }
 
 Transform::Transform(glm::vec3 t, glm::mat3 m) {
-    matrix = m;
-    translation = t;
+    this->m = m;
+    this->t = t;
 }
 
 Transform::Transform(glm::mat3 m) {
-    matrix = m;
-    translation = glm::vec3(0.0f);
+    this->m = m;
+    this->t = glm::vec3(0.0f); // Neutre
 }
 
 Transform::Transform(glm::vec3 t) {
-    matrix = glm::mat3(1.0f);
-    translation = t;
+    this->m = glm::mat3(1.0f); // Neutre
+    this->t = t;
 }
 
-Transform::Transform(const glm::mat4& mat4) {
-    translation = glm::vec3(mat4[3]);
-    glm::mat3 mat3;
+Transform::Transform(glm::mat4 mat4) {
+    this->t = glm::vec3(mat4[3]); // La translation est dans la quatrième colonne de la mat4
+    glm::mat3 mat3; // On veut extraire la mat3 de la mat4
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             mat3[i][j] = mat4[i][j];
         }
     }
-    matrix = mat3;
+    this->m = mat3;
 }
 
-glm::mat3 Transform::getMatrix() const {
-    return matrix;
+glm::mat3 Transform::getRotationScalingMatrix() {
+    return this->m;
 }
 
-glm::vec3 Transform::getTranslation() const {
-    return translation;
+glm::vec3 Transform::getTranslationVector() {
+    return this->t;
 }
 
-glm::mat4 Transform::getMatrix4(){
-    glm::mat4 matrix = glm::mat4(this->matrix);
-    matrix[3]= glm::vec4(this->translation[0],this->translation[1],this->translation[2],1);
-    return matrix;
+glm::mat4 Transform::getTransfoMat4(){
+    glm::mat4 result = glm::mat4(this->m);
+    result[3] = glm::vec4(this->t[0],this->t[1],this->t[2],1);
+    return result;
 }
+
 void Transform::addVelocity(glm::vec3 t){
-    translation +=t;
+    this->t += t;
 }
 
 

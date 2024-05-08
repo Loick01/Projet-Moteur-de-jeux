@@ -46,12 +46,12 @@ bool hasUpdate; // A rentrer dans la classe Hitbox plus tard
 bool isRunning = false;
 bool isHolding = false;
 
-//tmp
+// Temporaire
 float angle=0.0f;
 bool walk=false;
 bool fight=false;
 bool die=false;
-int time_Animation=0;
+float accumulateurAnimation = 0.0f; // Va servir à faire animations indépendantes du nombre de frame
 
 int blockInHotbar[9] = {23,29,1,11,12,13,20,26,33}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
@@ -109,22 +109,19 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 
     // ---------------------------------------------------------
-    // Joue les animations du zombie (temporaire)
+    // Joue les animations du zombie (temporaire, on utilisera une classe Agent)
     // Marche
     if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){ 
-            if(walk==true)walk=false;
-            else walk=true;
+            walk = !walk;
     }
     // Attaque
     if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){ 
-            if(fight==true)fight=false;
-            else fight=true;
+            fight = !fight;
     }
 
     // Meurt
     if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){ 
-            if(die==true)die=false;
-            else die=true;
+            die = !die;
     }
     // ---------------------------------------------------------
 }
@@ -355,9 +352,7 @@ int main(){
     glEnable(GL_DEPTH_TEST);
     // Accept fragment if it closer to the camera than the former one
     glDepthFunc(GL_LESS);
-
     glEnable(GL_CULL_FACE); // Attention à la construction des triangles
-
     // Pour utiliser de la transparence dans le fragment shader (par exemple pour le bloc de glace)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -374,7 +369,6 @@ int main(){
     programID = LoadShaders("../shaders/vertexShader.vert", "../shaders/fragmentShader.frag");
     programID_HUD = LoadShaders("../shaders/hud_vertex.vert", "../shaders/hud_frag.frag");
     programID_Entity = LoadShaders("../shaders/entity_vertex.vert", "../shaders/entity_frag.frag");
-    glUseProgram(programID_HUD);
 
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
     hitboxPlayer = player->getHitbox();
@@ -401,22 +395,22 @@ int main(){
 
     Skybox *skybox = new Skybox();
 
+    glUseProgram(programID_HUD);
     Hud *hud = new Hud(SCREEN_WIDTH, SCREEN_HEIGHT);
     glUniform1i(glGetUniformLocation(programID_HUD, "selectLocation"), indexHandBlock);
+    glUniform1iv(glGetUniformLocation(programID_HUD, "blockHotbar"), 9, blockInHotbar);
     hud->loadHud();
 
     GLuint ModelMatrix = glGetUniformLocation(programID,"Model");
+    // La matrice Model ne sera pas envoyé aux shaders des entités (ça ne sert à rien)
     GLuint ViewMatrix = glGetUniformLocation(programID,"View");
-    GLuint ProjectionMatrix = glGetUniformLocation(programID,"Projection");
-
-    GLuint ModelEntity = glGetUniformLocation(programID_Entity,"Model");
     GLuint ViewEntity = glGetUniformLocation(programID_Entity,"View");
+    GLuint ProjectionMatrix = glGetUniformLocation(programID,"Projection");
     GLuint ProjectionEntity = glGetUniformLocation(programID_Entity,"Projection");
 
     bool renduFilaire = false;
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    
     // Setup ImGui binding
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -424,23 +418,23 @@ int main(){
     ImGui_ImplOpenGL3_Init("#version 330");
     ImGui::StyleColorsLight();
 
-    glUniform1iv(glGetUniformLocation(programID_HUD, "blockHotbar"), 9, blockInHotbar);
-
     // Chargement des textures
     GLint atlasTexture = loadTexture2DFromFilePath("../Textures/Blocks/atlas.png");
     GLint hudTexture = loadTexture2DFromFilePath("../Textures/HUD/hud.png");
     GLint entityTexture = loadTexture2DFromFilePath("../Textures/Entity/entity.png");
 
+    glUseProgram(programID);
     if (atlasTexture != -1) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, atlasTexture);
         glUniform1i(glGetUniformLocation(programID, "atlasTexture"), GL_TEXTURE0);
-        glUniform1i(glGetUniformLocation(programID_HUD, "atlasTexture"), GL_TEXTURE0);
     }
 
-    if (hudTexture != -1) {
+    glUseProgram(programID_HUD);
+    if (hudTexture != -1 && atlasTexture != -1) {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, hudTexture);
+        glUniform1i(glGetUniformLocation(programID_HUD, "atlasTexture"), GL_TEXTURE0);
         glUniform1i(glGetUniformLocation(programID_HUD, "hudTexture"), 1);
     }
 
@@ -456,9 +450,8 @@ int main(){
     lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
 
     // Temporaire : Création des entités
-    Zombie *zombie = new Zombie(1,glm::vec3(3,1.4,3));
+    Zombie *zombie = new Zombie(1,glm::vec3(3,1.4,3), 3.0f);
     zombie->loadZombie();
-
 
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -514,7 +507,6 @@ int main(){
 
         // Affichage de la skybox
         skybox->drawSkybox(Model, Projection, View);
-        
 
         // Gestion des collisions
         hasUpdate = false;
@@ -523,28 +515,29 @@ int main(){
 
         glUseProgram(programID_Entity);
 
-         if(walk==true){
-            zombie->walk(zombie->getParentNode(),angle,deltaTime);
-            angle +=0.5f;
-        }else zombie->reset(zombie->getParentNode());
+        // Temporaire --------------------------------------------------------------------
+        if(walk==true){
+            zombie->walk(zombie->getRootNode(),angle,deltaTime);
+            angle += 6*deltaTime;
+        }else{
+            zombie->reset(zombie->getRootNode());
+        }
 
         if(fight==true){
-            time_Animation++;
-            zombie->attack(zombie->getParentNode(),&fight,&time_Animation);
+            zombie->attack(zombie->getRootNode(),&fight,&accumulateurAnimation,deltaTime);
         }
 
         if(die==true){
-            time_Animation++;
-            zombie->die(zombie->getParentNode(),&die,&time_Animation);
+            zombie->die(zombie->getRootNode(),&die,&accumulateurAnimation,deltaTime);
         }
+        // -------------------------------------------------------------------------------
 
-        glUniformMatrix4fv(ModelEntity,1,GL_FALSE,&Model[0][0]);
         glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
         glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
 
         zombie->drawZombie(programID_Entity);
 
-        // Affichage de l'hud
+        // Affichage de l'hud (Attention : Ca doit être la dernière chose à afficher dans la boucle de rendue, pour que l'hud se retrouve au premier plan)
         if (showHud){
             glDisable(GL_DEPTH_TEST);
             glUseProgram(programID_HUD);
@@ -699,8 +692,7 @@ int main(){
     delete hud;
     delete player;
     delete window_object;
+    delete zombie;
     glfwTerminate();
     return 0;
-
-
 }

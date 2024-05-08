@@ -5,28 +5,18 @@
 
 class Transform {
 private:
-    glm::mat3 matrix;
-    glm::vec3 translation;
-
+    glm::mat3 m; // Rotation + Scaling
+    glm::vec3 t; // Translation
 public:
-    // Constructeur par défaut
     Transform();
-
     Transform(glm::vec3 t, glm::mat3 m);
-
     Transform(glm::mat3 m);
-
     Transform(glm::vec3 t);
+    Transform(glm::mat4 mat);
 
-    Transform(const glm::mat4& mat4);
-
-    glm::mat3 getMatrix() const;
-
-    glm::vec3 getTranslation() const;
-
-    glm::mat4 getMatrix4();
+    glm::mat3 getRotationScalingMatrix();
+    glm::vec3 getTranslationVector();
+    glm::mat4 getTransfoMat4();
 
     void addVelocity(glm::vec3 t);
-
 };
-

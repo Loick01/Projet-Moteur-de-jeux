@@ -2,47 +2,43 @@
 
 #include <Headers.hpp>
 
-class Transform;
+class Transform; // Déclaration anticipée
 
 struct Node{
-    std::vector<unsigned short> indices;
-    std::vector<std::vector<unsigned short> > triangles;
+    std::vector<unsigned short> indices; // Indices des triangles concaténés dans une liste
     std::vector<glm::vec3> indexed_vertices;
-    std::vector<Node*> son;
+    std::vector<Node*> fils; // Ensemble des fils de l'objet du noeud
+    // Pas besoin de coordonnées uv, elles seront déterminées dans les shaders
 
+    GLuint vertexbuffer;
+    GLuint elementbuffer;
+
+    int nodeID;
     Transform *transformation;
-
-    glm::vec3 centerNode;
-
-    int ID;
-
-    GLuint vbuffer;
-    GLuint ebuffer;
+    glm::vec3 center;
 };
 
 class Zombie{
     private:
         Node *node;
-        int hp;
-        int att;
-        int speed;
+        float speedEntity;
     public:
-        Zombie(int ID,glm::vec3 pos);
+        Zombie(int ID,glm::vec3 pos, float speedEntity);
         ~Zombie();
         void loadZombie();
         void drawZombie(GLuint programID_Entity);
 
-        // A retirer d'ici
-        void setPave(Node* node, glm::vec3 dimensions, glm::vec3 position);
         void loadBufferNode(Node *node);
-        void sendNodeToBuffer(Node *node,GLuint programID_Entity,glm::mat4 parent);
+        void sendNodeToShader(Node *node,GLuint programID_Entity,glm::mat4 parent);
+
+        void setPave(Node* node, glm::vec3 dimensions, glm::vec3 position);
 
         void createZombie(Node* node, glm::vec3 position);
         
-        void walk(Node* node,float angle,float deltatime);
+        void walk(Node* node,float angle, float deltaTime);
         void reset(Node* node);
-        void attack(Node* node,bool *attack,int *time_Animation);
-        void die(Node* node,bool *die,int *time_Animation);
+        void attack(Node* node, bool *attack, float *accumulateurAnimation, float deltaTime);
+        void die(Node* node, bool *die, float *accumulateurAnimation, float deltaTime);
             
-        Node* getParentNode();
+        Node* getRootNode();
 };

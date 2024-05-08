@@ -1,22 +1,24 @@
 #include <Zombie.hpp>
 
 
-Zombie::Zombie(int ID,glm::vec3 pos){
-
+Zombie::Zombie(int nodeID, glm::vec3 pos, float speedEntity){
     this->node = new Node;
-    this->node->ID = ID;
+    this->node->nodeID = nodeID;
     this->node->transformation = new Transform();
 
-    this->hp=20;
-    this->speed=10;
-    this->att=10;
-
     this->createZombie(this->node,pos);
-
+    this->speedEntity = speedEntity;
 }
 
-Zombie::~Zombie(){ // Si on laisse un destructeur vide, valgrind aime pas ça
+Zombie::~Zombie(){
     std::cout << "Destructeur de Zombie\n";
+    // Il faudra mettre tout ce qui concerne Node dans une classe pour faire une destruction récursive comme on le fait d'habitude
+    glDeleteBuffers(1, &(this->node->vertexbuffer));
+    glDeleteBuffers(1, &(this->node->elementbuffer));
+    for (int i = 0 ; i < this->node->fils.size() ; i++){
+        glDeleteBuffers(1, &(this->node->fils[i]->vertexbuffer));
+        glDeleteBuffers(1, &(this->node->fils[i]->elementbuffer));
+    }
 }
 
 void Zombie::loadZombie(){
@@ -24,11 +26,10 @@ void Zombie::loadZombie(){
 }
 
 void Zombie::drawZombie(GLuint programID_Entity){
-    this->sendNodeToBuffer(this->node,programID_Entity,glm::mat4(1));
+    this->sendNodeToShader(this->node,programID_Entity,glm::mat4(1.0f));
 }
 
 void Zombie::setPave(Node* node, glm::vec3 dimensions, glm::vec3 position) {
-    // Effacer les anciens éléments
     node->indices.clear();
     node->indexed_vertices.clear();
 
@@ -41,7 +42,6 @@ void Zombie::setPave(Node* node, glm::vec3 dimensions, glm::vec3 position) {
         for (int h = 0; h < 2 ; h++) {
             for (int w = 0; w < 2; w++) {
                 float x, y, z;
-
                 if (i==0){ // Faces bottom
                     x = -dimX/2 + w*dimX + position[0];
                     y = -dimY/2 + position[1];
@@ -101,26 +101,25 @@ void Zombie::setPave(Node* node, glm::vec3 dimensions, glm::vec3 position) {
 }
 
 void Zombie::loadBufferNode(Node *node){
-    glGenBuffers(1, &(node->vbuffer));
-    glBindBuffer(GL_ARRAY_BUFFER, node->vbuffer);
+    glGenBuffers(1, &(node->vertexbuffer));
+    glBindBuffer(GL_ARRAY_BUFFER, node->vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, node->indexed_vertices.size() * sizeof(glm::vec3), &(node->indexed_vertices[0]), GL_STATIC_DRAW);
 
-    glGenBuffers(1, &(node->ebuffer));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, node->ebuffer);
+    glGenBuffers(1, &(node->elementbuffer));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, node->elementbuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, node->indices.size() * sizeof(unsigned short), &(node->indices[0]) , GL_STATIC_DRAW);
-    for(int i=0;i<node->son.size();i++){
-        loadBufferNode(node->son[i]);
+    for(int i=0;i<node->fils.size();i++){
+        loadBufferNode(node->fils[i]);
     }
 }
 
-void Zombie::sendNodeToBuffer(Node *node,GLuint programID_Entity,glm::mat4 parent){
-    glm::mat4 matI = glm::mat4(1);
-    matI=parent*node->transformation->getMatrix4();
+void Zombie::sendNodeToShader(Node *node,GLuint programID_Entity,glm::mat4 parent){
+    glm::mat4 matTransfo = parent*node->transformation->getTransfoMat4();
 
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, node->vbuffer);
-    glUniformMatrix4fv(glGetUniformLocation(programID_Entity, "Model"), 1, GL_FALSE, &matI[0][0]);
-    glUniform1i(glGetUniformLocation(programID_Entity,"ID"), node->ID);
+    glBindBuffer(GL_ARRAY_BUFFER, node->vertexbuffer);
+    glUniformMatrix4fv(glGetUniformLocation(programID_Entity, "Model"), 1, GL_FALSE, &(matTransfo[0][0]));
+    glUniform1i(glGetUniformLocation(programID_Entity,"nodeID"), node->nodeID);
     
     
     glVertexAttribPointer(
@@ -133,7 +132,7 @@ void Zombie::sendNodeToBuffer(Node *node,GLuint programID_Entity,glm::mat4 paren
                 );
 
     // Index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, node->ebuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, node->elementbuffer);
     // Draw the triangles !
     glDrawElements(
                 GL_TRIANGLES,      // mode
@@ -143,8 +142,8 @@ void Zombie::sendNodeToBuffer(Node *node,GLuint programID_Entity,glm::mat4 paren
                 );
 
     glDisableVertexAttribArray(0);
-    for(int i=0;i<node->son.size();i++){
-        sendNodeToBuffer(node->son[i],programID_Entity,matI);
+    for(int i=0;i<node->fils.size();i++){
+        sendNodeToShader(node->fils[i],programID_Entity,matTransfo);
     }
 }
 
@@ -155,12 +154,12 @@ void Zombie::createZombie(Node* node, glm::vec3 position){
     Node *rightArmZombie = new Node;
     Node *leftLegZombie = new Node;
     Node *rightLegZombie = new Node;
-    headZombie->ID=0;
-    chestZombie->ID=1;
-    leftArmZombie->ID=2;
-    rightArmZombie->ID=3;
-    leftLegZombie->ID=4;
-    rightLegZombie->ID=5;
+    headZombie->nodeID=0;
+    chestZombie->nodeID=1;
+    leftArmZombie->nodeID=2;
+    rightArmZombie->nodeID=3;
+    leftLegZombie->nodeID=4;
+    rightLegZombie->nodeID=5;
     this->setPave(chestZombie,glm::vec3(0.6,0.8,0.3), glm::vec3(0,0.8,0)+ position);
     this->setPave(headZombie,glm::vec3(0.6,0.6,0.6), glm::vec3(0,1.5,0)+ position);
     this->setPave(leftArmZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(0.45,0.8,0)+ position);
@@ -168,123 +167,113 @@ void Zombie::createZombie(Node* node, glm::vec3 position){
     this->setPave(leftLegZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(0.15,0.05,0)+ position);
     this->setPave(rightLegZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(-0.15,0.05,0)+ position);
 
-    chestZombie->centerNode=glm::vec3(0,0.8,0)+ position;
-    headZombie->centerNode=glm::vec3(0,1.5,0)+ position;
-    rightArmZombie->centerNode=glm::vec3(0.45,0.8,0)+ position;
-    leftArmZombie->centerNode=glm::vec3(0.15,0,0)+ position;
-    rightLegZombie->centerNode=glm::vec3(0.15,0,0)+ position;
-    leftLegZombie->centerNode=glm::vec3(-0.15,0,0)+ position;
+    chestZombie->center=glm::vec3(0,0.8,0)+ position;
+    headZombie->center=glm::vec3(0,1.5,0)+ position;
+    rightArmZombie->center=glm::vec3(0.45,0.8,0)+ position;
+    leftArmZombie->center=glm::vec3(0.15,0,0)+ position;
+    rightLegZombie->center=glm::vec3(0.15,0,0)+ position;
+    leftLegZombie->center=glm::vec3(-0.15,0,0)+ position;
 
-    chestZombie->transformation = new Transform(); // Appliquer la rotation à la matrice
-    headZombie->transformation = new Transform(); // Appliquer la rotation à la matrice
-    rightArmZombie->transformation = new Transform(); // Appliquer la rotation à la matrice
-    leftArmZombie->transformation = new Transform(); // Appliquer la rotation à la matrice
-    rightLegZombie->transformation = new Transform(); // Appliquer la rotation à la matrice
-    leftLegZombie->transformation = new Transform(); // Appliquer la rotation à la matrice
+    chestZombie->transformation = new Transform();
+    headZombie->transformation = new Transform();
+    rightArmZombie->transformation = new Transform();
+    leftArmZombie->transformation = new Transform();
+    rightLegZombie->transformation = new Transform();
+    leftLegZombie->transformation = new Transform();
 
-    node->son.push_back(chestZombie);
-    node->son.push_back(headZombie);
-    node->son.push_back(leftArmZombie);
-    node->son.push_back(rightArmZombie);
-    node->son.push_back(leftLegZombie);
-    node->son.push_back(rightLegZombie);
+    node->fils.push_back(chestZombie);
+    node->fils.push_back(headZombie);
+    node->fils.push_back(leftArmZombie);
+    node->fils.push_back(rightArmZombie);
+    node->fils.push_back(leftLegZombie);
+    node->fils.push_back(rightLegZombie);
 }
 
-void Zombie::walk(Node* node,float angle,float deltatime){ // Le paramètre node doit être un zombie dans le graphe de scène
-    float angle2;
-    float angleArm;
-    angle2 = sin(angle/20+(M_PI))*5400*deltatime;;
-    angle = sin(angle/20)*5400*deltatime;
-    
-    glm::mat4 transfoLeg = glm::mat4(1);
-    glm::mat4 transfoLeg2 = glm::mat4(1);
-    glm::mat4 transfoArm = glm::mat4(1);
+void Zombie::walk(Node* node,float angle,float deltaTime){ // Le paramètre node doit être un zombie dans le graphe de scène
+    float angleLeg1 = sin(angle);
+    float angleLeg2 = sin(angle+M_PI);
 
-    transfoArm = glm::translate(transfoArm,node->son[2]->centerNode+glm::vec3(0.45,1.2,0));
-    transfoArm = glm::rotate(transfoArm,80.0f,glm::vec3(1.f,0.0f,0.0f));
-    transfoArm = glm::translate(transfoArm,-node->son[2]->centerNode-glm::vec3(0.45,1.2,0));
+    // Les 2 bras ont la même transformation
+    glm::mat4 matTransfoArm = glm::translate(glm::mat4(1.0f),node->fils[2]->center+glm::vec3(0.45,1.2,0));
+    matTransfoArm = glm::rotate(matTransfoArm,(float)-M_PI/1.9f,glm::vec3(1.f,0.0f,0.0f));
+    matTransfoArm = glm::translate(matTransfoArm,-node->fils[2]->center-glm::vec3(0.45,1.2,0));
     
-    transfoLeg = glm::translate(transfoLeg,node->son[4]->centerNode+glm::vec3(0.15,0.4,0));
-    transfoLeg = glm::rotate(transfoLeg, glm::radians(angle),glm::vec3(1.f,0.0f,0.0f));
-    transfoLeg = glm::translate(transfoLeg,-node->son[4]->centerNode-glm::vec3(0.15,0.4,0));
+    glm::mat4 matTransfoLeg1 = glm::translate(glm::mat4(1.0f),node->fils[4]->center+glm::vec3(0.15,0.4,0));
+    matTransfoLeg1 = glm::rotate(matTransfoLeg1, angleLeg1,glm::vec3(1.f,0.0f,0.0f));
+    matTransfoLeg1 = glm::translate(matTransfoLeg1,-node->fils[4]->center-glm::vec3(0.15,0.4,0));
 
-    transfoLeg2 = glm::translate(transfoLeg2,node->son[5]->centerNode+glm::vec3(0.15,0.4,0));
-    transfoLeg2 = glm::rotate(transfoLeg2, glm::radians(angle2),glm::vec3(1.f,0.0f,0.0f));
-    transfoLeg2 = glm::translate(transfoLeg2,-node->son[5]->centerNode-glm::vec3(0.15,0.4,0));
-    node->transformation->addVelocity(glm::vec3(0,0,0.01f));
-            
-    node->son[4]->transformation = new Transform(transfoLeg);
-    node->son[5]->transformation = new Transform(transfoLeg2);
-    node->son[3]->transformation = new Transform(transfoArm);
-    node->son[2]->transformation = new Transform(transfoArm);
+    glm::mat4 matTransfoLeg2 = glm::translate(glm::mat4(1.0f),node->fils[5]->center+glm::vec3(0.15,0.4,0));
+    matTransfoLeg2 = glm::rotate(matTransfoLeg2, angleLeg2,glm::vec3(1.f,0.0f,0.0f));
+    matTransfoLeg2 = glm::translate(matTransfoLeg2,-node->fils[5]->center-glm::vec3(0.15,0.4,0));
+
+    node->transformation->addVelocity(glm::vec3(0,0,this->speedEntity*deltaTime));
+    node->fils[4]->transformation = new Transform(matTransfoLeg1);
+    node->fils[5]->transformation = new Transform(matTransfoLeg2);
+    node->fils[3]->transformation = new Transform(matTransfoArm);
+    node->fils[2]->transformation = new Transform(matTransfoArm);
 }
 
 void Zombie::reset(Node* node){ // Le paramètre node doit être un zombie dans le graphe de scène
  
     float angle = sin(0);
-    
-    glm::mat4 transfoLeg = glm::mat4(1);
-    glm::mat4 transfoLeg2 = glm::mat4(1);
-    glm::mat4 transfoArm = glm::mat4(1);
 
-    transfoArm = glm::translate(transfoArm,node->son[2]->centerNode+glm::vec3(0.45,1.2,0));
-    transfoArm = glm::rotate(transfoArm,angle,glm::vec3(1.f,0.0f,0.0f));
-    transfoArm = glm::translate(transfoArm,-node->son[2]->centerNode-glm::vec3(0.45,1.2,0));
+    glm::mat4 matTransfoArm = glm::translate(glm::mat4(1.0f),node->fils[2]->center+glm::vec3(0.45,1.2,0));
+    matTransfoArm = glm::rotate(matTransfoArm,angle,glm::vec3(1.f,0.0f,0.0f));
+    matTransfoArm = glm::translate(matTransfoArm,-node->fils[2]->center-glm::vec3(0.45,1.2,0));
     
-    transfoLeg = glm::translate(transfoLeg,node->son[4]->centerNode+glm::vec3(0.15,0.4,0));
-    transfoLeg = glm::rotate(transfoLeg,angle,glm::vec3(1.f,0.0f,0.0f));
-    transfoLeg = glm::translate(transfoLeg,-node->son[4]->centerNode-glm::vec3(0.15,0.4,0));
+    glm::mat4 matTransfoLeg1 = glm::translate(glm::mat4(1.0f),node->fils[4]->center+glm::vec3(0.15,0.4,0));
+    matTransfoLeg1 = glm::rotate(matTransfoLeg1,angle,glm::vec3(1.f,0.0f,0.0f));
+    matTransfoLeg1 = glm::translate(matTransfoLeg1,-node->fils[4]->center-glm::vec3(0.15,0.4,0));
 
-    transfoLeg2 = glm::translate(transfoLeg2,node->son[5]->centerNode+glm::vec3(0.15,0.4,0));
-    transfoLeg2 = glm::rotate(transfoLeg2,angle,glm::vec3(1.f,0.0f,0.0f));
-    transfoLeg2 = glm::translate(transfoLeg2,-node->son[5]->centerNode-glm::vec3(0.15,0.4,0));
+    glm::mat4 matTransfoLeg2 = glm::translate(glm::mat4(1.0f),node->fils[5]->center+glm::vec3(0.15,0.4,0));
+    matTransfoLeg2 = glm::rotate(matTransfoLeg2,angle,glm::vec3(1.f,0.0f,0.0f));
+    matTransfoLeg2 = glm::translate(matTransfoLeg2,-node->fils[5]->center-glm::vec3(0.15,0.4,0));
             
-    node->son[4]->transformation = new Transform(transfoLeg);
-    node->son[5]->transformation = new Transform(transfoLeg2);
-    node->son[3]->transformation = new Transform(transfoArm);
-    node->son[2]->transformation = new Transform(transfoArm);
+    node->fils[4]->transformation = new Transform(matTransfoLeg1);
+    node->fils[5]->transformation = new Transform(matTransfoLeg2);
+    node->fils[3]->transformation = new Transform(matTransfoArm);
+    node->fils[2]->transformation = new Transform(matTransfoArm);
 }
 
-void Zombie::attack(Node* node,bool *attack,int *time_Animation){ // Le paramètre node doit être un zombie dans le graphe de scène
- 
-    float angle = 79.8f;
-    
-    glm::mat4 transfoLeg = glm::mat4(1);
-    glm::mat4 transfoLeg2 = glm::mat4(1);
-    glm::mat4 transfoArm = glm::mat4(1);
+void Zombie::attack(Node* node, bool *attack, float *accumulateurAnimation, float deltaTime){ // Le paramètre node doit être un zombie dans le graphe de scène
+    float angle = -M_PI/1.9; // Angle en radians (pour toutes les animations il vaudrait mieux que ce soit le cas pour ne pas confondre)
 
-    transfoArm = glm::translate(transfoArm,node->son[2]->centerNode+glm::vec3(0.45,1.2,0));
-    transfoArm = glm::rotate(transfoArm,angle,glm::vec3(1.f,0.0f,0.0f));
-    transfoArm = glm::translate(transfoArm,-node->son[2]->centerNode-glm::vec3(0.45,1.2,0));
-    
+    // Les 2 bras ont la même transformation
+    glm::mat4 matTransfoArm = glm::translate(glm::mat4(1.0f),node->fils[2]->center+glm::vec3(0.45,1.2,0));
+    matTransfoArm = glm::rotate(matTransfoArm,angle,glm::vec3(1.f,0.0f,0.0f));
+    matTransfoArm = glm::translate(matTransfoArm,-node->fils[2]->center-glm::vec3(0.45,1.2,0));
             
-    node->son[3]->transformation = new Transform(transfoArm);
-    node->son[2]->transformation = new Transform(transfoArm);
+    node->fils[3]->transformation = new Transform(matTransfoArm);
+    node->fils[2]->transformation = new Transform(matTransfoArm);
     
-    if(*time_Animation>50){
+    if(*accumulateurAnimation>0.8f){ // Ici, 0.8 c'est la durée de l'animation (sachant qu'on rajoute deltaTime à l'accumulateur, ce qui garantit l'indépendance entre temps d'animation et nombre de FPS)
         *attack=false;
-        *time_Animation=0;
+        *accumulateurAnimation=0.0f;
+    }else{
+        *accumulateurAnimation += deltaTime;
     }
 }
 
-void Zombie::die(Node* node,bool *die,int *time_Animation){ // Le paramètre node doit être un zombie dans le graphe de scène
-    glm::mat4 transfoNode = node->transformation->getMatrix4();
-    transfoNode = glm::translate(transfoNode,node->son[0]->centerNode-glm::vec3(0,1.6,0));
-    transfoNode = glm::rotate(transfoNode,0.02f,glm::vec3(0.f,0.0f,1.0f));
-    transfoNode = glm::translate(transfoNode,-node->son[0]->centerNode+glm::vec3(0,1.6,0));
+// Peut être revoir l'animation de mort si on a le temps (pour faire plus joli)
+void Zombie::die(Node* node, bool *die, float *accumulateurAnimation, float deltaTime){ // Le paramètre node doit être un zombie dans le graphe de scène
+    glm::mat4 matTransAll = glm::translate(node->transformation->getTransfoMat4(),node->fils[0]->center-glm::vec3(0,1.6,0));
+    matTransAll = glm::rotate(matTransAll,deltaTime*4,glm::vec3(0.f,0.0f,1.0f));
+    matTransAll = glm::translate(matTransAll,-node->fils[0]->center+glm::vec3(0,1.6,0));
     
-    if(*time_Animation<3){
-        transfoNode = glm::translate(transfoNode,glm::vec3(0,0.2,0));;
+    if(*accumulateurAnimation<0.02){
+        matTransAll = glm::translate(matTransAll,glm::vec3(0,deltaTime*25,0));
+        *accumulateurAnimation += deltaTime;
     }
-    if(*time_Animation<70){
-        node->transformation = new Transform(transfoNode);
+    if(*accumulateurAnimation<0.4){
+        node->transformation = new Transform(matTransAll);
+        *accumulateurAnimation += deltaTime;
     }
-    if(*time_Animation>140){
+    if(*accumulateurAnimation>0.8){
         *die=false;
-        *time_Animation=0;
+        *accumulateurAnimation=0.0f;
     }
 }
 
-Node* Zombie::getParentNode(){
+Node* Zombie::getRootNode(){
     return this->node;
 }
