@@ -1,9 +1,11 @@
 #include <Player.hpp>
 
-Player::Player(glm::vec3 position){
+Player::Player(glm::vec3 position, float playerSpeed, float coeffAcceleration){
     this->stamina = 100.0f;
     this->life = 100.0f;
     this->hitbox = new Hitbox(position, 21.0f, 7.5f);
+    this->playerSpeed = playerSpeed;
+    this->coeffAcceleration = coeffAcceleration;
 }
 
 Player::~Player(){
@@ -30,4 +32,16 @@ float Player::getLife(){
 
 Hitbox* Player::getHitbox(){
     return this->hitbox;
+}
+
+float Player::getPlayerSpeed(){
+    return this->playerSpeed;
+}
+
+float Player::getCoeffAcceleration(){
+    return this->coeffAcceleration;
+}
+
+void Player::applyAcceleration(bool b){ // b = true si le joueur se met à sprinter, false s'il arrête
+    this->playerSpeed *= (b?this->coeffAcceleration:1/this->coeffAcceleration);
 }

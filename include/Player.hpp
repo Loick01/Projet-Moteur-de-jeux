@@ -12,9 +12,14 @@ class Player {
         float stamina;
         float life;
         Hitbox *hitbox;
+        float playerSpeed;
+        float coeffAcceleration; // Valeur par laquelle la vitesse est multiplié lorsque le joueur sprinte
     public:
-        Player(glm::vec3 position);
+        Player(glm::vec3 position, float playerSpeed, float coeffAcceleration);
         ~Player();
+        float getPlayerSpeed();
+        float getCoeffAcceleration();
+        void applyAcceleration(bool b);
         float getStamina();
         void addStamina(float add);
         void takeDamage(float damage);

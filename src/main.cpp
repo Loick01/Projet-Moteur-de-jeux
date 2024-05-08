@@ -31,8 +31,6 @@ float FoV_running = 80.0f;
 TerrainControler *terrainControler;
 Player *player;
 Hitbox *hitboxPlayer;
-float playerSpeed = 6.0f;
-float coeffAcceleration = 1.5f;
 bool hasUpdate; // A rentrer dans la classe Hitbox plus tard
 bool isRunning = false;
 bool isHoldingShift = false;
@@ -59,12 +57,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         isImGuiShow = !isImGuiShow;
     }
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS){
-        playerSpeed *= coeffAcceleration;
+        player->applyAcceleration(true);
         isRunning = true;
     }
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE){
         if (!isHoldingShift){
-            playerSpeed /= coeffAcceleration;
+            player->applyAcceleration(false);
         }
         isHoldingShift = false;
         isRunning = false;
@@ -145,7 +143,7 @@ void processInput(GLFWwindow* window){
         }
 
         if (x_axis || z_axis){
-            hitboxPlayer->move(glm::normalize(motion)*playerSpeed*deltaTime); // Attention à bien normaliser le vecteur de déplacement final (ça règle le problème de sqrt(2))
+            hitboxPlayer->move(glm::normalize(motion)*player->getPlayerSpeed()*deltaTime); // Attention à bien normaliser le vecteur de déplacement final (ça règle le problème de sqrt(2))
         }
 
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
@@ -268,7 +266,7 @@ int main(){
     programID_Entity = LoadShaders("../shaders/entity_vertex.vert", "../shaders/entity_frag.frag");
 
     terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4);
-    player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
+    player = new Player(glm::vec3(-0.5f,10.0f,-0.5f),6.0f, 1.5f);
     hitboxPlayer = player->getHitbox();
 
     Skybox *skybox = new Skybox();
@@ -356,7 +354,7 @@ int main(){
                 hud->updateStamina(player->getStamina());
                 FoV = FoV_running;
             }else{
-                playerSpeed /= coeffAcceleration;
+                player->applyAcceleration(false);
                 isRunning = false;
                 isHoldingShift = true;
             }
@@ -449,7 +447,7 @@ int main(){
 
             ImGui::Spacing();
 
-            ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 0.0, 50.0);
+            //ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 0.0, 50.0);
 
             ImGui::Spacing();
 
