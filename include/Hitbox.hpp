@@ -3,6 +3,7 @@
 #include <Headers.hpp>
 
 class Player;
+class TerrainControler;
 
 class Hitbox{
     private :
@@ -21,6 +22,6 @@ class Hitbox{
         void checkJump(bool *hasUpdate, float deltaTime);
         void resetJumpForce();
         // La fonction ci-dessous vérifie si le déplacement latéral demandé est possible ou non
-        bool getLateralMovePossible(bool axisToCheck, float directionCheck, glm::vec3 bottomPlayer, glm::vec3 camera_target, glm::vec3 camera_up, int planeWidth, int planeLength, std::vector<Chunk*> listeChunks, glm::vec3 *cross_point);
-        void checkTopAndBottomCollision(bool hasUpdate, int planeWidth, int planeLength, float deltaTime, std::vector<Chunk*> listeChunks, Hud *hud, Player *player);
+        bool getLateralMovePossible(bool axisToCheck, float directionCheck, glm::vec3 bottomPlayer, glm::vec3 camera_target, glm::vec3 camera_up, TerrainControler *terrainControler, glm::vec3 *cross_point);
+        void checkTopAndBottomCollision(bool hasUpdate, float deltaTime, TerrainControler *terrainControler, Hud *hud, Player *player);
 };

@@ -41,7 +41,11 @@ void Hitbox::resetJumpForce(){
 }
 
 // axisToCheck --> true pour Left/Right, false pour Front/Back
-bool Hitbox::getLateralMovePossible(bool axisToCheck,float directionCheck, glm::vec3 bottomPlayer, glm::vec3 camera_target, glm::vec3 camera_up, int planeWidth, int planeLength, std::vector<Chunk*> listeChunks,glm::vec3 *cross_point){
+bool Hitbox::getLateralMovePossible(bool axisToCheck,float directionCheck, glm::vec3 bottomPlayer, glm::vec3 camera_target, glm::vec3 camera_up, TerrainControler *terrainControler, glm::vec3 *cross_point){
+    int planeWidth = terrainControler->getPlaneWidth();
+    int planeLength = terrainControler->getPlaneLength();
+    std::vector<Chunk*> listeChunks = terrainControler->getListeChunks();
+    
     std::vector<glm::vec3> points; // On crée les 3 points qui serviront à la détection de la collision
     if (axisToCheck){
         *cross_point = glm::normalize(glm::cross(camera_target,camera_up))*directionCheck;
@@ -74,7 +78,11 @@ bool Hitbox::getLateralMovePossible(bool axisToCheck,float directionCheck, glm::
     return canMove;
 }
 
-void Hitbox::checkTopAndBottomCollision(bool hasUpdate, int planeWidth, int planeLength, float deltaTime, std::vector<Chunk*> listeChunks, Hud *hud, Player *player){
+void Hitbox::checkTopAndBottomCollision(bool hasUpdate, float deltaTime, TerrainControler *terrainControler, Hud *hud, Player *player){
+    int planeWidth = terrainControler->getPlaneWidth();
+    int planeLength = terrainControler->getPlaneLength();
+    std::vector<Chunk*> listeChunks = terrainControler->getListeChunks();
+    
     // Détermine la cellule ou se trouve le joueur
     glm::vec3 pPlayer = this->getBottomPoint();
     

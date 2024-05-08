@@ -3,8 +3,6 @@
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
 
-#define RANGE 4
-
 float deltaTime = 0.0f;	
 float lastFrame = 0.0f;
 
@@ -30,21 +28,14 @@ float theta = 0.0f;
 float FoV = 75.0f;
 float FoV_running = 80.0f;
 
-// Ces 3 tailles sont en nombre de chunk
-int planeWidth = 3; // De 1 à 32
-int planeLength = 3; // De 1 à 32
-int planeHeight = 1; // Pour simplifier on bloque cette valeur à 1
-
-int seedTerrain = 1000;
-int octave = 4;
-
+TerrainControler *terrainControler;
 Player *player;
 Hitbox *hitboxPlayer;
 float playerSpeed = 6.0f;
 float coeffAcceleration = 1.5f;
 bool hasUpdate; // A rentrer dans la classe Hitbox plus tard
 bool isRunning = false;
-bool isHolding = false;
+bool isHoldingShift = false;
 
 // Temporaire
 float angle=0.0f;
@@ -58,21 +49,6 @@ int indexHandBlock = 0;
 int handBlock = blockInHotbar[indexHandBlock]; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris)
 
 bool showHud = true;
-int typeChunk = 3; // Chunk plein (0), Chunk sinus (1), Chunk plat (2), Chunk procédural (3)
-
-std::vector<Chunk*> listeChunks;
-void buildPlanChunks(unsigned char* dataPixels, int widthHeightmap, int heightHeightmap){
-    listeChunks.clear();
-    for (int i = 0 ; i < planeWidth ; i++){
-        for (int j = 0 ; j < planeLength ; j++){
-            for (int k = 0 ; k < planeHeight ; k++){
-                Chunk *c = new Chunk(glm::vec3((planeWidth*32)/2*(-1.f) + i*32,(planeHeight*32)/2*(-1.f) + k*32,(planeLength*32)/2*(-1.f) + j*32), typeChunk, dataPixels, widthHeightmap, heightHeightmap, i*32,j*32*planeWidth*32, seedTerrain); 
-                c->loadChunk();
-                listeChunks.push_back(c);
-            }
-        }
-    }
-}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){ 
     glViewport(0,0,width,height);
@@ -87,10 +63,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         isRunning = true;
     }
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE){
-        if (!isHolding){
+        if (!isHoldingShift){
             playerSpeed /= coeffAcceleration;
         }
-        isHolding = false;
+        isHoldingShift = false;
         isRunning = false;
     }
     // Pour sortir de la caméra à la souris (plus tard ce sera la touche qui ouvre l'inventaire, et donc affiche la souris dans la fenêtre)
@@ -144,25 +120,25 @@ void processInput(GLFWwindow* window){
         glm::vec3 cross_point;
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){ // Déplacement en avant
-            if (hitboxPlayer->getLateralMovePossible(false,0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
+            if (hitboxPlayer->getLateralMovePossible(false,0.3f, bottomPlayer, camera_target, camera_up, terrainControler, &cross_point)){
                 motion += glm::vec3(camera_target[0],0.0f,camera_target[2]);
                 z_axis = true;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){ // Déplacement vers la gauche
-            if (hitboxPlayer->getLateralMovePossible(true,-0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
+            if (hitboxPlayer->getLateralMovePossible(true,-0.3f, bottomPlayer, camera_target, camera_up, terrainControler, &cross_point)){
                 motion += glm::normalize(cross_point);
                 x_axis = true;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){ // Déplacement en arrière
-            if (hitboxPlayer->getLateralMovePossible(false,-0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
+            if (hitboxPlayer->getLateralMovePossible(false,-0.3f, bottomPlayer, camera_target, camera_up, terrainControler, &cross_point)){
                 motion += glm::vec3(camera_target[0],0.0f,camera_target[2])*-1.0f;
                 z_axis = !z_axis;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){ // Déplacement vers la droite
-            if (hitboxPlayer->getLateralMovePossible(true,0.3f, bottomPlayer, camera_target, camera_up, planeWidth, planeLength, listeChunks, &cross_point)){
+            if (hitboxPlayer->getLateralMovePossible(true,0.3f, bottomPlayer, camera_target, camera_up, terrainControler, &cross_point)){
                 motion += glm::normalize(cross_point);
                 x_axis = !x_axis;
             }
@@ -237,88 +213,9 @@ void mouse_cursor_callback(GLFWwindow* window, double xpos, double ypos){
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        glm::vec3 originPoint = camera_position;
-        glm::vec3 direction = normalize(camera_target);
-        for (int k = 1 ; k < RANGE+1 ; k++){ // Trouver une meilleure manière pour détecter le bloc à casser
-        // for (float k = 0.1 ; k < RANGE+1. ; k+=0.1){
-            glm::vec3 target = originPoint + (float)k*direction;
-            int numLongueur = floor(target[0]) + 16*planeWidth;
-            int numHauteur = floor(target[1]) + 16;
-            int numProfondeur = floor(target[2]) + 16*planeLength;
-            if (numLongueur < 0 || numLongueur > (planeWidth*32)-1 || numProfondeur < 0 || numProfondeur > (planeLength*32)-1 || numHauteur < 0 || numHauteur > 31){
-                continue; // Attention à ne pas mettre return même si c'est tentant (par exemple si le joueur regarde vers le bas en étant au sommet d'un chunk)
-            }else{
-                int indiceV = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel que le joueur est en train de viser
-                int indiceChunk = (numLongueur/32) * planeLength + numProfondeur/32;
-                std::vector<Voxel*> listeVoxels = listeChunks[indiceChunk]->getListeVoxels();
-
-                if (listeVoxels[indiceV] == nullptr){
-                    continue;
-                }else{
-                    delete listeVoxels[indiceV]; // Ne pas oublier de bien libérer la mémoire
-                    listeVoxels[indiceV] = nullptr;
-
-                    // Rendre visible les 6 cubes adjacents (s'ils existent et s'ils ne sont pas déjà visible)
-                    // Il faudrait chercher une meilleure façon de faire ça
-                    for (int c = -1 ; c < 2 ; c+=2){
-                        int numLongueurVoisin = (numLongueur%32) + c;
-                        int numHauteurVoisin = numHauteur + c;
-                        int numProfondeurVoisin = (numProfondeur%32) + c;
-                        int indiceVoisin;
-
-                        if (numLongueurVoisin >= 0 && numLongueurVoisin <= 31){
-                            indiceVoisin = numHauteur *1024 + (numProfondeur%32) * 32 + numLongueurVoisin;
-                            if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){ // On vérifie si le voxel n'est pas déjà visible (en vrai c'est pas obligatoire)
-                                listeVoxels[indiceVoisin]->setVisible(true);
-                            }
-                        }
-                        if (numHauteurVoisin >= 0 && numHauteurVoisin <= 31){
-                            indiceVoisin = numHauteurVoisin *1024 + (numProfondeur%32) * 32 + (numLongueur%32);
-                            if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){
-                                listeVoxels[indiceVoisin]->setVisible(true);
-                            }
-                        }
-                        if (numProfondeurVoisin >= 0 && numProfondeurVoisin <= 31){
-                            indiceVoisin = numHauteur *1024 + numProfondeurVoisin * 32 + (numLongueur%32);
-                            if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){
-                                listeVoxels[indiceVoisin]->setVisible(true);
-                            }
-                        }
-                    }
-
-                    listeChunks[indiceChunk]->setListeVoxels(listeVoxels);
-                    listeChunks[indiceChunk]->loadChunk();
-                    return;
-                }
-            }
-        }
+        terrainControler->tryBreakBlock(camera_target, camera_position);
     }else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
-        glm::vec3 originPoint = camera_position;
-        glm::vec3 direction = normalize(camera_target);
-        float k = 3.0; // Pour l'instant le joueur ne peut poser un block qu'à cette distance
-        glm::vec3 target = originPoint + (float)k*direction;
-        int numLongueur = floor(target[0]) + 16*planeWidth;
-        int numHauteur = floor(target[1]) + 16;
-        int numProfondeur = floor(target[2]) + 16*planeLength;
-        if (numLongueur < 0 || numLongueur > (planeWidth*32)-1 || numProfondeur < 0 || numProfondeur > (planeLength*32)-1 || numHauteur < 0 || numHauteur > 31){
-            return;
-        }else{
-            int indiceV = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel que le joueur est en train de viser
-            int indiceChunk = (numLongueur/32) * planeLength + numProfondeur/32;
-            std::vector<Voxel*> listeVoxels = listeChunks[indiceChunk]->getListeVoxels();
-
-            if (listeVoxels[indiceV] == nullptr){
-                glm::vec3 posChunk = listeChunks[indiceChunk]->getPosition();
-                Voxel* vox = new Voxel(glm::vec3(posChunk[0]+numLongueur%32,posChunk[1]+numHauteur,posChunk[2]+numProfondeur%32),handBlock);
-                vox->setVisible(true);
-                listeVoxels[indiceV] = vox;
-
-                // A voir si ici on ne pourrait pas mettre à jour la visibilité de certains voxels pour faire mieux
-
-                listeChunks[indiceChunk]->setListeVoxels(listeVoxels);
-                listeChunks[indiceChunk]->loadChunk();
-            }
-        }
+        terrainControler->tryCreateBlock(camera_target, camera_position, handBlock);
     }
 }
 
@@ -370,28 +267,9 @@ int main(){
     programID_HUD = LoadShaders("../shaders/hud_vertex.vert", "../shaders/hud_frag.frag");
     programID_Entity = LoadShaders("../shaders/entity_vertex.vert", "../shaders/entity_frag.frag");
 
+    terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4);
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f));
     hitboxPlayer = player->getHitbox();
-    
-    MapGenerator *mg = new MapGenerator(planeWidth, planeLength, seedTerrain, octave); 
-    mg->generateImage();
-    int widthHeightmap, heightHeightmap, channels;
-    unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
-
-    std::vector<Structure> structures;
-    // Chargement des structures
-    std::ifstream tree_1_StructureFile("../Structures/Tree.txt");
-    structures.push_back(Chunk::readFile(tree_1_StructureFile));
-    std::ifstream tree_2_StructureFile("../Structures/Tree_2.txt");
-    structures.push_back(Chunk::readFile(tree_2_StructureFile));
-    std::ifstream houseStructureFile("../Structures/House_1.txt");
-    structures.push_back(Chunk::readFile(houseStructureFile));
-    Chunk::setListeStructures(structures);
-    tree_1_StructureFile.close();
-    tree_2_StructureFile.close();
-    houseStructureFile.close();
-
-    buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
 
     Skybox *skybox = new Skybox();
 
@@ -461,6 +339,14 @@ int main(){
 
         processInput(window);
 
+        /*
+        int left_button_state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+
+        if (left_button_state == GLFW_PRESS) {
+            std::cout << "Le bouton gauche est maintenu\n";
+        }
+        */
+
         glm::vec3 bottomPointPlayer = hitboxPlayer->getBottomPoint();
 
         // Courir consomme de l'endurance
@@ -472,10 +358,10 @@ int main(){
             }else{
                 playerSpeed /= coeffAcceleration;
                 isRunning = false;
-                isHolding = true;
+                isHoldingShift = true;
             }
         }else if (player->getStamina() < 100.0f){
-            if (!isHolding){
+            if (!isHoldingShift){
                 player->addStamina(30.0*deltaTime);
                 hud->updateStamina(player->getStamina());
             }
@@ -501,9 +387,7 @@ int main(){
         glUniformMatrix4fv(ViewMatrix,1,GL_FALSE,&View[0][0]);
         glUniformMatrix4fv(ProjectionMatrix,1,GL_FALSE,&Projection[0][0]);
 
-        for (int i = 0 ; i < listeChunks.size() ; i++){
-            listeChunks[i]->drawChunk();
-        }
+        terrainControler->drawTerrain();
 
         // Affichage de la skybox
         skybox->drawSkybox(Model, Projection, View);
@@ -511,7 +395,7 @@ int main(){
         // Gestion des collisions
         hasUpdate = false;
         hitboxPlayer->checkJump(&hasUpdate, deltaTime);
-        hitboxPlayer->checkTopAndBottomCollision(hasUpdate, planeWidth, planeLength, deltaTime, listeChunks, hud, player);
+        hitboxPlayer->checkTopAndBottomCollision(hasUpdate, deltaTime, terrainControler, hud, player);
 
         glUseProgram(programID_Entity);
 
@@ -617,41 +501,51 @@ int main(){
 
             ImGui::Spacing();
 
+            /*
             if (ImGui::SliderInt("Longueur terrain", &planeWidth, 1, 32)){
                 mg->setWidthMap(planeWidth);
                 mg->generateImage();
                 dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
                 buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
             }
+            */
 
             ImGui::Spacing();
 
+            /*
             if (ImGui::SliderInt("Largeur", &planeLength, 1, 32)){
                 mg->setHeightMap(planeLength);
                 mg->generateImage();
                 dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
                 buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
             }
+            */
 
             ImGui::Spacing();
 
+            /*
             if(ImGui::SliderInt("Seed de génération", &seedTerrain, 0, 10000)){
                 mg->setSeed(seedTerrain);
             }
+            */
 
             ImGui::Spacing();
 
+            /*
             if(ImGui::SliderInt("Nombre d'octaves", &octave, 1, 10)){
                 mg->setOctave(octave);
             }
+            */
 
             ImGui::Spacing();
 
+            /*
             if (ImGui::Button("Utiliser la seed et le nombre d'octaves")){
                 mg->generateImage();
                 dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
                 buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
             }
+            */
 
             // Pour simplifier, on limite à un seul chunk de haut
             //if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
@@ -660,10 +554,12 @@ int main(){
 
             ImGui::Spacing();
 
+            /*
             // Type 0 = Plein ; Type 1 = Sinus ; Type 2 = Flat ; Type 3 = Procedural
             if (ImGui::SliderInt("Type de chunk", &typeChunk, 0, 3)){
                 buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
             }
+            */
 
             ImGui::End();
 
@@ -683,12 +579,9 @@ int main(){
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    for (int i = 0 ; i < listeChunks.size() ; i++){
-        delete listeChunks[i];
-    }
-    stbi_image_free(dataPixels);
+    delete terrainControler;
+
     delete skybox;
-    delete mg;
     delete hud;
     delete player;
     delete window_object;

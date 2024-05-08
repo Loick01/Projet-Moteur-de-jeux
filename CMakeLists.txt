@@ -58,6 +58,7 @@ add_executable(main
     src/Hitbox.cpp
     src/Zombie.cpp
     src/Transform.cpp
+    src/TerrainControler.cpp
     )
 
 # Include directories for our project
