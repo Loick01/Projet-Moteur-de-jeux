@@ -8,7 +8,7 @@ class MapGenerator;
 class Chunk;
 
 struct LocalisationBlock {
-    int indiceVoxel, indiceChunk, numLongueur, numProfondeur, numHauteur;
+    int indiceVoxel, indiceChunk, numLongueur, numProfondeur, numHauteur, idInChunk;
 };
 
 
@@ -22,7 +22,6 @@ class TerrainControler{
         int typeChunk; // Chunk plein (0), Chunk sinus (1), Chunk plat (2), Chunk procédural (3)
         int seedTerrain; // 1000
         int octave; // 4
-
         MapGenerator *mg;
 
     public :

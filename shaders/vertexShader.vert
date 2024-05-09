@@ -9,6 +9,7 @@ out float shadow_value;
 uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
+uniform int indexBlockToBreak;
 
 layout(std430, binding = 0) buffer layoutObjectID
 {
@@ -39,10 +40,14 @@ void main(){
         if (objectID == 13 || objectID == 29){ // Pour avoir des textures différentes sur les faces d'un même bloc (que le bloc d'herbe et le bloc de bûche pour l'instant)
                 objectID = min(objectID + (gl_VertexID % 24)/4,objectID+2);
         }
+        if (gl_VertexID/24 == indexBlockToBreak){
+                shadow_value = 0.0;
+        }else{
+                shadow_value = shadows[gl_VertexID%24];
+        }
         uv_coord = texCoords[gl_VertexID%4];
         uv_coord[0] += objectID%5*0.2003;
         uv_coord[1] += objectID/5*0.1003;
-        shadow_value = shadows[gl_VertexID%24];
 }
 
 

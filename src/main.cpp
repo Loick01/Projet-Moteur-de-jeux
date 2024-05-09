@@ -14,7 +14,7 @@ bool isImGuiShow = true;
 // Temporaire
 float accumulateurDestructionBlock = 0.0f;
 bool mouseLeftClickHold = false;
-int previousIndiceVoxel;
+int previousIdInChunk = -2; // Attention à ne surtout pas initialiser avec -1 (sinon on tentera de casser un bloc hors liste de voxel)
 // --------------------------------
 
 // Caméra
@@ -219,11 +219,13 @@ void mouse_cursor_callback(GLFWwindow* window, double xpos, double ypos){
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         mouseLeftClickHold = true;
-        LocalisationBlock lb = terrainControler->tryBreakBlock(camera_target, camera_position);
-        previousIndiceVoxel = lb.indiceVoxel; // On conserve l'indice du voxel au moment où on clique
+        previousIdInChunk = -2;
     }else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE){
         mouseLeftClickHold = false;
         accumulateurDestructionBlock = 0.0f;
+        previousIdInChunk = -2;
+        glUseProgram(programID);
+        glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), previousIdInChunk);
     }else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
         terrainControler->tryCreateBlock(camera_target, camera_position, handBlock);
     }
@@ -289,6 +291,9 @@ int main(){
     glUniform1iv(glGetUniformLocation(programID_HUD, "blockHotbar"), 9, blockInHotbar);
     hud->loadHud();
 
+    glUseProgram(programID);
+    glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), previousIdInChunk); // On envoie une valeur par défaut aux shaders
+    
     GLuint ModelMatrix = glGetUniformLocation(programID,"Model");
     // La matrice Model ne sera pas envoyé aux shaders des entités (ça ne sert à rien)
     GLuint ViewMatrix = glGetUniformLocation(programID,"View");
@@ -349,29 +354,6 @@ int main(){
 
         processInput(window);
 
-        if (mouseLeftClickHold){
-            LocalisationBlock lb = terrainControler->tryBreakBlock(camera_target, camera_position);
-            // On part du principe que c'est impossible pour le joueur de viser un bloc d'un chunk à la frame n, puis le bloc équivalent d'un chunk adjacent à la frame n+1
-            // Puisque la portée de son coup est limité à 4 (RANGE dans TerrainControler.hpp)
-            // Du coup, il y a certain test qu'on peut se permettre d'éviter
-            if (lb.indiceVoxel == previousIndiceVoxel){
-                accumulateurDestructionBlock += deltaTime;
-            }else if (lb.indiceVoxel != -1){
-                previousIndiceVoxel = lb.indiceVoxel;
-                accumulateurDestructionBlock = 0.0f;
-            }else{
-                accumulateurDestructionBlock = 0.0f;
-            }
-
-            if (accumulateurDestructionBlock >= 1.0f){
-                terrainControler->breakBlock(lb);
-                accumulateurDestructionBlock = 0.0f;
-                // Si on voulait être précis, ici il aurait fallu remettre à jour previousIndiceBlock en rappelant tryBreakBlock
-                // Mais ce n'est pas nécéssaire, ce sera fait seulement avec une frame de retard (pas trop grave)
-            }
-            //std::cout << "Accumulateur = " << accumulateurDestructionBlock << "\n";
-        }
-
         glm::vec3 bottomPointPlayer = hitboxPlayer->getBottomPoint();
 
         // Courir consomme de l'endurance
@@ -413,6 +395,30 @@ int main(){
         glUniformMatrix4fv(ProjectionMatrix,1,GL_FALSE,&Projection[0][0]);
 
         terrainControler->drawTerrain();
+
+        if (mouseLeftClickHold){
+            LocalisationBlock lb = terrainControler->tryBreakBlock(camera_target, camera_position);
+            // On part du principe que c'est impossible pour le joueur de viser un bloc d'un chunk à la frame n, puis le bloc équivalent d'un chunk adjacent à la frame n+1
+            // Puisque la portée de son coup est limité à 4 (RANGE dans TerrainControler.hpp)
+            // Du coup, il y a certain test qu'on peut se permettre d'éviter
+            if (lb.idInChunk == previousIdInChunk){
+                accumulateurDestructionBlock += deltaTime;
+            }else if (lb.idInChunk != -1){ // A la première frame où on maintient le clic gauche, on rentre dans cette condition, et donc on définit à ce moment previousIdInChunk 
+                previousIdInChunk = lb.idInChunk;
+                accumulateurDestructionBlock = 0.0f;
+                glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), previousIdInChunk); // On envoie l'indice du voxel visé aux shaders (pour savoir où appliquer la texture de destruction)
+            }else{
+                accumulateurDestructionBlock = 0.0f;
+                glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), previousIdInChunk);
+            }
+
+            if (accumulateurDestructionBlock >= 1.0f){
+                terrainControler->breakBlock(lb);
+                accumulateurDestructionBlock = 0.0f;
+                // Si on voulait être précis, ici il aurait fallu remettre à jour previousIdInChunk en rappelant tryBreakBlock
+                // Mais ce n'est pas nécéssaire, ce sera fait seulement avec une frame de retard (pas trop grave)
+            }
+        }
 
         // Affichage de la skybox
         skybox->drawSkybox(Model, Projection, View);

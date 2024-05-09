@@ -82,11 +82,11 @@ LocalisationBlock TerrainControler::tryBreakBlock(glm::vec3 camera_target, glm::
             if (listeVoxels[indiceV] == nullptr){
                 continue;
             }else{
-                return {indiceV, indiceChunk, numLongueur, numProfondeur, numHauteur};
+                return {indiceV, indiceChunk, numLongueur, numProfondeur, numHauteur, listeVoxels[indiceV]->getIdInChunk()};
             }
         }
     }
-    return {-1,-1,-1,-1,-1};
+    return {-1,-1,-1,-1,-1,-1};
 }
 
 void TerrainControler::breakBlock(LocalisationBlock lb){ // Il faut déjà avoir testé (au minimum) si lb.indiceVoxel != -1 avant d'appeler cette fonction

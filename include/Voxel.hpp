@@ -7,6 +7,7 @@ class Voxel {
         std::vector<glm::vec3> vertices;
         int objectID;
         bool isVisible;
+        int idInChunk;
     public:
         glm::vec3 backBottomLeftCorner;
         Voxel(glm::vec3 position, int objectID);
@@ -19,4 +20,6 @@ class Voxel {
         bool getVisible();
         void setId(int new_id);
         int getID();
+        void setIdInChunk(int idInChunk);
+        int getIdInChunk();
 };

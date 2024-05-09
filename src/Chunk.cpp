@@ -239,6 +239,7 @@ void Chunk::loadChunk(){
     for (int i = 0 ; i < this->listeVoxels.size() ; i++){
         if (listeVoxels[i] != nullptr){
             if (listeVoxels[i]->getVisible()){
+                listeVoxels[i]->setIdInChunk(compteur); // Les voxels auront besoin d'avoir connaissance de leurs positions dans les buffers (c'est pour l'animation de la destruction d'un bloc)
                 std::vector<glm::vec3> verticesVoxel = listeVoxels[i]->getVertices();
                 this->vertices.insert(this->vertices.end(), verticesVoxel.begin(), verticesVoxel.end());
 

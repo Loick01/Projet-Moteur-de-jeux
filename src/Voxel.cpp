@@ -74,3 +74,11 @@ void Voxel::setId(int new_id){
 int Voxel::getID(){
     return this->objectID;
 }
+
+void Voxel::setIdInChunk(int idInChunk){
+    this->idInChunk = idInChunk;
+}
+
+int Voxel::getIdInChunk(){
+    return this->idInChunk;
+}
