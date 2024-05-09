@@ -50,15 +50,6 @@ std::vector<glm::vec3> Voxel::getVertices(){
     return this->vertices;
 }
 
-/*
-void Voxel::updateVertices(glm::vec3 motion){
-    this->backBottomLeftCorner += motion;
-    for (int i = 0 ; i < this->vertices.size() ; i++){
-        this->vertices[i] += motion;
-    }
-}
-*/
-
 void Voxel::setVisible(bool isVisible){
     this->isVisible = isVisible;
 }

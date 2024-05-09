@@ -396,19 +396,22 @@ int main(){
 
         terrainControler->drawTerrain();
 
+        // Il faudra mettre ce bout de code ailleurs si on a le temps
         if (mouseLeftClickHold){
             LocalisationBlock lb = terrainControler->tryBreakBlock(camera_target, camera_position);
             // On part du principe que c'est impossible pour le joueur de viser un bloc d'un chunk à la frame n, puis le bloc équivalent d'un chunk adjacent à la frame n+1
             // Puisque la portée de son coup est limité à 4 (RANGE dans TerrainControler.hpp)
-            // Du coup, il y a certain test qu'on peut se permettre d'éviter
+            // Du coup, il y a certains tests qu'on peut se permettre d'éviter
             if (lb.idInChunk == previousIdInChunk){
                 accumulateurDestructionBlock += deltaTime;
+                glUniform1i(glGetUniformLocation(programID, "accumulateur_destruction"), accumulateurDestructionBlock*100); // Dans le shader on utilise cette valeur avec % donc il faut que ce soit un int
             }else if (lb.idInChunk != -1){ // A la première frame où on maintient le clic gauche, on rentre dans cette condition, et donc on définit à ce moment previousIdInChunk 
                 previousIdInChunk = lb.idInChunk;
                 accumulateurDestructionBlock = 0.0f;
                 glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), previousIdInChunk); // On envoie l'indice du voxel visé aux shaders (pour savoir où appliquer la texture de destruction)
             }else{
                 accumulateurDestructionBlock = 0.0f;
+                previousIdInChunk = -2;
                 glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), previousIdInChunk);
             }
 

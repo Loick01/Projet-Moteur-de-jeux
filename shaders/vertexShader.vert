@@ -3,13 +3,16 @@
 layout(location = 0) in vec3 aPos;
 
 out vec2 uv_coord;
+out vec2 destruction_texture_coords;
 
 out float shadow_value;
+out float isCurrentlyBreaking;
 
 uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
 uniform int indexBlockToBreak;
+uniform int accumulateur_destruction;
 
 layout(std430, binding = 0) buffer layoutObjectID
 {
@@ -41,10 +44,15 @@ void main(){
                 objectID = min(objectID + (gl_VertexID % 24)/4,objectID+2);
         }
         if (gl_VertexID/24 == indexBlockToBreak){
-                shadow_value = 0.0;
+                isCurrentlyBreaking = 1.0;
+                destruction_texture_coords = texCoords[gl_VertexID%4];
+                // Dans l'atlas de texture, les destructions commencent à 34 (et on fait augmenter cet indice selon la valeur de l'accumulateur, qui est donnée en uniform)
+                destruction_texture_coords[0] += (34+accumulateur_destruction/10)%5*0.2003;
+                destruction_texture_coords[1] += (34+accumulateur_destruction/10)/5*0.1003; 
         }else{
-                shadow_value = shadows[gl_VertexID%24];
+                isCurrentlyBreaking = 0.0;
         }
+        shadow_value = shadows[gl_VertexID%24];
         uv_coord = texCoords[gl_VertexID%4];
         uv_coord[0] += objectID%5*0.2003;
         uv_coord[1] += objectID/5*0.1003;
