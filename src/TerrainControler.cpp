@@ -63,7 +63,7 @@ int TerrainControler::getPlaneHeight(){
     return this->planeHeight;
 }
 
-void TerrainControler::tryBreakBlock(glm::vec3 camera_target, glm::vec3 camera_position){
+LocalisationBlock TerrainControler::tryBreakBlock(glm::vec3 camera_target, glm::vec3 camera_position){
     glm::vec3 originPoint = camera_position;
     glm::vec3 direction = normalize(camera_target);
     for (int k = 1 ; k < RANGE+1 ; k++){ // Trouver une meilleure manière pour détecter le bloc à casser
@@ -82,43 +82,50 @@ void TerrainControler::tryBreakBlock(glm::vec3 camera_target, glm::vec3 camera_p
             if (listeVoxels[indiceV] == nullptr){
                 continue;
             }else{
-                delete listeVoxels[indiceV]; // Ne pas oublier de bien libérer la mémoire
-                listeVoxels[indiceV] = nullptr;
-
-                // Rendre visible les 6 cubes adjacents (s'ils existent et s'ils ne sont pas déjà visible)
-                // Il faudrait chercher une meilleure façon de faire ça
-                for (int c = -1 ; c < 2 ; c+=2){
-                    int numLongueurVoisin = (numLongueur%32) + c;
-                    int numHauteurVoisin = numHauteur + c;
-                    int numProfondeurVoisin = (numProfondeur%32) + c;
-                    int indiceVoisin;
-
-                    if (numLongueurVoisin >= 0 && numLongueurVoisin <= 31){
-                        indiceVoisin = numHauteur *1024 + (numProfondeur%32) * 32 + numLongueurVoisin;
-                        if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){ // On vérifie si le voxel n'est pas déjà visible (en vrai c'est pas obligatoire)
-                            listeVoxels[indiceVoisin]->setVisible(true);
-                        }
-                    }
-                    if (numHauteurVoisin >= 0 && numHauteurVoisin <= 31){
-                        indiceVoisin = numHauteurVoisin *1024 + (numProfondeur%32) * 32 + (numLongueur%32);
-                        if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){
-                            listeVoxels[indiceVoisin]->setVisible(true);
-                        }
-                    }
-                    if (numProfondeurVoisin >= 0 && numProfondeurVoisin <= 31){
-                        indiceVoisin = numHauteur *1024 + numProfondeurVoisin * 32 + (numLongueur%32);
-                        if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){
-                            listeVoxels[indiceVoisin]->setVisible(true);
-                        }
-                    }
-                }
-
-                this->listeChunks[indiceChunk]->setListeVoxels(listeVoxels);
-                this->listeChunks[indiceChunk]->loadChunk();
-                return;
+                return {indiceV, indiceChunk, numLongueur, numProfondeur, numHauteur};
             }
         }
     }
+    return {-1,-1,-1,-1,-1};
+}
+
+void TerrainControler::breakBlock(LocalisationBlock lb){ // Il faut déjà avoir testé (au minimum) si lb.indiceVoxel != -1 avant d'appeler cette fonction
+    std::vector<Voxel*> listeVoxels = this->listeChunks[lb.indiceChunk]->getListeVoxels();
+
+    delete listeVoxels[lb.indiceVoxel]; // Ne pas oublier de bien libérer la mémoire
+    listeVoxels[lb.indiceVoxel] = nullptr;
+
+    // Rendre visible les 6 cubes adjacents (s'ils existent et s'ils ne sont pas déjà visible)
+    // Il faudrait chercher une meilleure façon de faire ça
+    for (int c = -1 ; c < 2 ; c+=2){
+        int numLongueurVoisin = (lb.numLongueur%32) + c;
+        int numHauteurVoisin = lb.numHauteur + c;
+        int numProfondeurVoisin = (lb.numProfondeur%32) + c;
+        int indiceVoisin;
+
+        if (numLongueurVoisin >= 0 && numLongueurVoisin <= 31){
+            indiceVoisin = lb.numHauteur *1024 + (lb.numProfondeur%32) * 32 + numLongueurVoisin;
+            if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){ // On vérifie si le voxel n'est pas déjà visible (en vrai c'est pas obligatoire)
+                listeVoxels[indiceVoisin]->setVisible(true);
+            }
+        }
+        if (numHauteurVoisin >= 0 && numHauteurVoisin <= 31){
+            indiceVoisin = numHauteurVoisin *1024 + (lb.numProfondeur%32) * 32 + (lb.numLongueur%32);
+            if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){
+                listeVoxels[indiceVoisin]->setVisible(true);
+            }
+        }
+        if (numProfondeurVoisin >= 0 && numProfondeurVoisin <= 31){
+            indiceVoisin = lb.numHauteur *1024 + numProfondeurVoisin * 32 + (lb.numLongueur%32);
+            if (listeVoxels[indiceVoisin] != nullptr && !(listeVoxels[indiceVoisin]->getVisible())){
+                listeVoxels[indiceVoisin]->setVisible(true);
+            }
+        }
+    }
+
+    this->listeChunks[lb.indiceChunk]->setListeVoxels(listeVoxels);
+    this->listeChunks[lb.indiceChunk]->loadChunk();
+    //return;
 }
 
 void TerrainControler::tryCreateBlock(glm::vec3 camera_target, glm::vec3 camera_position, int typeBlock){

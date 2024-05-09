@@ -7,6 +7,11 @@
 class MapGenerator;
 class Chunk;
 
+struct LocalisationBlock {
+    int indiceVoxel, indiceChunk, numLongueur, numProfondeur, numHauteur;
+};
+
+
 class TerrainControler{
     private :
         // Ces 3 tailles sont en nombre de chunk
@@ -28,7 +33,8 @@ class TerrainControler{
         int getPlaneWidth();
         int getPlaneLength();
         int getPlaneHeight();
-        void tryBreakBlock(glm::vec3 camera_target, glm::vec3 camera_position);
+        LocalisationBlock tryBreakBlock(glm::vec3 camera_target, glm::vec3 camera_position);
+        void breakBlock(LocalisationBlock lb);
         void tryCreateBlock(glm::vec3 camera_target, glm::vec3 camera_position, int typeBlock);
         void drawTerrain();
 };

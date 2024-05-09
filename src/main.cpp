@@ -10,6 +10,13 @@ GLuint programID, programID_HUD,programID_Entity;
 
 bool isImGuiShow = true;
 
+// --------------------------------
+// Temporaire
+float accumulateurDestructionBlock = 0.0f;
+bool mouseLeftClickHold = false;
+int previousIndiceVoxel;
+// --------------------------------
+
 // Caméra
 glm::vec3 camera_position  = glm::vec3(0.0f, 5.0f, 5.0f);
 glm::vec3 camera_target = glm::vec3(1.0f,0.0f,-1.0f);
@@ -211,7 +218,12 @@ void mouse_cursor_callback(GLFWwindow* window, double xpos, double ypos){
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        terrainControler->tryBreakBlock(camera_target, camera_position);
+        mouseLeftClickHold = true;
+        LocalisationBlock lb = terrainControler->tryBreakBlock(camera_target, camera_position);
+        previousIndiceVoxel = lb.indiceVoxel; // On conserve l'indice du voxel au moment où on clique
+    }else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE){
+        mouseLeftClickHold = false;
+        accumulateurDestructionBlock = 0.0f;
     }else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
         terrainControler->tryCreateBlock(camera_target, camera_position, handBlock);
     }
@@ -337,13 +349,28 @@ int main(){
 
         processInput(window);
 
-        /*
-        int left_button_state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+        if (mouseLeftClickHold){
+            LocalisationBlock lb = terrainControler->tryBreakBlock(camera_target, camera_position);
+            // On part du principe que c'est impossible pour le joueur de viser un bloc d'un chunk à la frame n, puis le bloc équivalent d'un chunk adjacent à la frame n+1
+            // Puisque la portée de son coup est limité à 4 (RANGE dans TerrainControler.hpp)
+            // Du coup, il y a certain test qu'on peut se permettre d'éviter
+            if (lb.indiceVoxel == previousIndiceVoxel){
+                accumulateurDestructionBlock += deltaTime;
+            }else if (lb.indiceVoxel != -1){
+                previousIndiceVoxel = lb.indiceVoxel;
+                accumulateurDestructionBlock = 0.0f;
+            }else{
+                accumulateurDestructionBlock = 0.0f;
+            }
 
-        if (left_button_state == GLFW_PRESS) {
-            std::cout << "Le bouton gauche est maintenu\n";
+            if (accumulateurDestructionBlock >= 1.0f){
+                terrainControler->breakBlock(lb);
+                accumulateurDestructionBlock = 0.0f;
+                // Si on voulait être précis, ici il aurait fallu remettre à jour previousIndiceBlock en rappelant tryBreakBlock
+                // Mais ce n'est pas nécéssaire, ce sera fait seulement avec une frame de retard (pas trop grave)
+            }
+            //std::cout << "Accumulateur = " << accumulateurDestructionBlock << "\n";
         }
-        */
 
         glm::vec3 bottomPointPlayer = hitboxPlayer->getBottomPoint();
 
