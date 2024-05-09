@@ -56,7 +56,7 @@ add_executable(main
     src/MapGenerator.cpp
     src/FastNoise.cpp
     src/Hitbox.cpp
-    src/Zombie.cpp
+    src/Entity.cpp
     src/Transform.cpp
     src/TerrainControler.cpp
     )

@@ -34,6 +34,6 @@
 #include <Hud.hpp>
 #include <MapGenerator.hpp>
 #include <Hitbox.hpp>
-#include <Zombie.hpp>
+#include <Entity.hpp>
 #include <Transform.hpp>
 #include <TerrainControler.hpp>

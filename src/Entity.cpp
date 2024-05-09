@@ -1,17 +1,20 @@
-#include <Zombie.hpp>
+#include <Entity.hpp>
 
-
-Zombie::Zombie(int nodeID, glm::vec3 pos, float speedEntity){
+Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity){ // type = 0 pour zombie, 1 pour cochon
     this->node = new Node;
     this->node->nodeID = nodeID;
     this->node->transformation = new Transform();
-
-    this->createZombie(this->node,pos);
     this->speedEntity = speedEntity;
+
+    if (type==0){
+        this->createZombie(this->node,pos);
+    }else if (type == 1){
+        this->createCochon(this->node,pos);
+    }
 }
 
-Zombie::~Zombie(){
-    std::cout << "Destructeur de Zombie\n";
+Entity::~Entity(){
+    std::cout << "Destructeur de Entity\n";
     // Il faudra mettre tout ce qui concerne Node dans une classe pour faire une destruction récursive comme on le fait d'habitude
     glDeleteBuffers(1, &(this->node->vertexbuffer));
     glDeleteBuffers(1, &(this->node->elementbuffer));
@@ -21,15 +24,15 @@ Zombie::~Zombie(){
     }
 }
 
-void Zombie::loadZombie(){
+void Entity::loadEntity(){
     this->loadBufferNode(this->node);
 }
 
-void Zombie::drawZombie(GLuint programID_Entity){
+void Entity::drawEntity(GLuint programID_Entity){
     this->sendNodeToShader(this->node,programID_Entity,glm::mat4(1.0f));
 }
 
-void Zombie::setPave(Node* node, glm::vec3 dimensions, glm::vec3 position) {
+void Entity::setPave(Node* node, glm::vec3 dimensions, glm::vec3 position) {
     node->indices.clear();
     node->indexed_vertices.clear();
 
@@ -100,7 +103,7 @@ void Zombie::setPave(Node* node, glm::vec3 dimensions, glm::vec3 position) {
     });
 }
 
-void Zombie::loadBufferNode(Node *node){
+void Entity::loadBufferNode(Node *node){
     glGenBuffers(1, &(node->vertexbuffer));
     glBindBuffer(GL_ARRAY_BUFFER, node->vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, node->indexed_vertices.size() * sizeof(glm::vec3), &(node->indexed_vertices[0]), GL_STATIC_DRAW);
@@ -113,14 +116,13 @@ void Zombie::loadBufferNode(Node *node){
     }
 }
 
-void Zombie::sendNodeToShader(Node *node,GLuint programID_Entity,glm::mat4 parent){
+void Entity::sendNodeToShader(Node *node,GLuint programID_Entity,glm::mat4 parent){
     glm::mat4 matTransfo = parent*node->transformation->getTransfoMat4();
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, node->vertexbuffer);
     glUniformMatrix4fv(glGetUniformLocation(programID_Entity, "Model"), 1, GL_FALSE, &(matTransfo[0][0]));
     glUniform1i(glGetUniformLocation(programID_Entity,"nodeID"), node->nodeID);
-    
     
     glVertexAttribPointer(
                 0,                  // attribute
@@ -147,7 +149,7 @@ void Zombie::sendNodeToShader(Node *node,GLuint programID_Entity,glm::mat4 paren
     }
 }
 
-void Zombie::createZombie(Node* node, glm::vec3 position){
+void Entity::createZombie(Node* node, glm::vec3 position){
     Node *headZombie = new Node;
     Node *chestZombie = new Node;
     Node *leftArmZombie = new Node;
@@ -189,7 +191,76 @@ void Zombie::createZombie(Node* node, glm::vec3 position){
     node->fils.push_back(rightLegZombie);
 }
 
-void Zombie::walk(Node* node,float angle,float deltaTime){ // Le paramètre node doit être un zombie dans le graphe de scène
+void Entity::createCochon(Node* node, glm::vec3 position){
+    Node *headCochon = new Node;
+    Node *chestCochon = new Node;
+    Node *leftArmCochon = new Node;
+    Node *rightArmCochon = new Node;
+    Node *leftLegCochon = new Node;
+    Node *rightLegCochon = new Node;
+    headCochon->nodeID=0;
+    chestCochon->nodeID=1;
+    leftArmCochon->nodeID=2;
+    rightArmCochon->nodeID=3;
+    leftLegCochon->nodeID=4;
+    rightLegCochon->nodeID=5;
+    setPave(chestCochon,glm::vec3(0.9,0.5,0.5), glm::vec3(0,0.2,0)+ position);
+    setPave(headCochon,glm::vec3(0.45,0.45,0.45), glm::vec3(0.6,0.3,0)+ position);
+    setPave(leftArmCochon,glm::vec3(0.25,0.4,0.25), glm::vec3(-0.32,-0.1,0.14)+ position);
+    setPave(rightArmCochon,glm::vec3(0.25,0.4,0.25), glm::vec3(-0.32,-0.1,-0.14)+ position);
+    setPave(leftLegCochon,glm::vec3(0.25,0.4,0.25), glm::vec3(0.4,-0.1,0.14)+ position);
+    setPave(rightLegCochon,glm::vec3(0.25,0.4,0.25), glm::vec3(0.4,-0.1,-0.14)+ position);
+
+    chestCochon->center=glm::vec3(0,0.8,0)+ position;
+    headCochon->center=glm::vec3(0,1.5,0)+ position;
+    rightArmCochon->center=glm::vec3(0.45,0.8,0)+ position;
+    leftArmCochon->center=glm::vec3(0.15,0,0)+ position;
+    rightLegCochon->center=glm::vec3(0.15,0,0)+ position;
+    leftLegCochon->center=glm::vec3(-0.15,0,0)+ position;
+
+    chestCochon->transformation = new Transform();
+    headCochon->transformation = new Transform();
+    rightArmCochon->transformation = new Transform();
+    leftArmCochon->transformation = new Transform();
+    rightLegCochon->transformation = new Transform();
+    leftLegCochon->transformation = new Transform();
+
+    node->fils.push_back(chestCochon);
+    node->fils.push_back(headCochon);
+    node->fils.push_back(leftArmCochon);
+    node->fils.push_back(rightArmCochon);
+    node->fils.push_back(leftLegCochon);
+    node->fils.push_back(rightLegCochon);
+}
+
+void Entity::walkCochon(Node* node,float angle,float deltaTime){
+    float angle1 = sin(angle);
+    float angle2 = sin(angle+M_PI);
+
+    glm::mat4 matTransfoArm1 = glm::translate(glm::mat4(1.0f),node->fils[4]->center+glm::vec3(0.525f,0.1,0.0));
+    matTransfoArm1 = glm::rotate(matTransfoArm1, angle1,glm::vec3(0.f,0.0f,1.0f));
+    matTransfoArm1 = glm::translate(matTransfoArm1,-node->fils[4]->center-glm::vec3(0.525f,0.1,0.0));
+
+    glm::mat4 matTransfoArm2 = glm::translate(glm::mat4(1.0f),node->fils[5]->center+glm::vec3(0.4-0.125,0.1,0.0));
+    matTransfoArm2 = glm::rotate(matTransfoArm2, angle2,glm::vec3(0.f,0.0f,1.0f));
+    matTransfoArm2 = glm::translate(matTransfoArm2,-node->fils[5]->center-glm::vec3(0.4-0.125,0.1,0.0));
+
+    glm::mat4 matTransfoLeg1 = glm::translate(glm::mat4(1.0f),node->fils[3]->center+glm::vec3(-0.76f,-0.8,0.0));
+    matTransfoLeg1 = glm::rotate(matTransfoLeg1, angle1,glm::vec3(0.f,0.0f,1.0f));
+    matTransfoLeg1 = glm::translate(matTransfoLeg1,-node->fils[3]->center-glm::vec3(-0.76f,-0.8,0.0));
+
+    glm::mat4 matTransfoLeg2 = glm::translate(glm::mat4(1.0f),node->fils[2]->center+glm::vec3(-0.34-0.125f,0.0f,0.0));
+    matTransfoLeg2 = glm::rotate(matTransfoLeg2, angle2,glm::vec3(0.f,0.0f,1.0f));
+    matTransfoLeg2 = glm::translate(matTransfoLeg2,-node->fils[2]->center-glm::vec3(-0.34-0.125f,0.0f,0.0));
+
+    node->transformation->addVelocity(glm::vec3(this->speedEntity*deltaTime,0,0.0f));
+    node->fils[4]->transformation = new Transform(matTransfoLeg2);
+    node->fils[5]->transformation = new Transform(matTransfoLeg1);
+    node->fils[3]->transformation = new Transform(matTransfoArm2);
+    node->fils[2]->transformation = new Transform(matTransfoArm1);
+}
+
+void Entity::walk(Node* node,float angle,float deltaTime){ // Le paramètre node doit être un zombie dans le graphe de scène
     float angleLeg1 = sin(angle);
     float angleLeg2 = sin(angle+M_PI);
 
@@ -213,7 +284,7 @@ void Zombie::walk(Node* node,float angle,float deltaTime){ // Le paramètre node
     node->fils[2]->transformation = new Transform(matTransfoArm);
 }
 
-void Zombie::reset(Node* node){ // Le paramètre node doit être un zombie dans le graphe de scène
+void Entity::reset(Node* node){ // Le paramètre node doit être un zombie dans le graphe de scène
  
     float angle = sin(0);
 
@@ -235,7 +306,7 @@ void Zombie::reset(Node* node){ // Le paramètre node doit être un zombie dans 
     node->fils[2]->transformation = new Transform(matTransfoArm);
 }
 
-void Zombie::attack(Node* node, bool *attack, float *accumulateurAnimation, float deltaTime){ // Le paramètre node doit être un zombie dans le graphe de scène
+void Entity::attack(Node* node, bool *attack, float *accumulateurAnimation, float deltaTime){ // Le paramètre node doit être un zombie dans le graphe de scène
     float angle = -M_PI/1.9; // Angle en radians (pour toutes les animations il vaudrait mieux que ce soit le cas pour ne pas confondre)
 
     // Les 2 bras ont la même transformation
@@ -255,7 +326,7 @@ void Zombie::attack(Node* node, bool *attack, float *accumulateurAnimation, floa
 }
 
 // Peut être revoir l'animation de mort si on a le temps (pour faire plus joli)
-void Zombie::die(Node* node, bool *die, float *accumulateurAnimation, float deltaTime){ // Le paramètre node doit être un zombie dans le graphe de scène
+void Entity::die(Node* node, bool *die, float *accumulateurAnimation, float deltaTime){ // Le paramètre node doit être un zombie dans le graphe de scène
     glm::mat4 matTransAll = glm::translate(node->transformation->getTransfoMat4(),node->fils[0]->center-glm::vec3(0,1.6,0));
     matTransAll = glm::rotate(matTransAll,deltaTime*4,glm::vec3(0.f,0.0f,1.0f));
     matTransAll = glm::translate(matTransAll,-node->fils[0]->center+glm::vec3(0,1.6,0));
@@ -274,6 +345,6 @@ void Zombie::die(Node* node, bool *die, float *accumulateurAnimation, float delt
     }
 }
 
-Node* Zombie::getRootNode(){
+Node* Entity::getRootNode(){
     return this->node;
 }

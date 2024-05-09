@@ -18,15 +18,15 @@ struct Node{
     glm::vec3 center;
 };
 
-class Zombie{
+class Entity{
     private:
         Node *node;
         float speedEntity;
     public:
-        Zombie(int ID,glm::vec3 pos, float speedEntity);
-        ~Zombie();
-        void loadZombie();
-        void drawZombie(GLuint programID_Entity);
+        Entity(int type, int ID,glm::vec3 pos, float speedEntity);
+        ~Entity();
+        void loadEntity();
+        void drawEntity(GLuint programID_Entity);
 
         void loadBufferNode(Node *node);
         void sendNodeToShader(Node *node,GLuint programID_Entity,glm::mat4 parent);
@@ -34,8 +34,10 @@ class Zombie{
         void setPave(Node* node, glm::vec3 dimensions, glm::vec3 position);
 
         void createZombie(Node* node, glm::vec3 position);
+        void createCochon(Node* node, glm::vec3 position);
         
         void walk(Node* node,float angle, float deltaTime);
+        void walkCochon(Node* node,float angle,float deltaTime);
         void reset(Node* node);
         void attack(Node* node, bool *attack, float *accumulateurAnimation, float deltaTime);
         void die(Node* node, bool *die, float *accumulateurAnimation, float deltaTime);

@@ -42,12 +42,16 @@ bool hasUpdate; // A rentrer dans la classe Hitbox plus tard
 bool isRunning = false;
 bool isHoldingShift = false;
 
+// --------------------------------
 // Temporaire
-float angle=0.0f;
-bool walk=false;
-bool fight=false;
-bool die=false;
+float angleZombie=0.0f;
+float angleCochon=0.0f;
+bool walkZombie=false;
+bool walkCochon=false;
+bool fightZombie=false;
+bool dieZombie=false;
 float accumulateurAnimation = 0.0f; // Va servir à faire animations indépendantes du nombre de frame
+// --------------------------------
 
 int blockInHotbar[9] = {23,29,1,11,12,13,20,26,33}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
@@ -93,16 +97,21 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     // Joue les animations du zombie (temporaire, on utilisera une classe Agent)
     // Marche
     if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){ 
-            walk = !walk;
+            walkZombie = !walkZombie;
     }
     // Attaque
     if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){ 
-            fight = !fight;
+            fightZombie = !fightZombie;
     }
 
     // Meurt
     if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){ 
-            die = !die;
+            dieZombie = !dieZombie;
+    }
+
+    // Animation du cochon
+    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){ 
+            walkCochon = !walkCochon;
     }
     // ---------------------------------------------------------
 }
@@ -343,8 +352,11 @@ int main(){
     lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
 
     // Temporaire : Création des entités
-    Zombie *zombie = new Zombie(1,glm::vec3(3,1.4,3), 3.0f);
-    zombie->loadZombie();
+    Entity *zombie = new Entity(0, 1,glm::vec3(3,1.4,3), 3.0f);
+    zombie->loadEntity();
+    Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f);
+    zombie->loadEntity();
+    cochon->loadEntity();
 
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -408,6 +420,7 @@ int main(){
             }else if (lb.idInChunk != -1){ // A la première frame où on maintient le clic gauche, on rentre dans cette condition, et donc on définit à ce moment previousIdInChunk 
                 previousIdInChunk = lb.idInChunk;
                 accumulateurDestructionBlock = 0.0f;
+                glUniform1i(glGetUniformLocation(programID, "accumulateur_destruction"), accumulateurDestructionBlock*100); // On renvoie l'accumulation ici pour bien reprendre l'animation de 0 (sinon on voyait l'ancienne état de destruction s'afficher pendant une frame)
                 glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), previousIdInChunk); // On envoie l'indice du voxel visé aux shaders (pour savoir où appliquer la texture de destruction)
             }else{
                 accumulateurDestructionBlock = 0.0f;
@@ -434,26 +447,34 @@ int main(){
         glUseProgram(programID_Entity);
 
         // Temporaire --------------------------------------------------------------------
-        if(walk==true){
-            zombie->walk(zombie->getRootNode(),angle,deltaTime);
-            angle += 6*deltaTime;
+        if(walkZombie){
+            zombie->walk(zombie->getRootNode(),angleZombie,deltaTime);
+            angleZombie += 6*deltaTime;
         }else{
             zombie->reset(zombie->getRootNode());
         }
 
-        if(fight==true){
-            zombie->attack(zombie->getRootNode(),&fight,&accumulateurAnimation,deltaTime);
+        if (walkCochon){
+            cochon->walkCochon(cochon->getRootNode(), angleCochon, deltaTime);
+            angleCochon += 6*deltaTime;
+        }else{
+            cochon->reset(cochon->getRootNode());
         }
 
-        if(die==true){
-            zombie->die(zombie->getRootNode(),&die,&accumulateurAnimation,deltaTime);
+        if(fightZombie){
+            zombie->attack(zombie->getRootNode(),&fightZombie,&accumulateurAnimation,deltaTime);
+        }
+
+        if(dieZombie){
+            zombie->die(zombie->getRootNode(),&dieZombie,&accumulateurAnimation,deltaTime);
         }
         // -------------------------------------------------------------------------------
 
         glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
         glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
 
-        zombie->drawZombie(programID_Entity);
+        zombie->drawEntity(programID_Entity);
+        cochon->drawEntity(programID_Entity);
 
         // Affichage de l'hud (Attention : Ca doit être la dernière chose à afficher dans la boucle de rendue, pour que l'hud se retrouve au premier plan)
         if (showHud){
@@ -620,6 +641,7 @@ int main(){
     delete player;
     delete window_object;
     delete zombie;
+    delete cochon;
     glfwTerminate();
     return 0;
 }
