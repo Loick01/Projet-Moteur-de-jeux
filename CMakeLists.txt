@@ -59,6 +59,7 @@ add_executable(main
     src/Entity.cpp
     src/Transform.cpp
     src/TerrainControler.cpp
+    src/ParamsWindow.cpp
     )
 
 # Include directories for our project
