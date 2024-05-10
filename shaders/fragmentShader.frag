@@ -4,6 +4,7 @@ out vec4 FragColor;
 in vec2 uv_coord;
 in vec2 destruction_texture_coords;
 uniform sampler2D atlasTexture;
+uniform int isShadow;
 in float shadow_value;
 in float isCurrentlyBreaking;
 
@@ -16,6 +17,8 @@ void main(){
         if (color.a < 0.1){
                 discard;
         }
-        color.rgb = shadow_value * color.rgb;
+        if (isShadow==1){ // Sinon on utilise pas la valeur d'ombre pour le fragment
+                color.rgb = shadow_value * color.rgb;
+        }
         FragColor = color;
 }

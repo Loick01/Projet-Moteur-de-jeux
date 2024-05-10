@@ -106,6 +106,10 @@ void ParamsWindow::draw(){
     ImGui::Checkbox("Afficher l'hud", &showHud);
 
     ImGui::Spacing();
+
+    ImGui::Checkbox("Mode de jeu (créatif/survie)", &modeJeu);
+
+    ImGui::Spacing();
     
     /*
     if (ImGui::SliderInt("Longueur terrain", &planeWidth, 1, 32)){

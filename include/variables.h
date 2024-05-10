@@ -3,6 +3,7 @@
 // du constructeur de ParamsWindow (comme on le faisait avant)
 // C'est un peu de la triche, mais tant qu'il n'y a pas les classes nécéssaires on ne peut pas faire autrement
 extern bool showHud;
+extern bool modeJeu; 
 extern int speedCam;
 extern float FoV;
 extern bool cameraOrbitale;

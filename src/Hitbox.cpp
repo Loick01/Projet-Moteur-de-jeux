@@ -6,6 +6,7 @@ Hitbox::Hitbox(glm::vec3 position, float gravity, float forceJumpInitial){
     this->gravity = gravity;
     this->forceJump = 0.0f;
     this->forceJumpInitial = forceJumpInitial;
+    this->canTakeDamage = false;
 }
 
 Hitbox::~Hitbox(){
@@ -78,7 +79,8 @@ bool Hitbox::getLateralMovePossible(bool axisToCheck,float directionCheck, glm::
     return canMove;
 }
 
-void Hitbox::checkTopAndBottomCollision(bool hasUpdate, float deltaTime, TerrainControler *terrainControler, Hud *hud, Player *player){
+// Retourne les dégâts subis s'il y en a 
+float Hitbox::checkTopAndBottomCollision(bool hasUpdate, float deltaTime, TerrainControler *terrainControler){
     int planeWidth = terrainControler->getPlaneWidth();
     int planeLength = terrainControler->getPlaneLength();
     std::vector<Chunk*> listeChunks = terrainControler->getListeChunks();
@@ -132,40 +134,42 @@ void Hitbox::checkTopAndBottomCollision(bool hasUpdate, float deltaTime, Terrain
             v = listeChunks[(numLongueur/32) * planeLength + numProfondeur/32]->getListeVoxels()[indiceBlock];
             if (v != nullptr){
                 if(v->getID()==33 && this->forceJump<-0.1){
-                    this->forceJump*=-0.5;
-
+                    this->forceJump*=-0.85;
                 }else{
                     this->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
-                    if (this->forceJump <= -14.0f){
-                        player->takeDamage(pow(this->forceJump + 14.0, 2)); // On reverra plus le calcul des dégâts si on a le temps
-                        hud->updateLife(player->getLife());
-                        if (player->getLife() <= 0.0){
-                            std::cout << "Vous êtes mort !\n";
-                            //return -1; Le joueur est mort, le programme s'arrête 
-                        }
+                    if (this->canTakeDamage && this->forceJump <= -14.0f){
+                        float d = this->forceJump;
+                        this->forceJump = 0.0f;
+                        this->setCanJump(true);
+                        return pow(d + 14.0, 2); // On reverra plus tard le calcul des dégâts si on a le temps
                     }
                     this->forceJump = 0.0f;
                     this->setCanJump(true);
                 }
+                if(!this->canTakeDamage){
+                    this->canTakeDamage=true;
+                }
             }
         }else{
             if(v->getID()==33 && this->forceJump<-0.1){
-                this->forceJump*=-0.5;
+                this->forceJump*=-0.85;
             }else{
                 if (pPlayer[1] != ceil(pPlayer[1])){
                     this->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
-                    if (this->forceJump <= -14.0f){
-                        player->takeDamage(pow(this->forceJump + 14.0, 2)); // On reverra plus le calcul des dégâts si on a le temps
-                        hud->updateLife(player->getLife());
-                        if (player->getLife() <= 0.0){
-                            std::cout << "Vous êtes mort !\n";
-                            //return -1; Le joueur est mort, le programme s'arrête 
-                        }
+                    if (this->canTakeDamage && this->forceJump <= -14.0f){
+                        float d = this->forceJump;
+                        this->forceJump = 0.0f;
+                        this->setCanJump(true);
+                        return pow(d + 14.0, 2); // On reverra plus tard le calcul des dégâts si on a le temps
                     }
-                    this->forceJump = 0.0f;
                 }
+                this->forceJump = 0.0f;
                 this->setCanJump(true);
+            }
+            if(!this->canTakeDamage){
+                this->canTakeDamage=true;
             }
         }
     }
+    return 0.0f;
 }

@@ -12,6 +12,7 @@ class Hitbox{
         float gravity;
         float forceJump;
         float forceJumpInitial;
+        bool canTakeDamage; // On ne subira pas de dégâts avant le premier contact avec un bloc (pour ne pas mourir dès l'apparition)
     public :
         Hitbox(glm::vec3 position, float gravity, float forceJumpInitial);
         ~Hitbox();
@@ -23,5 +24,5 @@ class Hitbox{
         void resetJumpForce();
         // La fonction ci-dessous vérifie si le déplacement latéral demandé est possible ou non
         bool getLateralMovePossible(bool axisToCheck, float directionCheck, glm::vec3 bottomPlayer, glm::vec3 camera_target, glm::vec3 camera_up, TerrainControler *terrainControler, glm::vec3 *cross_point);
-        void checkTopAndBottomCollision(bool hasUpdate, float deltaTime, TerrainControler *terrainControler, Hud *hud, Player *player);
+        float checkTopAndBottomCollision(bool hasUpdate, float deltaTime, TerrainControler *terrainControler);
 };

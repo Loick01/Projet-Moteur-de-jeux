@@ -64,6 +64,8 @@ int indexHandBlock = 0;
 int handBlock = blockInHotbar[indexHandBlock]; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris)
 
 bool showHud = true;
+int isShadow = 1; // 1 si on utilise les ombres dans le shader, 0 sinon
+bool modeJeu = false; // true pour créatif, false pour survie
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){ 
     glViewport(0,0,width,height);
@@ -72,6 +74,11 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
     if (key == GLFW_KEY_F && action == GLFW_PRESS){
         isImGuiShow = !isImGuiShow;
+    }
+    if (key == GLFW_KEY_P && action == GLFW_PRESS){ // Plus tard on fera une checkbox ImGui pour changer la lumière
+        glUseProgram(programID);
+        isShadow = 1 - isShadow; // Inverse la valeur
+        glUniform1i(glGetUniformLocation(programID, "isShadow"), isShadow);
     }
     if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS){
         player->applyAcceleration(true);
@@ -349,7 +356,9 @@ int main(){
     hud->loadHud();
 
     glUseProgram(programID);
-    glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), previousIdInChunk); // On envoie une valeur par défaut aux shaders
+    // On envoie ces valeurs par défaut aux shaders
+    glUniform1i(glGetUniformLocation(programID, "isShadow"), isShadow);
+    glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), previousIdInChunk);
     
     GLuint ModelMatrix = glGetUniformLocation(programID,"Model");
     // La matrice Model ne sera pas envoyé aux shaders des entités (ça ne sert à rien)
@@ -413,16 +422,18 @@ int main(){
         // Courir consomme de l'endurance
         if (isRunning){
             if (player->getStamina() > 0.0){
-                player->addStamina(-30.0*deltaTime);
-                hud->updateStamina(player->getStamina());
+                if (!modeJeu){ // En mode survie seulement
+                    player->addStamina(-30.0*deltaTime);
+                    hud->updateStamina(player->getStamina());
+                }
                 FoV = FoV_running;
             }else{
                 player->applyAcceleration(false);
                 isRunning = false;
                 isHoldingShift = true;
             }
-        }else if (player->getStamina() < 100.0f){
-            if (!isHoldingShift){
+        }else if (modeJeu || player->getStamina() < 100.0f){ // On teste si on est en mode créatif, pour pouvoir revenir à la FoV normale si on ne court plus
+            if (!modeJeu && !isHoldingShift){ // En mode survie seulement
                 player->addStamina(30.0*deltaTime);
                 hud->updateStamina(player->getStamina());
             }
@@ -470,7 +481,8 @@ int main(){
                 glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), previousIdInChunk);
             }
 
-            if (accumulateurDestructionBlock >= 1.0f){
+            // Si on est en mode créatif, on vérifie si on vise bien un bloc (c'est qui causait la segfault)
+            if ((modeJeu && previousIdInChunk != -2)|| accumulateurDestructionBlock >= 1.0f){ // En mode créatif, les blocs se cassent directement
                 terrainControler->breakBlock(lb);
                 accumulateurDestructionBlock = 0.0f;
                 // Si on voulait être précis, ici il aurait fallu remettre à jour previousIdInChunk en rappelant tryBreakBlock
@@ -484,7 +496,15 @@ int main(){
         // Gestion des collisions
         hasUpdate = false;
         hitboxPlayer->checkJump(&hasUpdate, deltaTime);
-        hitboxPlayer->checkTopAndBottomCollision(hasUpdate, deltaTime, terrainControler, hud, player);
+        float damagePlayer = hitboxPlayer->checkTopAndBottomCollision(hasUpdate, deltaTime, terrainControler);
+        if (!modeJeu && damagePlayer != 0.0f){ // En mode survie uniquement
+            player->takeDamage(damagePlayer);
+            hud->updateLife(player->getLife());
+            if (player->getLife() <= 0.0){
+                std::cout << "Vous êtes mort !\n";
+                break; // Le joueur est mort, le programme s'arrête 
+            }
+        }
 
         glUseProgram(programID_Entity);
 
