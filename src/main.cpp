@@ -1,5 +1,8 @@
 #include <Headers.hpp>
 
+#define MINIAUDIO_IMPLEMENTATION // Attention à ne pas oublier cette ligne, sinon miniaudio n'est pas correctement inclus
+#include "miniaudio.h"
+
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
 
@@ -94,7 +97,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 
     // ---------------------------------------------------------
-    // Joue les animations du zombie (temporaire, on utilisera une classe Agent)
+    // Joue les animations du zombie et du cochon (temporaire, on utilisera une classe Agent)
     // Marche
     if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){ 
             walkZombie = !walkZombie;
@@ -246,6 +249,15 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     handBlock = blockInHotbar[indexHandBlock];
 }
 
+/*
+// Callback qui permet de jouer en boucle une musique (pour l'instant ne fonctionne pas)
+// Ce n'est peut être pas une si bonne idée d'utiliser un callback (à voir)
+void restart_callback(ma_sound* pSound, void* pUserData) {
+    ma_sound_seek_to_pcm_frame(pSound, 0);
+    ma_sound_start(pSound);
+}
+*/
+
 int main(){
     if( !glfwInit()){
         fprintf( stderr, "Failed to initialize GLFW\n" );
@@ -279,6 +291,39 @@ int main(){
     glfwSetCursorPosCallback(window, mouse_cursor_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
+
+    // ---------------------------------------------------------
+    // Temporaire : Gestion du son (On fera une classe à part)
+    ma_result result;
+    ma_engine engine;
+    ma_sound sound;
+    result = ma_engine_init(NULL, &engine);
+    if (result != MA_SUCCESS){
+        std::cout << "Failed to initialized miniaudio engine\n";
+        ma_engine_uninit(&engine);
+        return -1;
+    }
+    result = ma_sound_init_from_file(&engine, "../Sound/BackgroundMusic/black3.mp3", 0, NULL, NULL, &sound);
+    if (result != MA_SUCCESS){
+        std::cout << "Impossible de charger le son\n";
+        ma_engine_uninit(&engine);
+        return -1;
+    }
+    // Utilisation du callback qui relance la musique une fois terminé
+    // Le callback est bien appelé mais la musique ne veut pas se relancer
+    //ma_sound_set_end_callback(&sound, restart_callback, NULL);
+    ma_sound_set_looping(&sound,true); // Joue la musique en boucle
+    ma_sound_start(&sound);
+
+    // Pour jouer une musique en donnant directement le nom du fichier :
+    //ma_engine_play_sound(&engine,"../Sound/BackgroundMusic/black1.mp3",NULL);
+    // Quelques fonctions qui pourrait être utile :
+    // ma_sound_seek_to_pcm_frame(&sound, frameIndex);
+    // ma_sound_get_data_format(&sound, &format, &channels, &sampleRate, pChannelMap, channelMapCapacity);
+    // ma_sound_get_cursor_in_pcm_frames(&sound, &cursor);
+    // ma_sound_get_length_in_pcm_frames(&sound, &length);
+
+    // ---------------------------------------------------------
 
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
@@ -634,8 +679,10 @@ int main(){
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    delete terrainControler;
+    ma_sound_uninit(&sound);
+    ma_engine_uninit(&engine); // Attention à bien nettoyer la mémoire, sinon segfault
 
+    delete terrainControler;
     delete skybox;
     delete hud;
     delete player;
