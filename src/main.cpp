@@ -558,11 +558,15 @@ int main(){
         if (!switchToEditor && imgui->getInEditor()){
             switchToEditor = true;
             delete terrainControler; // On supprime l'ancien terrain (on perd donc les modfications faites dessus)
-            terrainControler = new TerrainControler(); // On génère un unique chunk            
+            terrainControler = new TerrainControler(); // On génère un unique chunk     
+            // TRES IMPORTANT : C'est ça qui causait la segfault qui m'a fait perdre 4 heures
+            // Comme l'instance de TerrainControler est delete, il faut faire attention à bien utiliser la nouvelle instance pour l'instance de ParamsWindow 
+            imgui->attachNewTerrain(terrainControler); 
         }else if (switchToEditor && !(imgui->getInEditor())){
             switchToEditor = false;
             delete terrainControler; // On supprime le terrain du mode éditeur
             terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4, nomStructure); // On revient au terrain initiale
+            imgui->attachNewTerrain(terrainControler); // TRES IMPORTANT : C'est ça qui causait la segfault qui m'a fait perdre 4 heures
             hitboxPlayer->resetCanTakeDamage(); // Si le joueur tombe de trop haut, il ne faut pas qu'il meurt au moment où on quitte le mode éditeur
         }
         

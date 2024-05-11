@@ -38,4 +38,5 @@ class TerrainControler{
         void breakBlock(LocalisationBlock lb);
         void tryCreateBlock(glm::vec3 camera_target, glm::vec3 camera_position, int typeBlock);
         void drawTerrain();
+        void saveStructure(char* nameStructure);
 };

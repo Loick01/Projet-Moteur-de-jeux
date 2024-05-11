@@ -12,8 +12,8 @@ class Voxel {
         glm::vec3 backBottomLeftCorner;
         Voxel(glm::vec3 position, int objectID);
         ~Voxel();
+        glm::vec3 getBackBottomLeftCorner();
         void buildVoxel();
-        glm::vec3 getPoint();
         std::vector<glm::vec3> getVertices();
         void setVisible(bool isVisible);
         bool getVisible();

@@ -11,6 +11,10 @@ Voxel::~Voxel(){
     //std::cout << "Destructeur de Voxel\n";
 }
 
+glm::vec3 Voxel::getBackBottomLeftCorner(){
+    return this->backBottomLeftCorner;
+}
+
 // Voxel de taille 1.0
 void Voxel::buildVoxel(){
     for (int i = 0 ; i < 6 ; i++){

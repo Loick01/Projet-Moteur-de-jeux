@@ -27,6 +27,7 @@ TerrainControler::TerrainControler(int planeWidth, int planeLength, int planeHei
 
 // Ce deuxième constructeur ne sera appelé que pour créer le terrain utilisé par le mode éditeur
 TerrainControler::TerrainControler(){
+    this->listeChunks.clear();
     // On est obligé de définir les 3 valeurs ci-dessous
     this->planeWidth = 1;
     this->planeLength = 1; 
@@ -47,7 +48,6 @@ std::vector<Chunk*> TerrainControler::getListeChunks(){
 }
 
 void TerrainControler::buildPlanChunks(unsigned char* dataPixels, int widthHeightmap, int heightHeightmap){
-    this->listeChunks.clear();
     for (int i = 0 ; i < this->planeWidth ; i++){
         for (int j = 0 ; j < this->planeLength ; j++){
             for (int k = 0 ; k < this->planeHeight ; k++){
@@ -61,7 +61,7 @@ void TerrainControler::buildPlanChunks(unsigned char* dataPixels, int widthHeigh
 
 void TerrainControler::buildEditorChunk(){
     // Le terrain dans le mode éditeur est composé d'un unique chunk
-    this->listeChunks.clear();
+    //this->listeChunks.clear();
     Chunk *c = new Chunk(glm::vec3(-16.0,-16.0,-16.0)); 
     c->loadChunk();
     this->listeChunks.push_back(c);
@@ -175,4 +175,22 @@ void TerrainControler::drawTerrain(){
     for (int i = 0 ; i < this->listeChunks.size() ; i++){
         this->listeChunks[i]->drawChunk();
     }
+}
+
+void TerrainControler::saveStructure(char* nameStructure){
+    std::string filePath = nameStructure;
+    filePath = "../Structures/" + filePath + ".txt";
+    std::ofstream fileStructure(filePath);
+
+    // On récupère l'unique chunk du terrain (car on est en mode édition)
+    Chunk *c = this->listeChunks[0];
+    std::vector<Voxel*> voxelsToSave = c->getListeVoxels();
+    for (int i = 0 ; i < voxelsToSave.size() ; i++){
+        Voxel *v = voxelsToSave[i];
+        if (v != nullptr){
+            // Attention à bien mettre un espace à la fin, avant le retour à la ligne
+            fileStructure << v->getID() << " " << floor(v->getBackBottomLeftCorner()[0]) << " " << floor(v->getBackBottomLeftCorner()[1]) << " " << floor(v->getBackBottomLeftCorner()[2]) << " \n";
+        }
+    }
+    fileStructure.close();
 }
