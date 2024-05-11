@@ -17,13 +17,6 @@ GLuint programID, programID_HUD,programID_Entity;
 bool isImGuiShow = true;
 bool switchToEditor = false;
 
-// --------------------------------
-// Temporaire
-float accumulateurDestructionBlock = 0.0f;
-bool mouseLeftClickHold = false;
-int previousIdInChunk = -2; // Attention à ne surtout pas initialiser avec -1 (sinon on tentera de casser un bloc hors liste de voxel)
-// --------------------------------
-
 // Caméra
 glm::vec3 camera_position  = glm::vec3(0.0f, 5.0f, 5.0f);
 glm::vec3 camera_target = glm::vec3(1.0f,0.0f,-1.0f);
@@ -93,7 +86,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         isRunning = false;
     }
     // Pour sortir de la caméra à la souris (plus tard ce sera la touche qui ouvre l'inventaire, et donc affiche la souris dans la fenêtre)
-    if (key == GLFW_KEY_E && action == GLFW_PRESS){ 
+    if (key == GLFW_KEY_E && action == GLFW_PRESS){
+        if (!switchToEditor){ 
             if (cameraMousePlayer){
                 cameraMouseLibre = false;
                 cameraMousePlayer = false;
@@ -105,6 +99,19 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 cameraOrbitale = false;
                 cameraLibre = false;
             }
+        }else{
+            if (cameraMouseLibre){
+                cameraMouseLibre = false;
+                cameraMousePlayer = false;
+                cameraOrbitale = false;
+                cameraLibre = true;
+            }else{
+                cameraMouseLibre = true;
+                cameraMousePlayer = false;
+                cameraOrbitale = false;
+                cameraLibre = false;
+            }
+        }
     }
 
     // ---------------------------------------------------------
@@ -241,14 +248,14 @@ void mouse_cursor_callback(GLFWwindow* window, double xpos, double ypos){
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        mouseLeftClickHold = true;
-        previousIdInChunk = -2;
+        terrainControler->setMouseLeftClickHold(true);
+        terrainControler->setPreviousIdInChunk(-2);
     }else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE){
-        mouseLeftClickHold = false;
-        accumulateurDestructionBlock = 0.0f;
-        previousIdInChunk = -2;
+        terrainControler->setMouseLeftClickHold(false);
+        terrainControler->setAccumulation(0.0f);
+        terrainControler->setPreviousIdInChunk(-2);
         glUseProgram(programID);
-        glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), previousIdInChunk);
+        glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), terrainControler->getPreviousIdInChunk());
     }else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
         terrainControler->tryCreateBlock(camera_target, camera_position, handBlock);
     }
@@ -363,7 +370,7 @@ int main(){
     glUseProgram(programID);
     // On envoie ces valeurs par défaut aux shaders
     glUniform1i(glGetUniformLocation(programID, "isShadow"), isShadow);
-    glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), previousIdInChunk);
+    glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), terrainControler->getPreviousIdInChunk());
     
     GLuint ModelMatrix = glGetUniformLocation(programID,"Model");
     // La matrice Model ne sera pas envoyé aux shaders des entités (ça ne sert à rien)
@@ -466,34 +473,7 @@ int main(){
 
         terrainControler->drawTerrain();
 
-        // Il faudra mettre ce bout de code ailleurs si on a le temps
-        if (mouseLeftClickHold){
-            LocalisationBlock lb = terrainControler->tryBreakBlock(camera_target, camera_position);
-            // On part du principe que c'est impossible pour le joueur de viser un bloc d'un chunk à la frame n, puis le bloc équivalent d'un chunk adjacent à la frame n+1
-            // Puisque la portée de son coup est limité à 4 (RANGE dans TerrainControler.hpp)
-            // Du coup, il y a certains tests qu'on peut se permettre d'éviter
-            if (lb.idInChunk == previousIdInChunk){
-                accumulateurDestructionBlock += deltaTime;
-                glUniform1i(glGetUniformLocation(programID, "accumulateur_destruction"), accumulateurDestructionBlock*100); // Dans le shader on utilise cette valeur avec % donc il faut que ce soit un int
-            }else if (lb.idInChunk != -1){ // A la première frame où on maintient le clic gauche, on rentre dans cette condition, et donc on définit à ce moment previousIdInChunk 
-                previousIdInChunk = lb.idInChunk;
-                accumulateurDestructionBlock = 0.0f;
-                glUniform1i(glGetUniformLocation(programID, "accumulateur_destruction"), accumulateurDestructionBlock*100); // On renvoie l'accumulation ici pour bien reprendre l'animation de 0 (sinon on voyait l'ancienne état de destruction s'afficher pendant une frame)
-                glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), previousIdInChunk); // On envoie l'indice du voxel visé aux shaders (pour savoir où appliquer la texture de destruction)
-            }else{
-                accumulateurDestructionBlock = 0.0f;
-                previousIdInChunk = -2;
-                glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), previousIdInChunk);
-            }
-
-            // Si on est en mode créatif, on vérifie si on vise bien un bloc (c'est qui causait la segfault)
-            if ((modeJeu && previousIdInChunk != -2)|| accumulateurDestructionBlock >= 1.0f){ // En mode créatif, les blocs se cassent directement
-                terrainControler->breakBlock(lb);
-                accumulateurDestructionBlock = 0.0f;
-                // Si on voulait être précis, ici il aurait fallu remettre à jour previousIdInChunk en rappelant tryBreakBlock
-                // Mais ce n'est pas nécéssaire, ce sera fait seulement avec une frame de retard (pas trop grave)
-            }
-        }
+        terrainControler->checkHoldLeftClick(camera_position, camera_target, deltaTime, modeJeu, programID);
 
         // Affichage de la skybox
         skybox->drawSkybox(Model, Projection, View);
@@ -556,6 +536,11 @@ int main(){
         }
 
         if (!switchToEditor && imgui->getInEditor()){
+            cameraMouseLibre = true;
+            cameraMousePlayer = false;
+            cameraOrbitale = false;
+            cameraLibre = false;
+
             switchToEditor = true;
             delete terrainControler; // On supprime l'ancien terrain (on perd donc les modfications faites dessus)
             terrainControler = new TerrainControler(); // On génère un unique chunk     

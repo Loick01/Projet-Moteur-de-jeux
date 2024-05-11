@@ -20,9 +20,12 @@ class TerrainControler{
         int planeHeight; // Pour simplifier on bloque cette valeur à 1
         std::vector<Chunk*> listeChunks;
         int typeChunk; // Chunk plein (0), Chunk sinus (1), Chunk plat (2), Chunk procédural (3)
-        int seedTerrain; // 1000
-        int octave; // 4
+        int seedTerrain; 
+        int octave;
         MapGenerator *mg;
+        float accumulateurDestructionBlock;
+        bool mouseLeftClickHold;
+        int previousIdInChunk; 
 
     public :
         TerrainControler(int planeWidth, int planeLength, int planeHeight, int typeChunk, int seedTerrain, int octave, std::vector<std::string> nomStructure);
@@ -38,5 +41,10 @@ class TerrainControler{
         void breakBlock(LocalisationBlock lb);
         void tryCreateBlock(glm::vec3 camera_target, glm::vec3 camera_position, int typeBlock);
         void drawTerrain();
-        void saveStructure(char* nameStructure);
+        void saveStructure(std::string filePath);
+        void checkHoldLeftClick(glm::vec3 camera_position, glm::vec3 camera_target, float deltaTime, bool modeJeu, GLuint programID);
+        void setMouseLeftClickHold(bool mouseLeftClickHold);
+        int getPreviousIdInChunk();
+        void setPreviousIdInChunk(int previousIdInChunk);
+        void setAccumulation(float accumulation);
 };

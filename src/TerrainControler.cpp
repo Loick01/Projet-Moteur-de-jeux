@@ -7,6 +7,9 @@ TerrainControler::TerrainControler(int planeWidth, int planeLength, int planeHei
     this->typeChunk = typeChunk;
     this->seedTerrain = seedTerrain;
     this->octave = octave;
+    this->accumulateurDestructionBlock = 0.0f;
+    this->mouseLeftClickHold = false;
+    this->previousIdInChunk = -2; // Attention à ne surtout pas initialiser avec -1 (sinon on tentera de casser un bloc hors liste de voxel)
 
     // Chargement des structures
     std::vector<Structure> structures;
@@ -177,10 +180,13 @@ void TerrainControler::drawTerrain(){
     }
 }
 
-void TerrainControler::saveStructure(char* nameStructure){
-    std::string filePath = nameStructure;
+void TerrainControler::saveStructure(std::string filePath){
     filePath = "../Structures/" + filePath + ".txt";
     std::ofstream fileStructure(filePath);
+
+    if (!fileStructure.is_open()) {
+        std::cerr << "Erreur : impossible d'ouvrir le fichier. Vérifiez le nom donné au fichier\n";
+    }
 
     // On récupère l'unique chunk du terrain (car on est en mode édition)
     Chunk *c = this->listeChunks[0];
@@ -193,4 +199,50 @@ void TerrainControler::saveStructure(char* nameStructure){
         }
     }
     fileStructure.close();
+}
+
+void TerrainControler::checkHoldLeftClick(glm::vec3 camera_position, glm::vec3 camera_target, float deltaTime, bool modeJeu, GLuint programID){
+    if (this->mouseLeftClickHold){
+        LocalisationBlock lb = this->tryBreakBlock(camera_target, camera_position);
+        // On part du principe que c'est impossible pour le joueur de viser un bloc d'un chunk à la frame n, puis le bloc équivalent d'un chunk adjacent à la frame n+1
+        // Puisque la portée de son coup est limité à 4 (RANGE dans TerrainControler.hpp)
+        // Du coup, il y a certains tests qu'on peut se permettre d'éviter
+        if (lb.idInChunk == this->previousIdInChunk){
+            this->accumulateurDestructionBlock += deltaTime;
+            glUniform1i(glGetUniformLocation(programID, "accumulateur_destruction"), this->accumulateurDestructionBlock*100); // Dans le shader on utilise cette valeur avec % donc il faut que ce soit un int
+        }else if (lb.idInChunk != -1){ // A la première frame où on maintient le clic gauche, on rentre dans cette condition, et donc on définit à ce moment previousIdInChunk 
+            this->previousIdInChunk = lb.idInChunk;
+            this->setAccumulation(0.0f);
+            glUniform1i(glGetUniformLocation(programID, "accumulateur_destruction"), this->accumulateurDestructionBlock*100); // On renvoie l'accumulation ici pour bien reprendre l'animation de 0 (sinon on voyait l'ancienne état de destruction s'afficher pendant une frame)
+            glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), this->previousIdInChunk); // On envoie l'indice du voxel visé aux shaders (pour savoir où appliquer la texture de destruction)
+        }else{
+            this->setAccumulation(0.0f);
+            this->previousIdInChunk = -2;
+            glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), this->previousIdInChunk);
+        }
+
+        // Si on est en mode créatif, on vérifie si on vise bien un bloc (c'est qui causait la segfault)
+        if ((modeJeu && this->previousIdInChunk != -2)|| this->accumulateurDestructionBlock >= 1.0f){ // En mode créatif, les blocs se cassent directement
+            this->breakBlock(lb);
+            this->accumulateurDestructionBlock = 0.0f;
+            // Si on voulait être précis, ici il aurait fallu remettre à jour previousIdInChunk en rappelant tryBreakBlock
+            // Mais ce n'est pas nécéssaire, ce sera fait seulement avec une frame de retard (pas trop grave)
+        }
+    }
+}
+
+void TerrainControler::setMouseLeftClickHold(bool mouseLeftClickHold){
+    this->mouseLeftClickHold = mouseLeftClickHold;
+}
+
+int TerrainControler::getPreviousIdInChunk(){
+    return this->previousIdInChunk;
+}
+
+void TerrainControler::setPreviousIdInChunk(int previousIdInChunk){
+    this->previousIdInChunk = previousIdInChunk;
+}
+
+void TerrainControler::setAccumulation(float accumulation){
+    this->accumulateurDestructionBlock = accumulation;
 }

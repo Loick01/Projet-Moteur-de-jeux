@@ -11,7 +11,7 @@ class ParamsWindow{
         bool renduFilaire;
         TerrainControler *terrainControler;
         bool inEditor;
-        static char nameStructure[128]; // On met cet attribut en static pour que le texte saisi reste le même entre 2 frames
+        static char nameStructure[512]; // On met cet attribut en static pour que le texte saisi reste le même entre 2 frames
     public:
         ParamsWindow(GLFWwindow* window, int style, TerrainControler *terrainControler);
         ~ParamsWindow();
