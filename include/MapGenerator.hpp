@@ -10,6 +10,7 @@ class MapGenerator{
         int octave;
     public:
         MapGenerator(int wMap, int hMap, int seed, int octave);
+        MapGenerator();
         ~MapGenerator();
         float generatePerlinNoise(float x, float y);
         void generateImage();

@@ -17,6 +17,10 @@ MapGenerator::MapGenerator(int wMap, int hMap, int seed, int octave){
   this->octave = octave;
 }
 
+MapGenerator::MapGenerator(){
+  // Vide (il permet de régler le problème avec la supression du terrain en mode éditeur)
+}
+
 MapGenerator::~MapGenerator(){
   std::cout << "Destructeur de MapGenerator\n";
 }

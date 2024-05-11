@@ -1,6 +1,6 @@
 #include <TerrainControler.hpp>
 
-TerrainControler::TerrainControler(int planeWidth, int planeLength, int planeHeight, int typeChunk, int seedTerrain, int octave){
+TerrainControler::TerrainControler(int planeWidth, int planeLength, int planeHeight, int typeChunk, int seedTerrain, int octave, std::vector<std::string> nomStructure){
     this->planeWidth = planeWidth;
     this->planeLength = planeLength; 
     this->planeHeight = planeHeight;
@@ -10,16 +10,12 @@ TerrainControler::TerrainControler(int planeWidth, int planeLength, int planeHei
 
     // Chargement des structures
     std::vector<Structure> structures;
-    std::ifstream tree_1_StructureFile("../Structures/Tree.txt");
-    structures.push_back(Chunk::readFile(tree_1_StructureFile));
-    std::ifstream tree_2_StructureFile("../Structures/Tree_2.txt");
-    structures.push_back(Chunk::readFile(tree_2_StructureFile));
-    std::ifstream houseStructureFile("../Structures/House_1.txt");
-    structures.push_back(Chunk::readFile(houseStructureFile));
+    for (int i = 0 ; i < nomStructure.size() ; i++){
+        std::ifstream fileStructure(nomStructure[i]);
+        structures.push_back(Chunk::readFile(fileStructure));
+        fileStructure.close();
+    }
     Chunk::setListeStructures(structures);
-    tree_1_StructureFile.close();
-    tree_2_StructureFile.close();
-    houseStructureFile.close();
 
     this->mg = new MapGenerator(this->planeWidth, this->planeLength, this->seedTerrain, this->octave); 
     this->mg->generateImage();
@@ -27,6 +23,16 @@ TerrainControler::TerrainControler(int planeWidth, int planeLength, int planeHei
     unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
     this->buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
     stbi_image_free(dataPixels);
+}
+
+// Ce deuxième constructeur ne sera appelé que pour créer le terrain utilisé par le mode éditeur
+TerrainControler::TerrainControler(){
+    // On est obligé de définir les 3 valeurs ci-dessous
+    this->planeWidth = 1;
+    this->planeLength = 1; 
+    this->planeHeight = 1;
+    this->buildEditorChunk();
+    this->mg = new MapGenerator(); // Pour ne pas poser problème avec le destructeur, on crée un MapGenerator vide 
 }
 
 TerrainControler::~TerrainControler(){
@@ -51,6 +57,14 @@ void TerrainControler::buildPlanChunks(unsigned char* dataPixels, int widthHeigh
             }
         }
     }
+}
+
+void TerrainControler::buildEditorChunk(){
+    // Le terrain dans le mode éditeur est composé d'un unique chunk
+    this->listeChunks.clear();
+    Chunk *c = new Chunk(glm::vec3(-16.0,-16.0,-16.0)); 
+    c->loadChunk();
+    this->listeChunks.push_back(c);
 }
 
 int TerrainControler::getPlaneWidth(){

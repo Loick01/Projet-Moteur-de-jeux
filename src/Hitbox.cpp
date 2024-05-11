@@ -173,3 +173,8 @@ float Hitbox::checkTopAndBottomCollision(bool hasUpdate, float deltaTime, Terrai
     }
     return 0.0f;
 }
+
+// Quand on va passer du mode éditeur au mode normal, il faut réactiver l'invincibilité avant que le joueur ne touche un premier bloc
+void Hitbox::resetCanTakeDamage(){
+    this->canTakeDamage = false;
+}

@@ -4,6 +4,7 @@ ParamsWindow::ParamsWindow(GLFWwindow* window, int style, TerrainControler *terr
     this->style = style;
     this->renduFilaire = false;
     this->terrainControler = terrainControler;
+    this->inEditor = false;
     this->init(window);
     this->useStyle();
 }
@@ -30,6 +31,10 @@ void ParamsWindow::init(GLFWwindow* window){
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
+}
+
+bool ParamsWindow::getInEditor(){
+    return this->inEditor;
 }
 
 void ParamsWindow::draw(){
@@ -108,6 +113,10 @@ void ParamsWindow::draw(){
     ImGui::Spacing();
 
     ImGui::Checkbox("Mode de jeu (créatif/survie)", &modeJeu);
+
+    ImGui::Spacing();
+
+    ImGui::Checkbox("Mode éditeur", &(this->inEditor));
 
     ImGui::Spacing();
     

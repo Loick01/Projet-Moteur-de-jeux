@@ -17,6 +17,11 @@ Chunk::Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int w
     }
 }
 
+Chunk::Chunk(glm::vec3 position){
+    this->position = position;
+    this->buildEditorChunk();
+}
+
 Chunk::~Chunk(){
     std::cout << "Destruction de Chunk\n";
     for (int i = 0 ; i < this->listeVoxels.size() ; i++){
@@ -24,6 +29,23 @@ Chunk::~Chunk(){
     }
     glDeleteBuffers(1, &(this->vertexbuffer));
     glDeleteBuffers(1, &(this->elementbuffer));
+}
+
+void Chunk::buildEditorChunk(){
+    this->listeVoxels.clear();
+    for (int k=0;k<CHUNK_SIZE;k++){
+        for (int j=0;j<CHUNK_SIZE;j++){     
+            for (int i=0;i<CHUNK_SIZE;i++){ 
+                if (i == CHUNK_SIZE/2 && j == CHUNK_SIZE/2 && k == CHUNK_SIZE/2){
+                    Voxel *vox = new Voxel(glm::vec3(0.0,0.0,0.0),STONE_BLOCK); 
+                    vox->setVisible(true);
+                    this->listeVoxels.push_back(vox);
+                }else{
+                    this->listeVoxels.push_back(nullptr);
+                }
+            }
+        }
+    }
 }
 
 void Chunk::buildFullChunk(){

@@ -15,6 +15,7 @@ float lastFrame = 0.0f;
 GLuint programID, programID_HUD,programID_Entity;
 
 bool isImGuiShow = true;
+bool switchToEditor = false;
 
 // --------------------------------
 // Temporaire
@@ -343,7 +344,11 @@ int main(){
     programID_HUD = LoadShaders("../shaders/hud_vertex.vert", "../shaders/hud_frag.frag");
     programID_Entity = LoadShaders("../shaders/entity_vertex.vert", "../shaders/entity_frag.frag");
 
-    terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4);
+    std::vector<std::string> nomStructure;
+    nomStructure.push_back("../Structures/Tree.txt");
+    nomStructure.push_back("../Structures/Tree_2.txt");
+    nomStructure.push_back("../Structures/House_1.txt");
+    terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4, nomStructure);
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f),6.0f, 1.5f);
     hitboxPlayer = player->getHitbox();
 
@@ -493,50 +498,54 @@ int main(){
         // Affichage de la skybox
         skybox->drawSkybox(Model, Projection, View);
 
-        // Gestion des collisions
-        hasUpdate = false;
-        hitboxPlayer->checkJump(&hasUpdate, deltaTime);
-        float damagePlayer = hitboxPlayer->checkTopAndBottomCollision(hasUpdate, deltaTime, terrainControler);
-        if (!modeJeu && damagePlayer != 0.0f){ // En mode survie uniquement
-            player->takeDamage(damagePlayer);
-            hud->updateLife(player->getLife());
-            if (player->getLife() <= 0.0){
-                std::cout << "Vous êtes mort !\n";
-                break; // Le joueur est mort, le programme s'arrête 
+        if (!switchToEditor){
+            // Gestion des collisions
+            hasUpdate = false;
+            hitboxPlayer->checkJump(&hasUpdate, deltaTime);
+            float damagePlayer = hitboxPlayer->checkTopAndBottomCollision(hasUpdate, deltaTime, terrainControler);
+            if (!modeJeu && damagePlayer != 0.0f){ // En mode survie uniquement
+                player->takeDamage(damagePlayer);
+                hud->updateLife(player->getLife());
+                if (player->getLife() <= 0.0){
+                    std::cout << "Vous êtes mort !\n";
+                    break; // Le joueur est mort, le programme s'arrête (en faisant attention à bien nettoyer la mémoire)
+                }
             }
         }
 
-        glUseProgram(programID_Entity);
+        if (!switchToEditor){
+            glUseProgram(programID_Entity);
 
-        // Temporaire --------------------------------------------------------------------
-        if(walkZombie){
-            zombie->walk(zombie->getRootNode(),angleZombie,deltaTime);
-            angleZombie += 6*deltaTime;
-        }else{
-            zombie->reset(zombie->getRootNode());
+            // Temporaire --------------------------------------------------------------------
+            if(walkZombie){
+                zombie->walk(zombie->getRootNode(),angleZombie,deltaTime);
+                angleZombie += 6*deltaTime;
+            }else{
+                zombie->reset(zombie->getRootNode());
+            }
+
+            if (walkCochon){
+                cochon->walkCochon(cochon->getRootNode(), angleCochon, deltaTime);
+                angleCochon += 6*deltaTime;
+            }else{
+                cochon->reset(cochon->getRootNode());
+            }
+
+            if(fightZombie){
+                zombie->attack(zombie->getRootNode(),&fightZombie,&accumulateurAnimation,deltaTime);
+            }
+
+            if(dieZombie){
+                zombie->die(zombie->getRootNode(),&dieZombie,&accumulateurAnimation,deltaTime);
+            }
+            // -------------------------------------------------------------------------------
+
+            glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
+            glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
+
+            zombie->drawEntity(programID_Entity);
+            cochon->drawEntity(programID_Entity);
         }
-
-        if (walkCochon){
-            cochon->walkCochon(cochon->getRootNode(), angleCochon, deltaTime);
-            angleCochon += 6*deltaTime;
-        }else{
-            cochon->reset(cochon->getRootNode());
-        }
-
-        if(fightZombie){
-            zombie->attack(zombie->getRootNode(),&fightZombie,&accumulateurAnimation,deltaTime);
-        }
-
-        if(dieZombie){
-            zombie->die(zombie->getRootNode(),&dieZombie,&accumulateurAnimation,deltaTime);
-        }
-        // -------------------------------------------------------------------------------
-
-        glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
-        glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
-
-        zombie->drawEntity(programID_Entity);
-        cochon->drawEntity(programID_Entity);
 
         // Affichage de l'hud (Attention : Ca doit être la dernière chose à afficher dans la boucle de rendue, pour que l'hud se retrouve au premier plan)
         if (showHud){
@@ -544,6 +553,17 @@ int main(){
             glUseProgram(programID_HUD);
             hud->drawHud();
             glEnable(GL_DEPTH_TEST);
+        }
+
+        if (!switchToEditor && imgui->getInEditor()){
+            switchToEditor = true;
+            delete terrainControler; // On supprime l'ancien terrain (on perd donc les modfications faites dessus)
+            terrainControler = new TerrainControler(); // On génère un unique chunk            
+        }else if (switchToEditor && !(imgui->getInEditor())){
+            switchToEditor = false;
+            delete terrainControler; // On supprime le terrain du mode éditeur
+            terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4, nomStructure); // On revient au terrain initiale
+            hitboxPlayer->resetCanTakeDamage(); // Si le joueur tombe de trop haut, il ne faut pas qu'il meurt au moment où on quitte le mode éditeur
         }
         
         if (isImGuiShow){

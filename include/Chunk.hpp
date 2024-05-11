@@ -35,11 +35,13 @@ class Chunk{
         static std::vector<Structure> structures;
     public:
         Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int widthHeightmap, int heightHeightmap, int posWidthChunk, int posLengthChunk, int seed);
+        Chunk(glm::vec3 position); // Ce deuxième constructeur est utilisé uniquement pour construire le terrain en mode éditeur
         ~Chunk();
         void buildFullChunk();
         void buildFlatChunk();
         void buildSinusChunk();
         void buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, int heightHeightmap, int posWidthChunk, int posLengthChunk, int seed);
+        void buildEditorChunk();
         void loadChunk();
         void drawChunk();
         std::vector<Voxel*> getListeVoxels();

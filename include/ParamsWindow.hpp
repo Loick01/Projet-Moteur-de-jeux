@@ -10,10 +10,12 @@ class ParamsWindow{
         int style; // 0 pour Dark, 1 pour Light, sinon Classic
         bool renduFilaire;
         TerrainControler *terrainControler;
+        bool inEditor;
     public:
         ParamsWindow(GLFWwindow* window, int style, TerrainControler *terrainControler);
         ~ParamsWindow();
         void useStyle();
         void init(GLFWwindow* window);
         void draw();
+        bool getInEditor();
 };
