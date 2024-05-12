@@ -1,9 +1,9 @@
 #include <Player.hpp>
 
-Player::Player(glm::vec3 position, float playerSpeed, float coeffAcceleration){
+Player::Player(glm::vec3 position, float playerHeight, float playerWidth, float playerSpeed, float coeffAcceleration){
     this->stamina = 100.0f;
     this->life = 100.0f;
-    this->hitbox = new Hitbox(position, 21.0f, 7.5f);
+    this->hitbox = new Hitbox(position, playerHeight, playerWidth, 21.0f, 7.5f);
     this->playerSpeed = playerSpeed;
     this->coeffAcceleration = coeffAcceleration;
 }

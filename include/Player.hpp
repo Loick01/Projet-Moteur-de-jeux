@@ -15,7 +15,7 @@ class Player {
         float playerSpeed;
         float coeffAcceleration; // Valeur par laquelle la vitesse est multiplié lorsque le joueur sprinte
     public:
-        Player(glm::vec3 position, float playerSpeed, float coeffAcceleration);
+        Player(glm::vec3 position, float playerHeight, float playerWidth, float playerSpeed, float coeffAcceleration);
         ~Player();
         float getPlayerSpeed();
         float getCoeffAcceleration();

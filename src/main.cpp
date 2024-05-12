@@ -155,25 +155,25 @@ void processInput(GLFWwindow* window){
         glm::vec3 cross_point;
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){ // Déplacement en avant
-            if (hitboxPlayer->getLateralMovePossible(false,0.3f, bottomPlayer, camera_target, camera_up, terrainControler, &cross_point)){
+            if (hitboxPlayer->getLateralMovePossible(false,1.0, camera_target, camera_up, terrainControler, &cross_point)){
                 motion += glm::vec3(camera_target[0],0.0f,camera_target[2]);
                 z_axis = true;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){ // Déplacement vers la gauche
-            if (hitboxPlayer->getLateralMovePossible(true,-0.3f, bottomPlayer, camera_target, camera_up, terrainControler, &cross_point)){
+            if (hitboxPlayer->getLateralMovePossible(true,-1.0, camera_target, camera_up, terrainControler, &cross_point)){
                 motion += glm::normalize(cross_point);
                 x_axis = true;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){ // Déplacement en arrière
-            if (hitboxPlayer->getLateralMovePossible(false,-0.3f, bottomPlayer, camera_target, camera_up, terrainControler, &cross_point)){
+            if (hitboxPlayer->getLateralMovePossible(false,-1.0, camera_target, camera_up, terrainControler, &cross_point)){
                 motion += glm::vec3(camera_target[0],0.0f,camera_target[2])*-1.0f;
                 z_axis = !z_axis;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){ // Déplacement vers la droite
-            if (hitboxPlayer->getLateralMovePossible(true,0.3f, bottomPlayer, camera_target, camera_up, terrainControler, &cross_point)){
+            if (hitboxPlayer->getLateralMovePossible(true,1.0, camera_target, camera_up, terrainControler, &cross_point)){
                 motion += glm::normalize(cross_point);
                 x_axis = !x_axis;
             }
@@ -356,7 +356,7 @@ int main(){
     nomStructure.push_back("../Structures/Tree_2.txt");
     nomStructure.push_back("../Structures/House_1.txt");
     terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4, nomStructure);
-    player = new Player(glm::vec3(-0.5f,10.0f,-0.5f),6.0f, 1.5f);
+    player = new Player(glm::vec3(-0.5f,10.0f,-0.5f), 1.8f, 0.6f, 6.0f, 1.5f); // Le joueur fait 1.8 bloc de haut, et 0.6 bloc de large et de long
     hitboxPlayer = player->getHitbox();
 
     Skybox *skybox = new Skybox();

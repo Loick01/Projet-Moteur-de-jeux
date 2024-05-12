@@ -1,7 +1,22 @@
 #include <Hitbox.hpp>
 
-Hitbox::Hitbox(glm::vec3 position, float gravity, float forceJumpInitial){
-    this->bottomPoint = glm::vec3(position + glm::vec3(0.5f,0.0f,0.5f));
+Hitbox::Hitbox(glm::vec3 position, float heightHitbox, float widthHitbox, float gravity, float forceJumpInitial){
+    this->bottomPoint = glm::vec3(position + glm::vec3(widthHitbox/2,0.0f,widthHitbox/2));
+    this->heightHitbox = heightHitbox;
+    this->widthHitbox = widthHitbox;
+    this->lengthHitbox = widthHitbox; // Même longueur que largeur (d'où la présence de 2 contructeurs)
+    this->canJump = false;
+    this->gravity = gravity;
+    this->forceJump = 0.0f;
+    this->forceJumpInitial = forceJumpInitial;
+    this->canTakeDamage = false;
+}
+
+Hitbox::Hitbox(glm::vec3 position, float heightHitbox, float widthHitbox, float lengthHitbox, float gravity, float forceJumpInitial){
+    this->bottomPoint = glm::vec3(position + glm::vec3(widthHitbox/2,0.0f,widthHitbox/2));
+    this->heightHitbox = heightHitbox;
+    this->widthHitbox = widthHitbox; // On souhaite pouvoir dissocier la longueur et la largeur de la hitbox, dans notre cas pour le cochon 
+    this->lengthHitbox = lengthHitbox;
     this->canJump = false;
     this->gravity = gravity;
     this->forceJump = 0.0f;
@@ -42,23 +57,24 @@ void Hitbox::resetJumpForce(){
 }
 
 // axisToCheck --> true pour Left/Right, false pour Front/Back
-bool Hitbox::getLateralMovePossible(bool axisToCheck,float directionCheck, glm::vec3 bottomPlayer, glm::vec3 camera_target, glm::vec3 camera_up, TerrainControler *terrainControler, glm::vec3 *cross_point){
+// directionCheck --> 1 pour positif, -1 pour négatif
+bool Hitbox::getLateralMovePossible(bool axisToCheck,float directionCheck, glm::vec3 camera_target, glm::vec3 camera_up, TerrainControler *terrainControler, glm::vec3 *cross_point){
     int planeWidth = terrainControler->getPlaneWidth();
     int planeLength = terrainControler->getPlaneLength();
     std::vector<Chunk*> listeChunks = terrainControler->getListeChunks();
     
     std::vector<glm::vec3> points; // On crée les 3 points qui serviront à la détection de la collision
     if (axisToCheck){
-        *cross_point = glm::normalize(glm::cross(camera_target,camera_up))*directionCheck;
+        *cross_point = glm::normalize(glm::cross(camera_target,camera_up))*this->widthHitbox*directionCheck;
     }else{
         glm::vec3 ct = camera_target;
         ct[1] = 0.0f;
-        *cross_point = glm::normalize(ct)*directionCheck;
+        *cross_point = glm::normalize(ct)*this->lengthHitbox*directionCheck; // Attention ici c'est lengthHitbox qu'on utilise et non widthHitbox
     }
-    glm::vec3 collision_point = bottomPlayer+*cross_point;
-    for (int i = 0 ; i < 3 ; i++){
+    glm::vec3 collision_point = this->bottomPoint+*cross_point;
+    for (int i = 0 ; i < 3 ; i++){ // On place 3 points sur la face latérale de la hitbox sur laquelle on regarde s'il y a collision 
         points.push_back(collision_point);
-        collision_point[1] += 0.9;
+        collision_point[1] += this->heightHitbox/3;
     }
 
     bool canMove = true;
@@ -105,7 +121,7 @@ float Hitbox::checkTopAndBottomCollision(bool hasUpdate, float deltaTime, Terrai
     
         if (!this->getCanJump()){ // Collision vers le haut (temporaire, il faudra faire plus propre)
             glm::vec3 pPlayerTop = pPlayer;
-            pPlayerTop[1] += 1.8; // Attention à bien mettre une hitbox plus haute que la position de la caméra (sinon on peut voir parfois à travers des blocs)
+            pPlayerTop[1] += this->heightHitbox; // Attention à bien mettre une hitbox plus haute que la position de la caméra (sinon on peut voir parfois à travers des blocs)
             int NL = floor(pPlayerTop[0]) + 16*planeWidth;
             int NH = floor(pPlayerTop[1]) + 16;
             int NP = floor(pPlayerTop[2]) + 16*planeLength;
