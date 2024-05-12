@@ -2,11 +2,18 @@
 
 char ParamsWindow::nameStructure[512]; // Permet d'éviter les erreurs de lien à la compilation
 
-ParamsWindow::ParamsWindow(GLFWwindow* window, int style, TerrainControler *terrainControler){
+ParamsWindow::ParamsWindow(GLFWwindow* window, int style, TerrainControler *terrainControler, Player *player){
     this->style = style;
     this->renduFilaire = false;
     this->terrainControler = terrainControler;
+    this->mg = terrainControler->getMapGenerator();
     this->inEditor = false;
+    this->speedPlayer = player->getRefToSpeed();
+    this->posJoueur = player->getHitbox()->getRefToBottomPoint();
+    this->planeWidth = terrainControler->getRefToPlaneWidth();
+    this->planeLength = terrainControler->getRefToPlaneLength();
+    this->seedTerrain = terrainControler->getRefToSeedTerrain();
+    this->octave = terrainControler->getRefToOctave();
     this->init(window);
     this->useStyle();
 }
@@ -60,11 +67,11 @@ void ParamsWindow::draw(){
 
     if(!this->inEditor){
 
-        //ImGui::Text("Position : %.2f / %.2f / %.2f", bottomPointPlayer[0], bottomPointPlayer[1], bottomPointPlayer[2]);
+        ImGui::Text("Position : %.2f / %.2f / %.2f", (*posJoueur)[0], (*posJoueur)[1], (*posJoueur)[2]);
 
         ImGui::Spacing();
 
-        //ImGui::SliderFloat("Vitesse Joueur", &playerSpeed, 0.0, 50.0);
+        ImGui::SliderFloat("Vitesse Joueur", this->speedPlayer, 0.0, 50.0);
 
         ImGui::Spacing();
 
@@ -139,56 +146,47 @@ void ParamsWindow::draw(){
             }
         }
     }else{
-        /*
-        if (ImGui::SliderInt("Longueur terrain", &planeWidth, 1, 32)){
-            mg->setWidthMap(planeWidth);
-            mg->generateImage();
-            dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
-            buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+        if (ImGui::SliderInt("Longueur terrain", this->planeWidth, 1, 32)){
+            this->mg->setWidthMap(*(this->planeWidth));
+            this->mg->generateImage();
+            int widthHeightmap, heightHeightmap, channels;
+            unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
+            this->terrainControler->buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+            stbi_image_free(dataPixels);
         }
-        */
 
         ImGui::Spacing();
 
-        /*
-        if (ImGui::SliderInt("Largeur", &planeLength, 1, 32)){
-            mg->setHeightMap(planeLength);
-            mg->generateImage();
-            dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
-            buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+        if (ImGui::SliderInt("Largeur terrain", this->planeLength, 1, 32)){
+            this->mg->setHeightMap(*(this->planeLength));
+            this->mg->generateImage();
+            int widthHeightmap, heightHeightmap, channels;
+            unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
+            this->terrainControler->buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+            stbi_image_free(dataPixels);
         }
-        */
 
         ImGui::Spacing();
 
-        /*
-        if(ImGui::SliderInt("Seed de génération", &seedTerrain, 0, 10000)){
-            mg->setSeed(seedTerrain);
+        if(ImGui::SliderInt("Seed de génération", this->seedTerrain, 0, 10000)){
+            this->mg->setSeed(*(this->seedTerrain));
         }
-        */
 
         ImGui::Spacing();
 
-        /*
-        if(ImGui::SliderInt("Nombre d'octaves", &octave, 1, 10)){
-            mg->setOctave(octave);
+        if(ImGui::SliderInt("Nombre d'octaves", this->octave, 1, 10)){
+            this->mg->setOctave(*(this->octave));
         }
-        */
 
         ImGui::Spacing();
 
-        /*
         if (ImGui::Button("Utiliser la seed et le nombre d'octaves")){
-            mg->generateImage();
-            dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
-            buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+            this->mg->generateImage();
+            int widthHeightmap, heightHeightmap, channels;
+            unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
+            this->terrainControler->buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+            stbi_image_free(dataPixels);
         }
-        */
-
-        // Pour simplifier, on limite à un seul chunk de haut
-        //if (ImGui::SliderInt("Hauteur", &planeHeight, 1, 8)){
-        //    buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
-        //}
 
         ImGui::Spacing();
 

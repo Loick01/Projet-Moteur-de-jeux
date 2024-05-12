@@ -51,6 +51,10 @@ std::vector<Chunk*> TerrainControler::getListeChunks(){
 }
 
 void TerrainControler::buildPlanChunks(unsigned char* dataPixels, int widthHeightmap, int heightHeightmap){
+    for (int i = 0 ; i < this->listeChunks.size() ; i++){
+        delete this->listeChunks[i];
+    }
+    this->listeChunks.clear();
     for (int i = 0 ; i < this->planeWidth ; i++){
         for (int j = 0 ; j < this->planeLength ; j++){
             for (int k = 0 ; k < this->planeHeight ; k++){
@@ -73,11 +77,23 @@ void TerrainControler::buildEditorChunk(){
 int TerrainControler::getPlaneWidth(){
     return this->planeWidth;
 }
+int* TerrainControler::getRefToPlaneWidth(){
+    return &(this->planeWidth);
+}
 int TerrainControler::getPlaneLength(){
     return this->planeLength;
 }
+int* TerrainControler::getRefToPlaneLength(){
+    return &(this->planeLength);
+}
 int TerrainControler::getPlaneHeight(){
     return this->planeHeight;
+}
+int* TerrainControler::getRefToSeedTerrain(){
+    return &(this->seedTerrain);
+}
+int* TerrainControler::getRefToOctave(){
+    return &(this->octave);
 }
 
 LocalisationBlock TerrainControler::tryBreakBlock(glm::vec3 camera_target, glm::vec3 camera_position){
@@ -245,4 +261,8 @@ void TerrainControler::setPreviousIdInChunk(int previousIdInChunk){
 
 void TerrainControler::setAccumulation(float accumulation){
     this->accumulateurDestructionBlock = accumulation;
+}
+
+MapGenerator* TerrainControler::getMapGenerator(){
+    return this->mg;
 }

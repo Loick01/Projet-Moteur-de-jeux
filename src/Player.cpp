@@ -37,6 +37,10 @@ float Player::getPlayerSpeed(){
     return this->playerSpeed;
 }
 
+float* Player::getRefToSpeed(){
+    return &(this->playerSpeed);
+}
+
 float Player::getCoeffAcceleration(){
     return this->coeffAcceleration;
 }

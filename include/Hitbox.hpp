@@ -22,6 +22,7 @@ class Hitbox{
         Hitbox(glm::vec3 position, float heightHitbox, float widthHitbox, float lengthHitbox, float gravity, float forceJumpInitial);
         ~Hitbox();
         glm::vec3 getBottomPoint();
+        glm::vec3* getRefToBottomPoint();
         void move(glm::vec3 motion);
         bool getCanJump();
         void setCanJump(bool canJump);

@@ -35,8 +35,12 @@ class TerrainControler{
         void buildPlanChunks(unsigned char* dataPixels, int widthHeightmap, int heightHeightmap);
         void buildEditorChunk();
         int getPlaneWidth();
+        int* getRefToPlaneWidth();
         int getPlaneLength();
+        int* getRefToPlaneLength();
         int getPlaneHeight();
+        int* getRefToSeedTerrain();
+        int* getRefToOctave();
         LocalisationBlock tryBreakBlock(glm::vec3 camera_target, glm::vec3 camera_position);
         void breakBlock(LocalisationBlock lb);
         void tryCreateBlock(glm::vec3 camera_target, glm::vec3 camera_position, int typeBlock);
@@ -47,4 +51,5 @@ class TerrainControler{
         int getPreviousIdInChunk();
         void setPreviousIdInChunk(int previousIdInChunk);
         void setAccumulation(float accumulation);
+        MapGenerator* getMapGenerator();
 };

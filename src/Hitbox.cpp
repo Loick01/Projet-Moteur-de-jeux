@@ -32,6 +32,10 @@ glm::vec3 Hitbox::getBottomPoint(){
     return this->bottomPoint;
 }
 
+glm::vec3* Hitbox::getRefToBottomPoint(){
+    return &(this->bottomPoint);
+}
+
 void Hitbox::move(glm::vec3 motion){
     this->bottomPoint += motion;
 }
@@ -191,6 +195,7 @@ float Hitbox::checkTopAndBottomCollision(bool hasUpdate, float deltaTime, Terrai
 }
 
 // Quand on va passer du mode éditeur au mode normal, il faut réactiver l'invincibilité avant que le joueur ne touche un premier bloc
+// Aussi quand on change le terrain via ImGui, il vaut mieux s'assurer que le joueur ne prendra pas dégâts à l'apparition
 void Hitbox::resetCanTakeDamage(){
     this->canTakeDamage = false;
 }

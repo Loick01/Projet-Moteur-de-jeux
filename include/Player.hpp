@@ -18,6 +18,7 @@ class Player {
         Player(glm::vec3 position, float playerHeight, float playerWidth, float playerSpeed, float coeffAcceleration);
         ~Player();
         float getPlayerSpeed();
+        float* getRefToSpeed();
         float getCoeffAcceleration();
         void applyAcceleration(bool b);
         float getStamina();

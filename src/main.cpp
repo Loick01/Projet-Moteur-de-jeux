@@ -381,7 +381,7 @@ int main(){
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    ParamsWindow *imgui = new ParamsWindow(window, 0, terrainControler); 
+    ParamsWindow *imgui = new ParamsWindow(window, 0, terrainControler, player); 
 
     // Chargement des textures
     GLint atlasTexture = loadTexture2DFromFilePath("../Textures/Blocks/atlas.png");
