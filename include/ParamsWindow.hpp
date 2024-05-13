@@ -18,12 +18,14 @@ class ParamsWindow{
         int *seedTerrain;
         int *octave;
         bool inEditor;
+        Hitbox* hitboxPlayer; // Nécessaire pour désactiver les dégâts de chutes après un changement de terrain
         static char nameStructure[512]; // On met cet attribut en static pour que le texte saisi reste le même entre 2 frames
     public:
         ParamsWindow(GLFWwindow* window, int style, TerrainControler *terrainControler, Player *player);
         ~ParamsWindow();
         void useStyle();
         void init(GLFWwindow* window);
+        void modifTerrain();
         void draw();
         bool getInEditor();
         void attachNewTerrain(TerrainControler *terrainControler);

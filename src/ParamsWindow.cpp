@@ -14,6 +14,7 @@ ParamsWindow::ParamsWindow(GLFWwindow* window, int style, TerrainControler *terr
     this->planeLength = terrainControler->getRefToPlaneLength();
     this->seedTerrain = terrainControler->getRefToSeedTerrain();
     this->octave = terrainControler->getRefToOctave();
+    this->hitboxPlayer = player->getHitbox();
     this->init(window);
     this->useStyle();
 }
@@ -22,6 +23,9 @@ ParamsWindow::~ParamsWindow(){
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+    // Les champs qui sont dans cette classe sont en grande partie des pointeurs vers des champs
+    // d'autres classes, ils seront supprimés dans leurs classes respectives
+    // Il n'y a donc rien d'autre à delete ici
 }
 
 void ParamsWindow::useStyle(){
@@ -44,6 +48,15 @@ void ParamsWindow::init(GLFWwindow* window){
 
 bool ParamsWindow::getInEditor(){
     return this->inEditor;
+}
+
+void ParamsWindow::modifTerrain(){
+    this->mg->generateImage();
+    int widthHeightmap, heightHeightmap, channels;
+    unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
+    this->terrainControler->buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
+    stbi_image_free(dataPixels);
+    this->hitboxPlayer->resetCanTakeDamage(); // Le joueur ne prends pas de dégâts de chute s'il tombe de trop haut au moment du changement de terrain
 }
 
 void ParamsWindow::draw(){
@@ -148,22 +161,14 @@ void ParamsWindow::draw(){
     }else{
         if (ImGui::SliderInt("Longueur terrain", this->planeWidth, 1, 32)){
             this->mg->setWidthMap(*(this->planeWidth));
-            this->mg->generateImage();
-            int widthHeightmap, heightHeightmap, channels;
-            unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
-            this->terrainControler->buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
-            stbi_image_free(dataPixels);
+            this->modifTerrain();
         }
 
         ImGui::Spacing();
 
         if (ImGui::SliderInt("Largeur terrain", this->planeLength, 1, 32)){
             this->mg->setHeightMap(*(this->planeLength));
-            this->mg->generateImage();
-            int widthHeightmap, heightHeightmap, channels;
-            unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
-            this->terrainControler->buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
-            stbi_image_free(dataPixels);
+            this->modifTerrain();
         }
 
         ImGui::Spacing();
@@ -181,11 +186,7 @@ void ParamsWindow::draw(){
         ImGui::Spacing();
 
         if (ImGui::Button("Utiliser la seed et le nombre d'octaves")){
-            this->mg->generateImage();
-            int widthHeightmap, heightHeightmap, channels;
-            unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);
-            this->terrainControler->buildPlanChunks(dataPixels, widthHeightmap, heightHeightmap);
-            stbi_image_free(dataPixels);
+            this->modifTerrain();
         }
 
         ImGui::Spacing();
@@ -206,4 +207,10 @@ void ParamsWindow::draw(){
 
 void ParamsWindow::attachNewTerrain(TerrainControler *terrainControler){
     this->terrainControler = terrainControler;
+    // Attention à bien récupérer les références de la nouvelle instance de TerrainControler
+    this->mg = terrainControler->getMapGenerator();
+    this->planeWidth = terrainControler->getRefToPlaneWidth();
+    this->planeLength = terrainControler->getRefToPlaneLength();
+    this->seedTerrain = terrainControler->getRefToSeedTerrain();
+    this->octave = terrainControler->getRefToOctave();
 }

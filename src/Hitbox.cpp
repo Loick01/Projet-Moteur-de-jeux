@@ -157,11 +157,11 @@ float Hitbox::checkTopAndBottomCollision(bool hasUpdate, float deltaTime, Terrai
                     this->forceJump*=-0.85;
                 }else{
                     this->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
-                    if (this->canTakeDamage && this->forceJump <= -14.0f){
+                    if (this->canTakeDamage && this->forceJump <= -12.0f){
                         float d = this->forceJump;
                         this->forceJump = 0.0f;
                         this->setCanJump(true);
-                        return pow(d + 14.0, 2); // On reverra plus tard le calcul des dégâts si on a le temps
+                        return pow(d + 12.0, 2); // On reverra plus tard le calcul des dégâts si on a le temps
                     }
                     this->forceJump = 0.0f;
                     this->setCanJump(true);
@@ -176,11 +176,11 @@ float Hitbox::checkTopAndBottomCollision(bool hasUpdate, float deltaTime, Terrai
             }else{
                 if (pPlayer[1] != ceil(pPlayer[1])){
                     this->move(glm::vec3(0.f,ceil(pPlayer[1]) - pPlayer[1],0.f));
-                    if (this->canTakeDamage && this->forceJump <= -14.0f){
+                    if (this->canTakeDamage && this->forceJump <= -12.0f){
                         float d = this->forceJump;
                         this->forceJump = 0.0f;
                         this->setCanJump(true);
-                        return pow(d + 14.0, 2); // On reverra plus tard le calcul des dégâts si on a le temps
+                        return pow(d + 12.0, 2); // On reverra plus tard le calcul des dégâts si on a le temps
                     }
                 }
                 this->forceJump = 0.0f;
