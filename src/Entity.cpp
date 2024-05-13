@@ -163,8 +163,8 @@ void Entity::createZombie(Node* node, glm::vec3 position){
     rightArmZombie->nodeID=3;
     leftLegZombie->nodeID=4;
     rightLegZombie->nodeID=5;
-    this->setPave(chestZombie,glm::vec3(0.6,0.8,0.3), glm::vec3(0,0.8,0)+ position);
-    this->setPave(headZombie,glm::vec3(0.6,0.6,0.6), glm::vec3(0,1.5,0)+ position);
+    this->setPave(chestZombie,glm::vec3(0.6,0.75,0.3), glm::vec3(0,0.82,0)+ position);
+    this->setPave(headZombie,glm::vec3(0.5,0.5,0.5), glm::vec3(0,1.45,0)+ position);
     this->setPave(leftArmZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(0.45,0.8,0)+ position);
     this->setPave(rightArmZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(-0.45,0.8,0)+ position);
     this->setPave(leftLegZombie,glm::vec3(0.3,0.8,0.3), glm::vec3(0.15,0.05,0)+ position);
