@@ -50,6 +50,7 @@ bool walkZombie=false;
 bool walkCochon=false;
 bool fightZombie=false;
 bool dieZombie=false;
+bool rotation=false;
 float accumulateurAnimation = 0.0f; // Va servir à faire animations indépendantes du nombre de frame
 // --------------------------------
 
@@ -133,6 +134,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     // Animation du cochon
     if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){ 
             walkCochon = !walkCochon;
+    }
+
+    // rotation d'une entity
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS){ 
+            rotation = !rotation;
     }
     // ---------------------------------------------------------
 }
@@ -354,6 +360,8 @@ int main(){
     std::vector<std::string> nomStructure;
     nomStructure.push_back("../Structures/Tree.txt");
     nomStructure.push_back("../Structures/Tree_2.txt");
+    nomStructure.push_back("../Structures/Tree_3.txt");
+
     nomStructure.push_back("../Structures/House_1.txt");
     terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4, nomStructure);
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f), 1.8f, 0.6f, 6.0f, 1.5f); // Le joueur fait 1.8 bloc de haut, et 0.6 bloc de large et de long
@@ -415,9 +423,9 @@ int main(){
     lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
 
     // Temporaire : Création des entités
-    Entity *zombie = new Entity(0, 1,glm::vec3(3,1.4,3), 3.0f);
+    Entity *zombie = new Entity(0, 1,glm::vec3(3,1.4,3), 3.0f,2.1f,0.8f,0.0f); // valeur temporaire de hit box
     zombie->loadEntity();
-    Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f);
+    Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f,0.6f,0.4f,0.8f);  // valeur temporaire de hit box
     zombie->loadEntity();
     cochon->loadEntity();
 
@@ -506,7 +514,7 @@ int main(){
 
             if (walkCochon){
                 cochon->walkCochon(cochon->getRootNode(), angleCochon, deltaTime);
-                angleCochon += 6*deltaTime;
+                angleCochon += 4*deltaTime;
             }else{
                 cochon->reset(cochon->getRootNode());
             }
@@ -518,13 +526,17 @@ int main(){
             if(dieZombie){
                 zombie->die(zombie->getRootNode(),&dieZombie,&accumulateurAnimation,deltaTime);
             }
+
+            if(rotation){
+                zombie->rotateEntity(2*deltaTime);
+            }
             // -------------------------------------------------------------------------------
 
             glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
             glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
 
-            zombie->drawEntity(programID_Entity, 0); // 0 pour zombie
-            cochon->drawEntity(programID_Entity, 1); // 1 pour cochon
+            zombie->drawEntity(programID_Entity, 0,deltaTime,terrainControler); // 0 pour zombie
+            cochon->drawEntity(programID_Entity, 1,deltaTime,terrainControler); // 1 pour cochon
         }
 
         // Affichage de l'hud (Attention : Ca doit être la dernière chose à afficher dans la boucle de rendue, pour que l'hud se retrouve au premier plan)

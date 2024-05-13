@@ -44,7 +44,7 @@ vec2 texCoords[48] = vec2[48](
     vec2(32.0/44.0,0.5),
     vec2(32.0/44.0,0.25),
 
-    Pour le cochon
+    //Pour le cochon
     // Head (nodeID = 0)
     vec2(0.0,1.0),
     vec2(8.0/44.0,1.0),

@@ -64,6 +64,7 @@ void TerrainControler::buildPlanChunks(unsigned char* dataPixels, int widthHeigh
             }
         }
     }
+    srand(time(NULL));
 }
 
 void TerrainControler::buildEditorChunk(){

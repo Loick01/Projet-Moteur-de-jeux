@@ -1,15 +1,22 @@
 #include <Entity.hpp>
 
-Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity){ // type = 0 pour zombie, 1 pour cochon
+
+Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth,float entityLenght ){ // type = 0 pour zombie, 1 pour cochon
     this->node = new Node;
     this->node->nodeID = nodeID;
     this->node->transformation = new Transform();
     this->speedEntity = speedEntity;
+    this->mouvement.angle=0.0f;
+    this->angleOfVue=0;
+    this->isMoving=false;
+    this->type=type;
 
     if (type==0){
         this->createZombie(this->node,pos);
+        this->hitbox = new Hitbox(pos+glm::vec3(0,-0.4,0), entityHeight, entityWidth, 21.0f, 7.5f);
     }else if (type == 1){
         this->createCochon(this->node,pos);
+        this->hitbox = new Hitbox(pos, entityHeight, entityWidth,entityLenght,21.0f, 7.5f);
     }
 }
 
@@ -28,7 +35,47 @@ void Entity::loadEntity(){
     this->loadBufferNode(this->node);
 }
 
-void Entity::drawEntity(GLuint programID_Entity, int numEntity){
+void Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime,TerrainControler *terrainControler){
+    if(!isMoving && rand()%100==0){
+        this->mouvement.time = 1.0f + rand()%10;
+        this->mouvement.direction[0]= -1.0f + ((rand()%21)/10.0f);
+        this->mouvement.direction[2]= -1.0f + ((rand()%21)/10.0f);
+        this->mouvement.direction=glm::normalize(this->mouvement.direction);
+        glm::vec2 v = glm::vec2(this->mouvement.direction[0],this->mouvement.direction[2]);
+        glm::vec2 u = glm::vec2(cos(angleOfVue),sin(angleOfVue));
+        this->mouvement.toReach = acos(glm::dot(u,v)/cos(angleOfVue));
+        this->isMoving=true;
+    }else if(isMoving){
+        //this->isMoving=false;
+        if(this->mouvement.time<=0){
+            this->isMoving=false;
+            this->reset(this->node);
+        }
+        if(this->angleOfVue<=this->mouvement.toReach){
+            this->rotateEntity(2*deltaTime);
+        }else if(this->angleOfVue>=this->mouvement.toReach){
+            this->rotateEntity(-2*deltaTime);
+        }
+        // this->hitbox->move(this->mouvement.direction*deltaTime);
+        // this->node->transformation->addVelocity(this->mouvement.direction*deltaTime);
+        
+        if(this->type==0){
+            this->mouvement.angle += 6*deltaTime;
+            this->walk(this->node,this->mouvement.angle,deltaTime);
+        }
+        if(this->type==1){
+            this->mouvement.angle += 4*deltaTime;
+            this->walkCochon(this->node,this->mouvement.angle,deltaTime);
+        }
+        this->mouvement.time -= deltaTime;
+    
+    }
+
+    glm::vec3 initialPos = this->hitbox->getBottomPoint();
+    this->hitbox->checkTopAndBottomCollision(false,deltaTime,terrainControler);
+    glm::vec3 targetPos = this->hitbox->getBottomPoint();
+    this->node->transformation->addVelocity(glm::vec3(0.0f,targetPos[1]-initialPos[1],0.0f));
+
     glUniform1i(glGetUniformLocation(programID_Entity,"numEntity"), numEntity);
     this->sendNodeToShader(this->node,programID_Entity,glm::mat4(1.0f));
 }
@@ -148,6 +195,19 @@ void Entity::sendNodeToShader(Node *node,GLuint programID_Entity,glm::mat4 paren
     for(int i=0;i<node->fils.size();i++){
         sendNodeToShader(node->fils[i],programID_Entity,matTransfo);
     }
+}
+void Entity::rotateEntity(float angleRotation){
+
+    this->angleOfVue+=angleRotation;
+    if(this->angleOfVue>2*M_PI)angleOfVue=0;
+    if(this->angleOfVue<0)angleOfVue=2*M_PI;
+    glm::mat4 matTransfoChest = this->node->transformation->getTransfoMat4();
+
+    matTransfoChest = glm::translate(matTransfoChest,this->node->fils[1]->center);
+    matTransfoChest = glm::rotate(matTransfoChest,angleRotation,glm::vec3(0.f,1.0f,0.0f));
+    matTransfoChest = glm::translate(matTransfoChest,-this->node->fils[1]->center);
+
+    this->node->transformation = new Transform(matTransfoChest);
 }
 
 void Entity::createZombie(Node* node, glm::vec3 position){
@@ -270,8 +330,9 @@ void Entity::walk(Node* node,float angle,float deltaTime){ // Le paramètre node
     float angleLeg1 = sin(angle);
     float angleLeg2 = sin(angle+M_PI);
 
+    glm::mat4 matTransfoArm = node->fils[2]->transformation->getTransfoMat4();
     // Les 2 bras ont la même transformation
-    glm::mat4 matTransfoArm = glm::translate(glm::mat4(1.0f),node->fils[2]->center+glm::vec3(0.45,1.2,0));
+    matTransfoArm = glm::translate(glm::mat4(1.0f),node->fils[2]->center+glm::vec3(0.45,1.2,0));
     matTransfoArm = glm::rotate(matTransfoArm,(float)-M_PI/1.9f,glm::vec3(1.f,0.0f,0.0f));
     matTransfoArm = glm::translate(matTransfoArm,-node->fils[2]->center-glm::vec3(0.45,1.2,0));
     
@@ -283,7 +344,8 @@ void Entity::walk(Node* node,float angle,float deltaTime){ // Le paramètre node
     matTransfoLeg2 = glm::rotate(matTransfoLeg2, angleLeg2,glm::vec3(1.f,0.0f,0.0f));
     matTransfoLeg2 = glm::translate(matTransfoLeg2,-node->fils[5]->center-glm::vec3(0.15,0.4,0));
 
-    node->transformation->addVelocity(glm::vec3(0,0,this->speedEntity*deltaTime));
+    this->hitbox->move(this->mouvement.direction*deltaTime*this->speedEntity);
+    node->transformation->addVelocity(this->mouvement.direction*deltaTime*this->speedEntity);
     node->fils[4]->transformation = new Transform(matTransfoLeg1);
     node->fils[5]->transformation = new Transform(matTransfoLeg2);
     node->fils[3]->transformation = new Transform(matTransfoArm);

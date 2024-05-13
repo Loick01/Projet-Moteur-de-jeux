@@ -3,6 +3,14 @@
 #include <Headers.hpp>
 
 class Transform; // Déclaration anticipée
+class TerrainControler;
+
+struct Mouvement{
+    float time;
+    glm::vec3 direction;
+    float angle;
+    float toReach;
+};
 
 struct Node{
     std::vector<unsigned short> indices; // Indices des triangles concaténés dans une liste
@@ -22,11 +30,16 @@ class Entity{
     private:
         Node *node;
         float speedEntity;
+        Hitbox *hitbox;
+        bool isMoving;
+        Mouvement mouvement;
+        float angleOfVue;
+        int type;
     public:
-        Entity(int type, int ID,glm::vec3 pos, float speedEntity);
+        Entity(int type, int ID,glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth, float entityLenght);
         ~Entity();
         void loadEntity();
-        void drawEntity(GLuint programID_Entity, int numEntity);
+        void drawEntity(GLuint programID_Entity, int numEntity,float deltaTime,TerrainControler *terrainControler);
 
         void loadBufferNode(Node *node);
         void sendNodeToShader(Node *node,GLuint programID_Entity,glm::mat4 parent);
@@ -36,6 +49,8 @@ class Entity{
         void createZombie(Node* node, glm::vec3 position);
         void createCochon(Node* node, glm::vec3 position);
         
+        void rotateEntity(float angle);
+
         void walk(Node* node,float angle, float deltaTime);
         void walkCochon(Node* node,float angle,float deltaTime);
         void reset(Node* node);
