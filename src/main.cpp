@@ -523,8 +523,8 @@ int main(){
             glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
             glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
 
-            zombie->drawEntity(programID_Entity);
-            cochon->drawEntity(programID_Entity);
+            zombie->drawEntity(programID_Entity, 0); // 0 pour zombie
+            cochon->drawEntity(programID_Entity, 1); // 1 pour cochon
         }
 
         // Affichage de l'hud (Attention : Ca doit être la dernière chose à afficher dans la boucle de rendue, pour que l'hud se retrouve au premier plan)

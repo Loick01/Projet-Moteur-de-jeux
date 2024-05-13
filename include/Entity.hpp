@@ -26,7 +26,7 @@ class Entity{
         Entity(int type, int ID,glm::vec3 pos, float speedEntity);
         ~Entity();
         void loadEntity();
-        void drawEntity(GLuint programID_Entity);
+        void drawEntity(GLuint programID_Entity, int numEntity);
 
         void loadBufferNode(Node *node);
         void sendNodeToShader(Node *node,GLuint programID_Entity,glm::mat4 parent);

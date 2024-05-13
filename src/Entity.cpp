@@ -28,7 +28,8 @@ void Entity::loadEntity(){
     this->loadBufferNode(this->node);
 }
 
-void Entity::drawEntity(GLuint programID_Entity){
+void Entity::drawEntity(GLuint programID_Entity, int numEntity){
+    glUniform1i(glGetUniformLocation(programID_Entity,"numEntity"), numEntity);
     this->sendNodeToShader(this->node,programID_Entity,glm::mat4(1.0f));
 }
 
@@ -237,21 +238,26 @@ void Entity::walkCochon(Node* node,float angle,float deltaTime){
     float angle1 = sin(angle);
     float angle2 = sin(angle+M_PI);
 
-    glm::mat4 matTransfoArm1 = glm::translate(glm::mat4(1.0f),node->fils[4]->center+glm::vec3(0.525f,0.1,0.0));
+    glm::mat4 matTransfoArm1= glm::mat4(1.0f);
+    glm::mat4 matTransfoArm2= glm::mat4(1.0f);
+    glm::mat4 matTransfoLeg1= glm::mat4(1.0f);
+    glm::mat4 matTransfoLeg2= glm::mat4(1.0f);
+ 
+    matTransfoArm1 = glm::translate(matTransfoArm1 ,node->fils[4]->center+glm::vec3(-0.2f,0.1,0.0));
     matTransfoArm1 = glm::rotate(matTransfoArm1, angle1,glm::vec3(0.f,0.0f,1.0f));
-    matTransfoArm1 = glm::translate(matTransfoArm1,-node->fils[4]->center-glm::vec3(0.525f,0.1,0.0));
+    matTransfoArm1 = glm::translate(matTransfoArm1,-node->fils[4]->center-glm::vec3(-0.2f,0.1,0.0));
 
-    glm::mat4 matTransfoArm2 = glm::translate(glm::mat4(1.0f),node->fils[5]->center+glm::vec3(0.4-0.125,0.1,0.0));
+    matTransfoArm2 = glm::translate(glm::mat4(1.0f),node->fils[5]->center+glm::vec3(-0.46f,0.1,0.0));
     matTransfoArm2 = glm::rotate(matTransfoArm2, angle2,glm::vec3(0.f,0.0f,1.0f));
-    matTransfoArm2 = glm::translate(matTransfoArm2,-node->fils[5]->center-glm::vec3(0.4-0.125,0.1,0.0));
+    matTransfoArm2 = glm::translate(matTransfoArm2,-node->fils[5]->center-glm::vec3(-0.48f,0.1,0.0));
 
-    glm::mat4 matTransfoLeg1 = glm::translate(glm::mat4(1.0f),node->fils[3]->center+glm::vec3(-0.76f,-0.8,0.0));
+    matTransfoLeg1 = glm::translate(glm::mat4(1.0f),node->fils[3]->center+glm::vec3(-0.02,-0.7,0.0));
     matTransfoLeg1 = glm::rotate(matTransfoLeg1, angle1,glm::vec3(0.f,0.0f,1.0f));
-    matTransfoLeg1 = glm::translate(matTransfoLeg1,-node->fils[3]->center-glm::vec3(-0.76f,-0.8,0.0));
+    matTransfoLeg1 = glm::translate(matTransfoLeg1,-node->fils[3]->center-glm::vec3(-0.02,-0.7,0.0));
 
-    glm::mat4 matTransfoLeg2 = glm::translate(glm::mat4(1.0f),node->fils[2]->center+glm::vec3(-0.34-0.125f,0.0f,0.0));
+    matTransfoLeg2 = glm::translate(glm::mat4(1.0f),node->fils[2]->center+glm::vec3(0.24,0.12f,0.24f));
     matTransfoLeg2 = glm::rotate(matTransfoLeg2, angle2,glm::vec3(0.f,0.0f,1.0f));
-    matTransfoLeg2 = glm::translate(matTransfoLeg2,-node->fils[2]->center-glm::vec3(-0.34-0.125f,0.0f,0.0));
+    matTransfoLeg2 = glm::translate(matTransfoLeg2,-node->fils[2]->center-glm::vec3(0.24,0.12f,0.24f));
 
     node->transformation->addVelocity(glm::vec3(this->speedEntity*deltaTime,0,0.0f));
     node->fils[4]->transformation = new Transform(matTransfoLeg2);
