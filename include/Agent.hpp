@@ -26,4 +26,7 @@ class Agent{
         float getAngleForLeg();
         void timePass(float timeMotion);
         glm::vec3 getDirection();
+        void addToAngleOfView(float angleOfView);
+        float getAngleOfView();
+        float getAngleToReach();
 };

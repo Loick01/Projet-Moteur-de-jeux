@@ -43,7 +43,7 @@ class Entity{
         void createZombie(Node* node, glm::vec3 position);
         void createCochon(Node* node, glm::vec3 position);
         
-        // void rotateEntity(float angle);
+        void rotateEntity(float angleRotation);
 
         void walk(Node* node,float angle, float deltaTime);
         void walkCochon(Node* node,float angle,float deltaTime);

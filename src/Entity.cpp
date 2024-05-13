@@ -40,15 +40,15 @@ void Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime,
         this->agent->createMouvement();
     }else if(this->agent->getIsMoving()){
         if(this->agent->getRemainingTime() <= 0){
+            this->agent->setIsMoving(false);
             this->reset(this->node);
         }
-        /*
-        if(this->angleOfVue<=this->mouvement.toReach){
+        
+        if(this->agent->getAngleOfView() <= this->agent->getAngleToReach()){
             this->rotateEntity(2*deltaTime);
-        }else if(this->angleOfVue>=this->mouvement.toReach){
+        }else if(this->agent->getAngleOfView() >= this->agent->getAngleToReach()){
             this->rotateEntity(-2*deltaTime);
         }
-        */
                 
         this->agent->addToAngleForLeg(this->vitesseRotationLeg*deltaTime);
         if(this->type==0){
@@ -388,12 +388,8 @@ void Entity::die(Node* node, bool *die, float *accumulateurAnimation, float delt
     }
 }
 
-/*
 void Entity::rotateEntity(float angleRotation){
-
-    this->angleOfVue+=angleRotation;
-    if(this->angleOfVue>2*M_PI)angleOfVue=0;
-    if(this->angleOfVue<0)angleOfVue=2*M_PI;
+    this->agent->addToAngleOfView(angleRotation);
     glm::mat4 matTransfoChest = this->node->transformation->getTransfoMat4();
 
     matTransfoChest = glm::translate(matTransfoChest,this->node->fils[1]->center);
@@ -402,7 +398,6 @@ void Entity::rotateEntity(float angleRotation){
 
     this->node->transformation = new Transform(matTransfoChest);
 }
-*/
 
 Node* Entity::getRootNode(){
     return this->node;

@@ -427,9 +427,9 @@ int main(){
     lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
 
     // Temporaire : Création des entités
-    Entity *zombie = new Entity(0, 1,glm::vec3(3,1.4,3), 3.0f,2.1f,0.8f,0.0f, 6); // valeur temporaire de hit box
+    Entity *zombie = new Entity(0, 1,glm::vec3(3,1.4,3), 3.0f,2.1f,0.8f,0.0f, 6); // Valeur temporaire de hitbox
     zombie->loadEntity();
-    Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f,0.6f,0.4f,0.8f, 4);  // valeur temporaire de hit box
+    Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f,0.6f,0.4f,0.8f, 4);  // Valeur temporaire de hitbox
     zombie->loadEntity();
     cochon->loadEntity();
 

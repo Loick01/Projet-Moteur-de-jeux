@@ -2,7 +2,7 @@
 
 Agent::Agent(){
     this->mouvement.angleForLeg = 0.0f;
-    this->angleOfView = 0.0f;
+    this->angleOfView = -M_PI/2; // Ca c'est pour le zombie, pour le cochon se sera sûrement une autre valeur (il faudra mettre un paramètre à ce constructeur pour cette valeur)
     this->isMoving = false;
 }
 
@@ -15,13 +15,11 @@ bool Agent::getIsMoving(){
 }
 
 void Agent::createMouvement(){
-    this->mouvement.timeMotion = 1.0f + rand()%10;
+    this->mouvement.timeMotion = 1.0f + rand()%4;
     this->mouvement.direction[0]= -1.0f + ((rand()%21)/10.0f);
     this->mouvement.direction[2]= -1.0f + ((rand()%21)/10.0f);
     this->mouvement.direction=glm::normalize(this->mouvement.direction);
-    glm::vec2 v = glm::vec2(this->mouvement.direction[0],this->mouvement.direction[2]);
-    glm::vec2 u = glm::vec2(cos(this->angleOfView),sin(this->angleOfView));
-    this->mouvement.angleViewToReach = acos(glm::dot(u,v)/cos(this->angleOfView));
+    this->mouvement.angleViewToReach = acos(this->mouvement.direction[0]);
     this->isMoving=true;
 }
 
@@ -47,4 +45,20 @@ void Agent::timePass(float timeMotion){
 
 glm::vec3 Agent::getDirection(){
     return this->mouvement.direction;
+}
+
+void Agent::addToAngleOfView(float angleOfView){
+    this->angleOfView += angleOfView;
+    /*
+    if(this->angleOfVue>2*M_PI)angleOfVue=0;
+    if(this->angleOfVue<0)angleOfVue=2*M_PI;
+    */
+}
+
+float Agent::getAngleOfView(){
+    return this->angleOfView;
+}
+
+float Agent::getAngleToReach(){
+    return this->mouvement.angleViewToReach;
 }
