@@ -44,6 +44,7 @@ bool isHoldingShift = false;
 
 // --------------------------------
 // Temporaire
+/*
 float angleZombie=0.0f;
 float angleCochon=0.0f;
 bool walkZombie=false;
@@ -52,6 +53,7 @@ bool fightZombie=false;
 bool dieZombie=false;
 bool rotation=false;
 float accumulateurAnimation = 0.0f; // Va servir à faire animations indépendantes du nombre de frame
+*/
 // --------------------------------
 
 int blockInHotbar[9] = {23,29,1,11,12,13,20,26,33}; // Blocs qui sont dans la hotbar
@@ -118,6 +120,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     // ---------------------------------------------------------
     // Joue les animations du zombie et du cochon (temporaire, on utilisera une classe Agent)
     // Marche
+    /*
     if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){ 
             walkZombie = !walkZombie;
     }
@@ -140,6 +143,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS){ 
             rotation = !rotation;
     }
+    */
     // ---------------------------------------------------------
 }
 
@@ -423,9 +427,9 @@ int main(){
     lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
 
     // Temporaire : Création des entités
-    Entity *zombie = new Entity(0, 1,glm::vec3(3,1.4,3), 3.0f,2.1f,0.8f,0.0f); // valeur temporaire de hit box
+    Entity *zombie = new Entity(0, 1,glm::vec3(3,1.4,3), 3.0f,2.1f,0.8f,0.0f, 6); // valeur temporaire de hit box
     zombie->loadEntity();
-    Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f,0.6f,0.4f,0.8f);  // valeur temporaire de hit box
+    Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f,0.6f,0.4f,0.8f, 4);  // valeur temporaire de hit box
     zombie->loadEntity();
     cochon->loadEntity();
 
@@ -505,6 +509,7 @@ int main(){
             glUseProgram(programID_Entity);
 
             // Temporaire --------------------------------------------------------------------
+            /*
             if(walkZombie){
                 zombie->walk(zombie->getRootNode(),angleZombie,deltaTime);
                 angleZombie += 6*deltaTime;
@@ -530,6 +535,7 @@ int main(){
             if(rotation){
                 zombie->rotateEntity(2*deltaTime);
             }
+            */
             // -------------------------------------------------------------------------------
 
             glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);

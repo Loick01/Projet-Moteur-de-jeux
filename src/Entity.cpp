@@ -1,15 +1,13 @@
 #include <Entity.hpp>
 
-
-Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth,float entityLenght ){ // type = 0 pour zombie, 1 pour cochon
+Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth,float entityLenght, int vitesseRotationLeg){ // type = 0 pour zombie, 1 pour cochon
     this->node = new Node;
     this->node->nodeID = nodeID;
     this->node->transformation = new Transform();
     this->speedEntity = speedEntity;
-    this->mouvement.angle=0.0f;
-    this->angleOfVue=0;
-    this->isMoving=false;
     this->type=type;
+    this->agent = new Agent();
+    this->vitesseRotationLeg = vitesseRotationLeg;
 
     if (type==0){
         this->createZombie(this->node,pos);
@@ -29,6 +27,8 @@ Entity::~Entity(){
         glDeleteBuffers(1, &(this->node->fils[i]->vertexbuffer));
         glDeleteBuffers(1, &(this->node->fils[i]->elementbuffer));
     }
+    delete this->agent;
+    delete this->hitbox;
 }
 
 void Entity::loadEntity(){
@@ -36,39 +36,28 @@ void Entity::loadEntity(){
 }
 
 void Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime,TerrainControler *terrainControler){
-    if(!isMoving && rand()%100==0){
-        this->mouvement.time = 1.0f + rand()%10;
-        this->mouvement.direction[0]= -1.0f + ((rand()%21)/10.0f);
-        this->mouvement.direction[2]= -1.0f + ((rand()%21)/10.0f);
-        this->mouvement.direction=glm::normalize(this->mouvement.direction);
-        glm::vec2 v = glm::vec2(this->mouvement.direction[0],this->mouvement.direction[2]);
-        glm::vec2 u = glm::vec2(cos(angleOfVue),sin(angleOfVue));
-        this->mouvement.toReach = acos(glm::dot(u,v)/cos(angleOfVue));
-        this->isMoving=true;
-    }else if(isMoving){
-        //this->isMoving=false;
-        if(this->mouvement.time<=0){
-            this->isMoving=false;
+    if(!(this->agent->getIsMoving()) && rand()%100==0){
+        this->agent->createMouvement();
+    }else if(this->agent->getIsMoving()){
+        if(this->agent->getRemainingTime() <= 0){
             this->reset(this->node);
         }
+        /*
         if(this->angleOfVue<=this->mouvement.toReach){
             this->rotateEntity(2*deltaTime);
         }else if(this->angleOfVue>=this->mouvement.toReach){
             this->rotateEntity(-2*deltaTime);
         }
-        // this->hitbox->move(this->mouvement.direction*deltaTime);
-        // this->node->transformation->addVelocity(this->mouvement.direction*deltaTime);
-        
+        */
+                
+        this->agent->addToAngleForLeg(this->vitesseRotationLeg*deltaTime);
         if(this->type==0){
-            this->mouvement.angle += 6*deltaTime;
-            this->walk(this->node,this->mouvement.angle,deltaTime);
+            this->walk(this->node,this->agent->getAngleForLeg(),deltaTime);
         }
         if(this->type==1){
-            this->mouvement.angle += 4*deltaTime;
-            this->walkCochon(this->node,this->mouvement.angle,deltaTime);
+            this->walkCochon(this->node,this->agent->getAngleForLeg(),deltaTime);
         }
-        this->mouvement.time -= deltaTime;
-    
+        this->agent->timePass(deltaTime);
     }
 
     glm::vec3 initialPos = this->hitbox->getBottomPoint();
@@ -195,19 +184,6 @@ void Entity::sendNodeToShader(Node *node,GLuint programID_Entity,glm::mat4 paren
     for(int i=0;i<node->fils.size();i++){
         sendNodeToShader(node->fils[i],programID_Entity,matTransfo);
     }
-}
-void Entity::rotateEntity(float angleRotation){
-
-    this->angleOfVue+=angleRotation;
-    if(this->angleOfVue>2*M_PI)angleOfVue=0;
-    if(this->angleOfVue<0)angleOfVue=2*M_PI;
-    glm::mat4 matTransfoChest = this->node->transformation->getTransfoMat4();
-
-    matTransfoChest = glm::translate(matTransfoChest,this->node->fils[1]->center);
-    matTransfoChest = glm::rotate(matTransfoChest,angleRotation,glm::vec3(0.f,1.0f,0.0f));
-    matTransfoChest = glm::translate(matTransfoChest,-this->node->fils[1]->center);
-
-    this->node->transformation = new Transform(matTransfoChest);
 }
 
 void Entity::createZombie(Node* node, glm::vec3 position){
@@ -344,8 +320,8 @@ void Entity::walk(Node* node,float angle,float deltaTime){ // Le paramètre node
     matTransfoLeg2 = glm::rotate(matTransfoLeg2, angleLeg2,glm::vec3(1.f,0.0f,0.0f));
     matTransfoLeg2 = glm::translate(matTransfoLeg2,-node->fils[5]->center-glm::vec3(0.15,0.4,0));
 
-    this->hitbox->move(this->mouvement.direction*deltaTime*this->speedEntity);
-    node->transformation->addVelocity(this->mouvement.direction*deltaTime*this->speedEntity);
+    this->hitbox->move(this->agent->getDirection()*deltaTime*this->speedEntity);
+    node->transformation->addVelocity(this->agent->getDirection()*deltaTime*this->speedEntity);
     node->fils[4]->transformation = new Transform(matTransfoLeg1);
     node->fils[5]->transformation = new Transform(matTransfoLeg2);
     node->fils[3]->transformation = new Transform(matTransfoArm);
@@ -393,7 +369,6 @@ void Entity::attack(Node* node, bool *attack, float *accumulateurAnimation, floa
     }
 }
 
-// Peut être revoir l'animation de mort si on a le temps (pour faire plus joli)
 void Entity::die(Node* node, bool *die, float *accumulateurAnimation, float deltaTime){ // Le paramètre node doit être un zombie dans le graphe de scène
     glm::mat4 matTransAll = glm::translate(node->transformation->getTransfoMat4(),node->fils[0]->center-glm::vec3(0,1.6,0));
     matTransAll = glm::rotate(matTransAll,deltaTime*4,glm::vec3(0.f,0.0f,1.0f));
@@ -412,6 +387,22 @@ void Entity::die(Node* node, bool *die, float *accumulateurAnimation, float delt
         *accumulateurAnimation=0.0f;
     }
 }
+
+/*
+void Entity::rotateEntity(float angleRotation){
+
+    this->angleOfVue+=angleRotation;
+    if(this->angleOfVue>2*M_PI)angleOfVue=0;
+    if(this->angleOfVue<0)angleOfVue=2*M_PI;
+    glm::mat4 matTransfoChest = this->node->transformation->getTransfoMat4();
+
+    matTransfoChest = glm::translate(matTransfoChest,this->node->fils[1]->center);
+    matTransfoChest = glm::rotate(matTransfoChest,angleRotation,glm::vec3(0.f,1.0f,0.0f));
+    matTransfoChest = glm::translate(matTransfoChest,-this->node->fils[1]->center);
+
+    this->node->transformation = new Transform(matTransfoChest);
+}
+*/
 
 Node* Entity::getRootNode(){
     return this->node;

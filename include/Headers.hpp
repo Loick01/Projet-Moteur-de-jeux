@@ -38,3 +38,4 @@
 #include <Transform.hpp>
 #include <TerrainControler.hpp>
 #include <ParamsWindow.hpp>
+#include <Agent.hpp>
