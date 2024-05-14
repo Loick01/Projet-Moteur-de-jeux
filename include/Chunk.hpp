@@ -10,6 +10,9 @@
 #define DIAMOND_ORE 19
 #define IRON_ORE 21
 #define STONE_BLOCK 0
+#define SNOW_BLOCK 16
+#define SAND_BLOCK 7
+
 
 struct BlockStructure{
     int infoBlock[4];
@@ -32,7 +35,8 @@ class Chunk{
         GLuint vertexbuffer;
         GLuint elementbuffer;
         GLuint shaderstoragebuffer;
-        static std::vector<Structure> structures;
+        static std::vector<std::vector<Structure>> structures;
+        int ID;
     public:
         Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int widthHeightmap, int heightHeightmap, int posWidthChunk, int posLengthChunk, int seed);
         Chunk(glm::vec3 position); // Ce deuxième constructeur est utilisé uniquement pour construire le terrain en mode éditeur
@@ -50,6 +54,6 @@ class Chunk{
 
         // Pour la génération des structures
         static Structure readFile(std::ifstream &file);
-        static void setListeStructures(std::vector<Structure> liste);
+        static void setListeStructures(std::vector<std::vector<Structure>> liste);
         void buildStructure(int i, int j, int k);
 };

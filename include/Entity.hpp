@@ -6,6 +6,7 @@
 class Transform; 
 class TerrainControler;
 class Agent;
+class Player;
 
 struct Node{
     std::vector<unsigned short> indices; // Indices des triangles concaténés dans une liste
@@ -30,11 +31,12 @@ class Entity{
         int type; // 0 pour zombie, 1 pour cochon
         int vitesseRotationLeg;
         float vitesseRotation;
+        float distancePlayer;
     public:
         Entity(int type, int ID,glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth, float entityLenght, int vitesseRotationLeg, float vitesseRotation);
         ~Entity();
         void loadEntity();
-        void drawEntity(GLuint programID_Entity, int numEntity,float deltaTime,TerrainControler *terrainControler);
+        void drawEntity(GLuint programID_Entity, int numEntity,float deltaTime,TerrainControler *terrainControler, Player *p);
 
         void loadBufferNode(Node *node);
         void sendNodeToShader(Node *node,GLuint programID_Entity,glm::mat4 parent);

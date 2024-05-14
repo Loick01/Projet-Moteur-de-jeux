@@ -1,6 +1,6 @@
 #include <TerrainControler.hpp>
 
-TerrainControler::TerrainControler(int planeWidth, int planeLength, int planeHeight, int typeChunk, int seedTerrain, int octave, std::vector<std::string> nomStructure){
+TerrainControler::TerrainControler(int planeWidth, int planeLength, int planeHeight, int typeChunk, int seedTerrain, int octave, std::vector<std::vector<std::string>> nomStructure){
     this->planeWidth = planeWidth;
     this->planeLength = planeLength; 
     this->planeHeight = planeHeight;
@@ -12,11 +12,15 @@ TerrainControler::TerrainControler(int planeWidth, int planeLength, int planeHei
     this->previousIdInChunk = -2; // Attention à ne surtout pas initialiser avec -1 (sinon on tentera de casser un bloc hors liste de voxel)
 
     // Chargement des structures
-    std::vector<Structure> structures;
+    std::vector<std::vector<Structure>> structures;
     for (int i = 0 ; i < nomStructure.size() ; i++){
-        std::ifstream fileStructure(nomStructure[i]);
-        structures.push_back(Chunk::readFile(fileStructure));
-        fileStructure.close();
+        std::vector<Structure> structuresBiome;
+        for (int j = 0 ; j < nomStructure[i].size() ; j++){
+            std::ifstream fileStructure(nomStructure[i][j]);
+            structuresBiome.push_back(Chunk::readFile(fileStructure));
+            fileStructure.close();
+        }
+        structures.push_back(structuresBiome);
     }
     Chunk::setListeStructures(structures);
 

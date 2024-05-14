@@ -28,7 +28,7 @@ class TerrainControler{
         int previousIdInChunk; 
 
     public :
-        TerrainControler(int planeWidth, int planeLength, int planeHeight, int typeChunk, int seedTerrain, int octave, std::vector<std::string> nomStructure);
+        TerrainControler(int planeWidth, int planeLength, int planeHeight, int typeChunk, int seedTerrain, int octave, std::vector<std::vector<std::string>> nomStructure);
         TerrainControler(); // Ce deuxième constructeur ne sera appelé que pour créer le terrain utilisé par le mode éditeur
         ~TerrainControler();
         std::vector<Chunk*> getListeChunks();

@@ -2,6 +2,7 @@
 
 #include <Headers.hpp>
 
+
 struct Mouvement{
     float timeMotion;
     glm::vec3 direction;
@@ -18,7 +19,7 @@ class Agent{
         Agent();
         ~Agent();
         void resetMouvement();
-        void createMouvement();
+        void createMouvement(glm::vec3 d);
         bool getIsMoving();
         float getRemainingTime();
         void setIsMoving(bool isMoving);
@@ -29,4 +30,5 @@ class Agent{
         void addToAngleOfView(float angleOfView);
         float getAngleOfView();
         float getAngleToReach();
+        void setDirection(glm::vec3 d);
 };

@@ -9,6 +9,7 @@ Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float enti
     this->agent = new Agent();
     this->vitesseRotationLeg = vitesseRotationLeg;
     this->vitesseRotation = vitesseRotation;
+    this->distancePlayer=100;
 
     if (type==0){
         this->createZombie(this->node,pos);
@@ -36,31 +37,52 @@ void Entity::loadEntity(){
     this->loadBufferNode(this->node);
 }
 
-void Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime,TerrainControler *terrainControler){
-    if(!(this->agent->getIsMoving()) && rand()%100==0){
-        this->agent->createMouvement();
-    }else if(this->agent->getIsMoving()){
-        
-        if(this->agent->getAngleOfView() <= this->agent->getAngleToReach()){
-            this->rotateEntity(this->vitesseRotation*deltaTime);
-        }else if(this->agent->getAngleOfView() >= this->agent->getAngleToReach()){
-            this->rotateEntity(-(this->vitesseRotation)*deltaTime);
-        }
-                
-        this->agent->addToAngleForLeg(this->vitesseRotationLeg*deltaTime);
-        if(this->type==0){
-            this->walk(this->node,this->agent->getAngleForLeg(),deltaTime);
-        }
-        if(this->type==1){
-            this->walkCochon(this->node,this->agent->getAngleForLeg(),deltaTime);
-        }
-        this->agent->timePass(deltaTime);
 
-        if(this->agent->getRemainingTime() <= 0){
-            this->agent->setIsMoving(false);
-            this->reset(this->node);
+void Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime,TerrainControler *terrainControler, Player *p){
+
+    this->distancePlayer=sqrt(pow((this->hitbox->getBottomPoint()[0]-p->getHitbox()->getBottomPoint()[0]),2) + pow((this->hitbox->getBottomPoint()[1]-p->getHitbox()->getBottomPoint()[1]),2) +pow((this->hitbox->getBottomPoint()[2]-p->getHitbox()->getBottomPoint()[2]),2));
+    // if(this->distancePlayer<5.0f && this->type==0){
+    //         //printf("alerte\n");
+    //         //printf("distancePlayer = %f\n",this->distancePlayer);
+    //         glm::vec3 d = -glm::vec3(this->hitbox->getBottomPoint()[0]-p->getHitbox()->getBottomPoint()[0],0,this->hitbox->getBottomPoint()[2]-p->getHitbox()->getBottomPoint()[2]);
+    //         this->agent->addToAngleForLeg(this->vitesseRotationLeg*deltaTime);
+    //         this->agent->createMouvement(d);
+    //         this->walk(this->node,this->agent->getAngleForLeg(),deltaTime);
+    //         this->agent->timePass(deltaTime);
+    //         if(this->agent->getRemainingTime() <= 0){
+    //             this->agent->setIsMoving(false);
+    //             this->reset(this->node);
+    //         }
+    //         // this->agent->mouvement.direction=glm::normalize(this->mouvement.direction);
+    // }else{
+        if(!(this->agent->getIsMoving()) && rand()%100==0){
+            this->agent->createMouvement(glm::vec3(-1.0f + ((rand()%21)/10.0f),0,-1.0f + ((rand()%21)/10.0f)));
+        }else if(this->agent->getIsMoving()){
+            glm::vec3 cross_point;
+            // if(this->hitbox->getLateralMovePossible(true,this->agent->getDirection()[0]>0? 1:-1,this->agent->getDirection(),glm::vec3(0,1,0),terrainControler,&cross_point) && (this->hitbox->getLateralMovePossible(false,this->agent->getDirection()[2]>0? 1:-1,this->agent->getDirection(),glm::vec3(0,1,0),terrainControler,&cross_point))){
+                
+                if(this->type==0){
+                    this->walk(this->node,this->agent->getAngleForLeg(),deltaTime);
+                }   
+                if(this->type==1){
+                    this->walkCochon(this->node,this->agent->getAngleForLeg(),deltaTime);
+                }   
+            //}
+            if(this->agent->getAngleOfView() <= this->agent->getAngleToReach()){
+                this->rotateEntity(this->vitesseRotation*deltaTime);
+            }else if(this->agent->getAngleOfView() >= this->agent->getAngleToReach()){
+                this->rotateEntity(-(this->vitesseRotation)*deltaTime);
+            }
+            if(this->agent->getRemainingTime() <= 0){
+                this->agent->setIsMoving(false);
+                this->reset(this->node);
+            }
+            this->agent->addToAngleForLeg(this->vitesseRotationLeg*deltaTime);
+            this->agent->timePass(deltaTime);
         }
-    }
+    
+
+
 
     glm::vec3 initialPos = this->hitbox->getBottomPoint();
     this->hitbox->checkTopAndBottomCollision(false,deltaTime,terrainControler);

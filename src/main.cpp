@@ -56,7 +56,7 @@ float accumulateurAnimation = 0.0f; // Va servir à faire animations indépendan
 */
 // --------------------------------
 
-int blockInHotbar[9] = {23,29,1,11,12,13,20,26,33}; // Blocs qui sont dans la hotbar
+int blockInHotbar[9] = {23,11,12,16,9,13,20,26,33}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
 int handBlock = blockInHotbar[indexHandBlock]; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris)
 
@@ -361,12 +361,28 @@ int main(){
     programID_HUD = LoadShaders("../shaders/hud_vertex.vert", "../shaders/hud_frag.frag");
     programID_Entity = LoadShaders("../shaders/entity_vertex.vert", "../shaders/entity_frag.frag");
 
-    std::vector<std::string> nomStructure;
-    nomStructure.push_back("../Structures/Tree.txt");
-    nomStructure.push_back("../Structures/Tree_2.txt");
-    nomStructure.push_back("../Structures/Tree_3.txt");
+    std::vector<std::string> structureBiome0;
+    structureBiome0.push_back("../Structures/Tree.txt");
+    structureBiome0.push_back("../Structures/Tree_2.txt");
+    structureBiome0.push_back("../Structures/Tree_3.txt");
+    structureBiome0.push_back("../Structures/House_1.txt");
 
-    nomStructure.push_back("../Structures/House_1.txt");
+    std::vector<std::string> structureBiome1;
+    structureBiome1.push_back("../Structures/Pillone.txt");
+
+    std::vector<std::string> structureBiome2;
+    structureBiome2.push_back("../Structures/Glace.txt");
+    structureBiome2.push_back("../Structures/Sapin.txt");
+
+    std::vector<std::vector<std::string>> nomStructure;
+
+    nomStructure.push_back(structureBiome0);
+    nomStructure.push_back(structureBiome1);
+    nomStructure.push_back(structureBiome2);
+
+
+
+
     terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4, nomStructure);
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f), 1.8f, 0.6f, 6.0f, 1.5f); // Le joueur fait 1.8 bloc de haut, et 0.6 bloc de large et de long
     hitboxPlayer = player->getHitbox();
@@ -427,11 +443,10 @@ int main(){
     lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
 
     // Temporaire : Création des entités
-    Entity *zombie = new Entity(0, 1,glm::vec3(3,1.4,3), 3.0f,2.1f,0.8f,0.0f, 6, 6.0); // Valeur temporaire de hitbox
+    Entity *zombie = new Entity(0, 1,glm::vec3(3,1.4,3), 3.0f,2.1f,0.5f,0.5f, 6, 6.0); // Valeur temporaire de hitbox
     zombie->loadEntity();
-    Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f,0.6f,0.4f,0.8f, 4, 2.0);  // Valeur temporaire de hitbox
-    zombie->loadEntity();
-    cochon->loadEntity();
+    // Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f,0.6f,0.4f,0.8f, 4, 2.0);  // Valeur temporaire de hitbox
+    // cochon->loadEntity();
 
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -541,8 +556,8 @@ int main(){
             glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
             glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
 
-            zombie->drawEntity(programID_Entity, 0,deltaTime,terrainControler); // 0 pour zombie
-            cochon->drawEntity(programID_Entity, 1,deltaTime,terrainControler); // 1 pour cochon
+            zombie->drawEntity(programID_Entity, 0,deltaTime,terrainControler,player); // 0 pour zombie
+            //cochon->drawEntity(programID_Entity, 1,deltaTime,terrainControler,player); // 1 pour cochon
         }
 
         // Affichage de l'hud (Attention : Ca doit être la dernière chose à afficher dans la boucle de rendue, pour que l'hud se retrouve au premier plan)
@@ -595,7 +610,7 @@ int main(){
     delete player;
     delete window_object;
     delete zombie;
-    delete cochon;
+    //delete cochon;
     glfwTerminate();
     return 0;
 }

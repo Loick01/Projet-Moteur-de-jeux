@@ -2,10 +2,11 @@
 
 #define CHUNK_SIZE 32
 
-std::vector<Structure> Chunk::structures; // Permet d'éviter les erreurs de lien à la compilation
+std::vector<std::vector<Structure>> Chunk::structures; // Permet d'éviter les erreurs de lien à la compilation
 
 Chunk::Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int widthHeightmap, int heightHeightmap, int posWidthChunk, int posLengthChunk, int seed){
     this->position = position;
+    this->ID=rand()%3;
     if (typeChunk==0){
         this->buildFullChunk();
     }else if (typeChunk==1){
@@ -125,10 +126,24 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
                 if (k <= ((int)dataPixels[indInText])){ 
                     int typeBlock = rand() % 500;
                     int sizeVein = rand() % 3;
-                    Voxel *vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k>=(int)dataPixels[indInText]-(2+rand()%4) ? DIRT_BLOCK : (typeBlock==0?DIAMOND_ORE:(typeBlock<10?IRON_ORE:STONE_BLOCK))); 
+                    Voxel *vox;
+                    if(this->ID==0){
+                        vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k>=(int)dataPixels[indInText]-(2+rand()%4) ? DIRT_BLOCK : (typeBlock==0?DIAMOND_ORE:(typeBlock<10?IRON_ORE:STONE_BLOCK))); 
+                    }else if(this->ID==1){
+                        vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k>=(int)dataPixels[indInText]-(2+rand()%4) ? SAND_BLOCK : (typeBlock==0?DIAMOND_ORE:(typeBlock<10?IRON_ORE:STONE_BLOCK))); 
+                    }else if(this->ID==2){
+                        vox = new Voxel(glm::vec3(this->position[0]+i,this->position[1]+k,this->position[2]+j),k>=(int)dataPixels[indInText]-(2+rand()%4) ? SNOW_BLOCK : (typeBlock==0?DIAMOND_ORE:(typeBlock<10?IRON_ORE:STONE_BLOCK))); 
+                    }
+                    
                     if (k==(int)dataPixels[indInText]){
                         vox->setVisible(true);
-                        vox->setId(GRASS_BLOCK);
+                        if(this->ID==0){
+                            vox->setId(GRASS_BLOCK);
+                        }else if(this->ID==1){
+                            vox->setId(SAND_BLOCK);
+                        }else if(this->ID==2){
+                            vox->setId(SNOW_BLOCK);
+                        }
                     }else if (i*j*k==0 || i==CHUNK_SIZE-1 || j==CHUNK_SIZE-1){
                         vox->setVisible(true);
                     }
@@ -206,7 +221,7 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
             for (int i=0;i<CHUNK_SIZE;i++){ 
                 // On s'assure que la structure pourra rentrer dans le chunk
                 int indInText = posLengthChunk*4 + posWidthChunk*4 + j*widthHeightmap*4 + i*4;
-                if (k == ((int)dataPixels[indInText])+1 && i>1 && i<CHUNK_SIZE-2 && j>1 && j<CHUNK_SIZE-2 && rand()%100 == 0){ // Pour l'instant, les structures apparaissent aléatoirement
+                if (k == ((int)dataPixels[indInText])+1 && i>1 && i<CHUNK_SIZE-2 && j>1 && j<CHUNK_SIZE-2 && rand()%300 == 0){ // Pour l'instant, les structures apparaissent aléatoirement
                     buildStructure(i,j,k);
                 }
             }
@@ -229,12 +244,12 @@ Structure Chunk::readFile(std::ifstream &file){
     return resStructure;
 }
 
-void Chunk::setListeStructures(std::vector<Structure> liste){
+void Chunk::setListeStructures(std::vector<std::vector<Structure>> liste){
     structures = liste;
 }
 
 void Chunk::buildStructure(int i, int j, int k){
-    Structure to_build = structures[rand()%structures.size()]; // On construit l'une des structures disponibles 
+    Structure to_build = structures[this->ID][rand()%structures[this->ID].size()]; // On construit l'une des structures disponibles 
     for (int n = 0 ; n < to_build.blocks.size() ; n++){
         
         int *infoBlock = to_build.blocks[n].infoBlock;
