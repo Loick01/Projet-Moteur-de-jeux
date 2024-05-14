@@ -38,6 +38,4 @@ class Agent{
         void setAccumulateur(float accumulateurAnimation);
         bool getIsAttacking();
         void setIsAttacking(bool isAttacking);
-   
-
 };

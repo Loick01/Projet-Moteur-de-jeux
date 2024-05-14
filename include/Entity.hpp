@@ -31,9 +31,9 @@ class Entity{
         int type; // 0 pour zombie, 1 pour cochon
         int vitesseRotationLeg;
         float vitesseRotation;
-        float distancePlayer;
+        float damageEntity;
     public:
-        Entity(int type, int ID,glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth, float entityLenght, int vitesseRotationLeg, float vitesseRotation);
+        Entity(int type, int ID,glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth, float entityLenght, int vitesseRotationLeg, float vitesseRotation, float damageEntity);
         ~Entity();
         void loadEntity();
         float drawEntity(GLuint programID_Entity, int numEntity,float deltaTime,TerrainControler *terrainControler, Player *p);

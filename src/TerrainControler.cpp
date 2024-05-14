@@ -104,8 +104,8 @@ int* TerrainControler::getRefToOctave(){
 LocalisationBlock TerrainControler::tryBreakBlock(glm::vec3 camera_target, glm::vec3 camera_position){
     glm::vec3 originPoint = camera_position;
     glm::vec3 direction = normalize(camera_target);
-    for (int k = 1 ; k < RANGE+1 ; k++){ // Trouver une meilleure manière pour détecter le bloc à casser
-    // for (float k = 0.1 ; k < RANGE+1. ; k+=0.1){
+    //for (int k = 1 ; k < RANGE+1 ; k++){ // Trouver une meilleure manière pour détecter le bloc à casser
+    for (float k = 0.1 ; k < RANGE+1. ; k+=0.1){
         glm::vec3 target = originPoint + (float)k*direction;
         int numLongueur = floor(target[0]) + 16*this->planeWidth;
         int numHauteur = floor(target[1]) + 16;

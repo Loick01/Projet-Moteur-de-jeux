@@ -2,7 +2,7 @@
 
 Agent::Agent(){
     this->mouvement.angleForLeg = 0.0f;
-    this->angleOfView = 0; // Ca c'est pour le zombie, pour le cochon se sera sûrement une autre valeur (il faudra mettre un paramètre à ce constructeur pour cette valeur)
+    this->angleOfView = 0;
     this->isMoving = false;
     this->isAttacking = false;
     this->accumulateurAnimation=0.0f;
@@ -20,9 +20,7 @@ void Agent::createMouvement(glm::vec3 d){
     this->mouvement.timeMotion = 1.0f + rand()%4;
     this->mouvement.direction = d;
     this->mouvement.direction=glm::normalize(this->mouvement.direction);
-
     this->mouvement.angleViewToReach = atan2(this->mouvement.direction[0],this->mouvement.direction[2]);
-    
     this->isMoving=true;
 }
 

@@ -1,6 +1,6 @@
 #include <Entity.hpp>
 
-Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth,float entityLenght, int vitesseRotationLeg, float vitesseRotation){ // type = 0 pour zombie, 1 pour cochon
+Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth,float entityLenght, int vitesseRotationLeg, float vitesseRotation, float damageEntity){ // type = 0 pour zombie, 1 pour cochon
     this->node = new Node;
     this->node->nodeID = nodeID;
     this->node->transformation = new Transform();
@@ -9,7 +9,7 @@ Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float enti
     this->agent = new Agent();
     this->vitesseRotationLeg = vitesseRotationLeg;
     this->vitesseRotation = vitesseRotation;
-    this->distancePlayer=100;
+    this->damageEntity = damageEntity;
 
     if (type==0){
         this->createZombie(this->node,pos);
@@ -39,15 +39,16 @@ void Entity::loadEntity(){
 
 
 float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime,TerrainControler *terrainControler, Player *p){
-    float damage=0.0f;
+    float damageFromEntity = 0.0f;
+
     if(!(this->agent->getIsAttacking())){
-        this->distancePlayer=sqrt(pow((this->hitbox->getBottomPoint()[0]-p->getHitbox()->getBottomPoint()[0]),2) + pow((this->hitbox->getBottomPoint()[1]-p->getHitbox()->getBottomPoint()[1]),2) +pow((this->hitbox->getBottomPoint()[2]-p->getHitbox()->getBottomPoint()[2]),2));
+        float distanceToPlayer = sqrt(pow((this->hitbox->getBottomPoint()[0]-p->getHitbox()->getBottomPoint()[0]),2) + pow((this->hitbox->getBottomPoint()[1]-p->getHitbox()->getBottomPoint()[1]),2) +pow((this->hitbox->getBottomPoint()[2]-p->getHitbox()->getBottomPoint()[2]),2));
+
         if(!(this->agent->getIsMoving()) && rand()%100==0){
             this->agent->createMouvement(glm::vec3(-1.0f + ((rand()%21)/10.0f),0,-1.0f + ((rand()%21)/10.0f)));
         }else if(this->agent->getIsMoving()){
             glm::vec3 cross_point;
             // if(this->hitbox->getLateralMovePossible(true,this->agent->getDirection()[0]>0? 1:-1,this->agent->getDirection(),glm::vec3(0,1,0),terrainControler,&cross_point) && (this->hitbox->getLateralMovePossible(false,this->agent->getDirection()[2]>0? 1:-1,this->agent->getDirection(),glm::vec3(0,1,0),terrainControler,&cross_point))){
-                
                 if(this->type==0){
                     this->walk(this->node,this->agent->getAngleForLeg(),deltaTime);
                 }   
@@ -55,11 +56,11 @@ float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime
                     this->walkCochon(this->node,this->agent->getAngleForLeg(),deltaTime);
                 }   
             //}
-            if(this->agent->getAngleOfView() <= this->agent->getAngleToReach()){
-                this->rotateEntity(this->vitesseRotation*deltaTime);
-            }else if(this->agent->getAngleOfView() >= this->agent->getAngleToReach()){
-                this->rotateEntity(-(this->vitesseRotation)*deltaTime);
-            }
+                if(this->agent->getAngleOfView() < this->agent->getAngleToReach() - 0.1){
+                    this->rotateEntity(this->vitesseRotation*deltaTime);
+                }else if(this->agent->getAngleOfView() > this->agent->getAngleToReach() + 0.1){
+                    this->rotateEntity(-(this->vitesseRotation)*deltaTime);
+                }
             if(this->agent->getRemainingTime() <= 0){
                 this->agent->setIsMoving(false);
                 this->reset(this->node);
@@ -68,23 +69,21 @@ float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime
             this->agent->timePass(deltaTime);
         }
 
-        if(this->distancePlayer<5.0f && this->type==0){
-            if(this->distancePlayer<1.0f && this->type==0){
-               
+        // Seul le zombie peut attaquer
+        if(distanceToPlayer < 5.0f && this->type == 0){
+            if(distanceToPlayer < 1.0f){
+                this->agent->setIsMoving(false);
                 this->agent->resetAccumulateur();
                 this->reset(this->node);
-                this->attack(this->node,deltaTime);
                 p->getHitbox()->resetJumpForce();
                 p->getHitbox()->setCanJump(false);
-                damage=10.0f;
+                damageFromEntity = this->damageEntity;
                 this->agent->setIsAttacking(true);
                     
+            }else{
+                glm::vec3 d = -glm::vec3(this->hitbox->getBottomPoint()[0]-p->getHitbox()->getBottomPoint()[0],0,this->hitbox->getBottomPoint()[2]-p->getHitbox()->getBottomPoint()[2]);
+                this->agent->createMouvement(d);
             }
-        }else{
-
-            glm::vec3 d = -glm::vec3(this->hitbox->getBottomPoint()[0]-p->getHitbox()->getBottomPoint()[0],0,this->hitbox->getBottomPoint()[2]-p->getHitbox()->getBottomPoint()[2]);
-            
-            this->agent->createMouvement(d);
         }
             
     }else{
@@ -99,7 +98,7 @@ float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime
 
     glUniform1i(glGetUniformLocation(programID_Entity,"numEntity"), numEntity);
     this->sendNodeToShader(this->node,programID_Entity,glm::mat4(1.0f));
-    return damage;
+    return damageFromEntity;
 }
 
 void Entity::setPave(Node* node, glm::vec3 dimensions, glm::vec3 position) {
