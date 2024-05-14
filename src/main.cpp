@@ -42,21 +42,7 @@ bool hasUpdate; // A rentrer dans la classe Hitbox plus tard
 bool isRunning = false;
 bool isHoldingShift = false;
 
-// --------------------------------
-// Temporaire
-/*
-float angleZombie=0.0f;
-float angleCochon=0.0f;
-bool walkZombie=false;
-bool walkCochon=false;
-bool fightZombie=false;
-bool dieZombie=false;
-bool rotation=false;
-float accumulateurAnimation = 0.0f; // Va servir à faire animations indépendantes du nombre de frame
-*/
-// --------------------------------
-
-int blockInHotbar[9] = {23,11,12,16,9,13,20,26,33}; // Blocs qui sont dans la hotbar
+int blockInHotbar[9] = {23,11,12,16,9,13,20,34,33}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
 int handBlock = blockInHotbar[indexHandBlock]; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris)
 
@@ -116,35 +102,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             }
         }
     }
-
-    // ---------------------------------------------------------
-    // Joue les animations du zombie et du cochon (temporaire, on utilisera une classe Agent)
-    // Marche
-    /*
-    if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){ 
-            walkZombie = !walkZombie;
-    }
-    // Attaque
-    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){ 
-            fightZombie = !fightZombie;
-    }
-
-    // Meurt
-    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){ 
-            dieZombie = !dieZombie;
-    }
-
-    // Animation du cochon
-    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){ 
-            walkCochon = !walkCochon;
-    }
-
-    // rotation d'une entity
-    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS){ 
-            rotation = !rotation;
-    }
-    */
-    // ---------------------------------------------------------
 }
 
 void processInput(GLFWwindow* window){ 
@@ -368,7 +325,10 @@ int main(){
     structureBiome0.push_back("../Structures/House_1.txt");
 
     std::vector<std::string> structureBiome1;
-    structureBiome1.push_back("../Structures/Pillone.txt");
+    structureBiome1.push_back("../Structures/arche.txt");
+    structureBiome1.push_back("../Structures/cactus_amas.txt");
+    structureBiome1.push_back("../Structures/cactus_simple_1.txt");
+    structureBiome1.push_back("../Structures/cactus_simple_2.txt");
 
     std::vector<std::string> structureBiome2;
     structureBiome2.push_back("../Structures/Glace.txt");
@@ -522,41 +482,10 @@ int main(){
 
         if (!switchToEditor){
             glUseProgram(programID_Entity);
-
-            // Temporaire --------------------------------------------------------------------
-            /*
-            if(walkZombie){
-                zombie->walk(zombie->getRootNode(),angleZombie,deltaTime);
-                angleZombie += 6*deltaTime;
-            }else{
-                zombie->reset(zombie->getRootNode());
-            }
-
-            if (walkCochon){
-                cochon->walkCochon(cochon->getRootNode(), angleCochon, deltaTime);
-                angleCochon += 4*deltaTime;
-            }else{
-                cochon->reset(cochon->getRootNode());
-            }
-
-            if(fightZombie){
-                zombie->attack(zombie->getRootNode(),&fightZombie,&accumulateurAnimation,deltaTime);
-            }
-
-            if(dieZombie){
-                zombie->die(zombie->getRootNode(),&dieZombie,&accumulateurAnimation,deltaTime);
-            }
-
-            if(rotation){
-                zombie->rotateEntity(2*deltaTime);
-            }
-            */
-            // -------------------------------------------------------------------------------
-
             glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
             glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
 
-            float damage=zombie->drawEntity(programID_Entity, 0,deltaTime,terrainControler,player); // 0 pour zombie
+            float damage = zombie->drawEntity(programID_Entity, 0,deltaTime,terrainControler,player); // 0 pour zombie
             if (!modeJeu && damage != 0.0f){ // En mode survie uniquement
                 player->takeDamage(damage);
                 hud->updateLife(player->getLife());

@@ -40,15 +40,15 @@ void main(){
         mat4 mvp = Projection * View * Model;
         gl_Position = mvp * vec4(aPos,1);
         int objectID = dataID[gl_VertexID/24];
-        if (objectID == 13 || objectID == 29){ // Pour avoir des textures différentes sur les faces d'un même bloc (que le bloc d'herbe et le bloc de bûche pour l'instant)
+        if (objectID == 13 || objectID == 29 || objectID == 34){ // Pour avoir des textures différentes sur les faces d'un même bloc (bloc d'herbe, bloc de bûche, bloc de cactus)
                 objectID = min(objectID + (gl_VertexID % 24)/4,objectID+2);
         }
         if (gl_VertexID/24 == indexBlockToBreak){
                 isCurrentlyBreaking = 1.0;
                 destruction_texture_coords = texCoords[gl_VertexID%4];
-                // Dans l'atlas de texture, les destructions commencent à 34 (et on fait augmenter cet indice selon la valeur de l'accumulateur, qui est donnée en uniform)
-                destruction_texture_coords[0] += (34+accumulateur_destruction/10)%5*0.2003;
-                destruction_texture_coords[1] += (34+accumulateur_destruction/10)/5*0.1003; 
+                // Dans l'atlas de texture, les destructions commencent à 37 (et on fait augmenter cet indice selon la valeur de l'accumulateur, qui est donnée en uniform)
+                destruction_texture_coords[0] += (37+accumulateur_destruction/10)%5*0.2003;
+                destruction_texture_coords[1] += (37+accumulateur_destruction/10)/5*0.1003; 
         }else{
                 isCurrentlyBreaking = 0.0;
         }
