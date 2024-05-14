@@ -1,6 +1,6 @@
 #include <Entity.hpp>
 
-Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth,float entityLenght, int vitesseRotationLeg){ // type = 0 pour zombie, 1 pour cochon
+Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth,float entityLenght, int vitesseRotationLeg, float vitesseRotation){ // type = 0 pour zombie, 1 pour cochon
     this->node = new Node;
     this->node->nodeID = nodeID;
     this->node->transformation = new Transform();
@@ -8,6 +8,7 @@ Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float enti
     this->type=type;
     this->agent = new Agent();
     this->vitesseRotationLeg = vitesseRotationLeg;
+    this->vitesseRotation = vitesseRotation;
 
     if (type==0){
         this->createZombie(this->node,pos);
@@ -39,15 +40,11 @@ void Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime,
     if(!(this->agent->getIsMoving()) && rand()%100==0){
         this->agent->createMouvement();
     }else if(this->agent->getIsMoving()){
-        if(this->agent->getRemainingTime() <= 0){
-            this->agent->setIsMoving(false);
-            this->reset(this->node);
-        }
         
         if(this->agent->getAngleOfView() <= this->agent->getAngleToReach()){
-            this->rotateEntity(2*deltaTime);
+            this->rotateEntity(this->vitesseRotation*deltaTime);
         }else if(this->agent->getAngleOfView() >= this->agent->getAngleToReach()){
-            this->rotateEntity(-2*deltaTime);
+            this->rotateEntity(-(this->vitesseRotation)*deltaTime);
         }
                 
         this->agent->addToAngleForLeg(this->vitesseRotationLeg*deltaTime);
@@ -58,6 +55,11 @@ void Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime,
             this->walkCochon(this->node,this->agent->getAngleForLeg(),deltaTime);
         }
         this->agent->timePass(deltaTime);
+
+        if(this->agent->getRemainingTime() <= 0){
+            this->agent->setIsMoving(false);
+            this->reset(this->node);
+        }
     }
 
     glm::vec3 initialPos = this->hitbox->getBottomPoint();

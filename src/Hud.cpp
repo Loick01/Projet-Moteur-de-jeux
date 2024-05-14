@@ -32,7 +32,7 @@ Hud::Hud(int screen_width, int screen_height){
     this->hotbar = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 ,10.0),hotbarWidth,hotbarHeight,0);
     this->select = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 - 4.0,6.0),selectSize,selectSize,4); // Par défaut, le sélecteur est placé sur le premier élément de la hotbar
     this->cursor = createPlaneHud(glm::vec2(screen_width/2.0 - cursorSize/2.0 ,screen_height/2.0 - cursorSize/2.0),cursorSize,cursorSize,8);
-    this->lifeLine = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 + 4.0 , 20.0 + hotbarHeight),hotbarWidth/2 - 18.0,14.0,12);
+    this->lifeLine = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 + 4.0 , 20.0 + hotbarHeight),hotbarWidth/2 - 16.0,14.0,12);
     this->staminaLine = createPlaneHud(glm::vec2(screen_width/2.0+14.0 ,20.0 + hotbarHeight),hotbarWidth/2-18.0,14.0,16);
     this->lifeBar = createPlaneHud(glm::vec2(screen_width/2.0 - hotbarWidth/2.0 ,20.0 + hotbarHeight),hotbarWidth/2-10.0,16.0,20);
     this->staminaBar = createPlaneHud(glm::vec2(screen_width/2.0+10.0 ,20.0 + hotbarHeight),hotbarWidth/2-10.0,16.0,24);
@@ -106,7 +106,7 @@ void Hud::drawHud(){
 
 void Hud::updateLife(float new_life){
     glDeleteBuffers(1, &(this->vertexbuffer)); // Ne pas oublier de supprimer le précédent buffer
-    float new_x = this->screen_width/2.0 - this->hotbarWidth/2.0 + (new_life*this->hotbarWidth/200);
+    float new_x = this->screen_width/2.0 - this->hotbarWidth/2.0 + (new_life*(this->hotbarWidth-16.0)/200);
     this->elements[3].vertices[1].x = new_x;
     this->elements[3].vertices[3].x = new_x;
 
