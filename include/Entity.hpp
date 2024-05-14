@@ -36,7 +36,7 @@ class Entity{
         Entity(int type, int ID,glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth, float entityLenght, int vitesseRotationLeg, float vitesseRotation);
         ~Entity();
         void loadEntity();
-        void drawEntity(GLuint programID_Entity, int numEntity,float deltaTime,TerrainControler *terrainControler, Player *p);
+        float drawEntity(GLuint programID_Entity, int numEntity,float deltaTime,TerrainControler *terrainControler, Player *p);
 
         void loadBufferNode(Node *node);
         void sendNodeToShader(Node *node,GLuint programID_Entity,glm::mat4 parent);
@@ -51,7 +51,7 @@ class Entity{
         void walk(Node* node,float angle, float deltaTime);
         void walkCochon(Node* node,float angle,float deltaTime);
         void reset(Node* node);
-        void attack(Node* node, bool *attack, float *accumulateurAnimation, float deltaTime);
+        void attack(Node* node, float deltaTime);
         void die(Node* node, bool *die, float *accumulateurAnimation, float deltaTime);
             
         Node* getRootNode();

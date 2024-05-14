@@ -445,8 +445,8 @@ int main(){
     // Temporaire : Création des entités
     Entity *zombie = new Entity(0, 1,glm::vec3(3,1.4,3), 3.0f,2.1f,0.5f,0.5f, 6, 6.0); // Valeur temporaire de hitbox
     zombie->loadEntity();
-    // Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f,0.6f,0.4f,0.8f, 4, 2.0);  // Valeur temporaire de hitbox
-    // cochon->loadEntity();
+    Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f,0.6f,0.4f,0.8f, 4, 2.0);  // Valeur temporaire de hitbox
+    cochon->loadEntity();
 
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -556,8 +556,18 @@ int main(){
             glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
             glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
 
-            zombie->drawEntity(programID_Entity, 0,deltaTime,terrainControler,player); // 0 pour zombie
-            //cochon->drawEntity(programID_Entity, 1,deltaTime,terrainControler,player); // 1 pour cochon
+            float damage=zombie->drawEntity(programID_Entity, 0,deltaTime,terrainControler,player); // 0 pour zombie
+            if (!modeJeu && damage != 0.0f){ // En mode survie uniquement
+                player->takeDamage(damage);
+                hud->updateLife(player->getLife());
+                if (player->getLife() <= 0.0){
+                    std::cout << "Vous êtes mort !\n";
+                    break; // Le joueur est mort, le programme s'arrête (en faisant attention à bien nettoyer la mémoire)
+                }
+            }
+
+            cochon->drawEntity(programID_Entity, 1,deltaTime,terrainControler,player); // 1 pour cochon
+            
         }
 
         // Affichage de l'hud (Attention : Ca doit être la dernière chose à afficher dans la boucle de rendue, pour que l'hud se retrouve au premier plan)
@@ -610,7 +620,7 @@ int main(){
     delete player;
     delete window_object;
     delete zombie;
-    //delete cochon;
+    delete cochon;
     glfwTerminate();
     return 0;
 }

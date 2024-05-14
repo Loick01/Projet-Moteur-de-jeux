@@ -159,14 +159,14 @@ void ParamsWindow::draw(){
             }
         }
     }else{
-        if (ImGui::SliderInt("Longueur terrain", this->planeWidth, 1, 32)){
+        if (ImGui::SliderInt("Longueur terrain", this->planeWidth, 1, 22)){
             this->mg->setWidthMap(*(this->planeWidth));
             this->modifTerrain();
         }
 
         ImGui::Spacing();
 
-        if (ImGui::SliderInt("Largeur terrain", this->planeLength, 1, 32)){
+        if (ImGui::SliderInt("Largeur terrain", this->planeLength, 1, 22)){
             this->mg->setHeightMap(*(this->planeLength));
             this->modifTerrain();
         }
@@ -179,7 +179,7 @@ void ParamsWindow::draw(){
 
         ImGui::Spacing();
 
-        if(ImGui::SliderInt("Nombre d'octaves", this->octave, 1, 10)){
+        if(ImGui::SliderInt("Nombre d'octaves", this->octave, 1, 7)){
             this->mg->setOctave(*(this->octave));
         }
 

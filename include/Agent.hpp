@@ -15,6 +15,8 @@ class Agent{
         bool isMoving;
         Mouvement mouvement;
         float angleOfView;
+        float accumulateurAnimation;
+        bool isAttacking;
     public :
         Agent();
         ~Agent();
@@ -31,4 +33,11 @@ class Agent{
         float getAngleOfView();
         float getAngleToReach();
         void setDirection(glm::vec3 d);
+        void resetAccumulateur();
+        float getAccumulateur();
+        void setAccumulateur(float accumulateurAnimation);
+        bool getIsAttacking();
+        void setIsAttacking(bool isAttacking);
+   
+
 };

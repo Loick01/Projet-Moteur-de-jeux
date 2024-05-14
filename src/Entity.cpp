@@ -38,23 +38,10 @@ void Entity::loadEntity(){
 }
 
 
-void Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime,TerrainControler *terrainControler, Player *p){
-
-    this->distancePlayer=sqrt(pow((this->hitbox->getBottomPoint()[0]-p->getHitbox()->getBottomPoint()[0]),2) + pow((this->hitbox->getBottomPoint()[1]-p->getHitbox()->getBottomPoint()[1]),2) +pow((this->hitbox->getBottomPoint()[2]-p->getHitbox()->getBottomPoint()[2]),2));
-    // if(this->distancePlayer<5.0f && this->type==0){
-    //         //printf("alerte\n");
-    //         //printf("distancePlayer = %f\n",this->distancePlayer);
-    //         glm::vec3 d = -glm::vec3(this->hitbox->getBottomPoint()[0]-p->getHitbox()->getBottomPoint()[0],0,this->hitbox->getBottomPoint()[2]-p->getHitbox()->getBottomPoint()[2]);
-    //         this->agent->addToAngleForLeg(this->vitesseRotationLeg*deltaTime);
-    //         this->agent->createMouvement(d);
-    //         this->walk(this->node,this->agent->getAngleForLeg(),deltaTime);
-    //         this->agent->timePass(deltaTime);
-    //         if(this->agent->getRemainingTime() <= 0){
-    //             this->agent->setIsMoving(false);
-    //             this->reset(this->node);
-    //         }
-    //         // this->agent->mouvement.direction=glm::normalize(this->mouvement.direction);
-    // }else{
+float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime,TerrainControler *terrainControler, Player *p){
+    float damage=0.0f;
+    if(!(this->agent->getIsAttacking())){
+        this->distancePlayer=sqrt(pow((this->hitbox->getBottomPoint()[0]-p->getHitbox()->getBottomPoint()[0]),2) + pow((this->hitbox->getBottomPoint()[1]-p->getHitbox()->getBottomPoint()[1]),2) +pow((this->hitbox->getBottomPoint()[2]-p->getHitbox()->getBottomPoint()[2]),2));
         if(!(this->agent->getIsMoving()) && rand()%100==0){
             this->agent->createMouvement(glm::vec3(-1.0f + ((rand()%21)/10.0f),0,-1.0f + ((rand()%21)/10.0f)));
         }else if(this->agent->getIsMoving()){
@@ -80,10 +67,31 @@ void Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime,
             this->agent->addToAngleForLeg(this->vitesseRotationLeg*deltaTime);
             this->agent->timePass(deltaTime);
         }
+
+        if(this->distancePlayer<5.0f && this->type==0){
+            if(this->distancePlayer<1.0f && this->type==0){
+               
+                this->agent->resetAccumulateur();
+                this->reset(this->node);
+                this->attack(this->node,deltaTime);
+                p->getHitbox()->resetJumpForce();
+                p->getHitbox()->setCanJump(false);
+                damage=10.0f;
+                this->agent->setIsAttacking(true);
+                    
+            }
+        }else{
+
+            glm::vec3 d = -glm::vec3(this->hitbox->getBottomPoint()[0]-p->getHitbox()->getBottomPoint()[0],0,this->hitbox->getBottomPoint()[2]-p->getHitbox()->getBottomPoint()[2]);
+            
+            this->agent->createMouvement(d);
+        }
+            
+    }else{
+        this->attack(this->node,deltaTime);
+    }
+
     
-
-
-
     glm::vec3 initialPos = this->hitbox->getBottomPoint();
     this->hitbox->checkTopAndBottomCollision(false,deltaTime,terrainControler);
     glm::vec3 targetPos = this->hitbox->getBottomPoint();
@@ -91,6 +99,7 @@ void Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime,
 
     glUniform1i(glGetUniformLocation(programID_Entity,"numEntity"), numEntity);
     this->sendNodeToShader(this->node,programID_Entity,glm::mat4(1.0f));
+    return damage;
 }
 
 void Entity::setPave(Node* node, glm::vec3 dimensions, glm::vec3 position) {
@@ -374,7 +383,8 @@ void Entity::reset(Node* node){ // Le paramètre node doit être un zombie dans 
     node->fils[2]->transformation = new Transform(matTransfoArm);
 }
 
-void Entity::attack(Node* node, bool *attack, float *accumulateurAnimation, float deltaTime){ // Le paramètre node doit être un zombie dans le graphe de scène
+void Entity::attack(Node* node, float deltaTime){ // Le paramètre node doit être un zombie dans le graphe de scène
+    float accumulateurAnimation = this->agent->getAccumulateur();
     float angle = -M_PI/1.9; // Angle en radians (pour toutes les animations il vaudrait mieux que ce soit le cas pour ne pas confondre)
 
     // Les 2 bras ont la même transformation
@@ -385,11 +395,11 @@ void Entity::attack(Node* node, bool *attack, float *accumulateurAnimation, floa
     node->fils[3]->transformation = new Transform(matTransfoArm);
     node->fils[2]->transformation = new Transform(matTransfoArm);
     
-    if(*accumulateurAnimation>0.8f){ // Ici, 0.8 c'est la durée de l'animation (sachant qu'on rajoute deltaTime à l'accumulateur, ce qui garantit l'indépendance entre temps d'animation et nombre de FPS)
-        *attack=false;
-        *accumulateurAnimation=0.0f;
+    if(accumulateurAnimation>0.8f){ // Ici, 0.8 c'est la durée de l'animation (sachant qu'on rajoute deltaTime à l'accumulateur, ce qui garantit l'indépendance entre temps d'animation et nombre de FPS)
+        this->agent->resetAccumulateur();
+        this->agent->setIsAttacking(false);
     }else{
-        *accumulateurAnimation += deltaTime;
+        this->agent->setAccumulateur(this->agent->getAccumulateur()+deltaTime);
     }
 }
 
