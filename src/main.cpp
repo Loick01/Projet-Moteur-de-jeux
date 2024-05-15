@@ -1,8 +1,5 @@
 #include <Headers.hpp>
 
-#define MINIAUDIO_IMPLEMENTATION // Attention à ne pas oublier cette ligne, sinon miniaudio n'est pas correctement inclus
-#include "miniaudio.h"
-
 // Variables partagées avec la fenêtre ImGui
 #include "variables.h"
 
@@ -50,11 +47,8 @@ bool showHud = true;
 int isShadow = 1; // 1 si on utilise les ombres dans le shader, 0 sinon
 bool modeJeu = false; // true pour créatif, false pour survie
 
-std::vector<ma_sound*> listSounds;
-ma_engine engine;
-
-ma_sound* breakBlock;
-ma_sound* createBlock;
+// Cette objet permet de lancer tous les sons qui seront nécéssaire
+Sound *soundManager;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){ 
     glViewport(0,0,width,height);
@@ -251,7 +245,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), terrainControler->getPreviousIdInChunk());
     }else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
         if (terrainControler->tryCreateBlock(camera_target, camera_position, handBlock)){
-            ma_sound_start(createBlock);
+            soundManager->playCreateSound();
         }
     }
 }
@@ -260,24 +254,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     indexHandBlock = (indexHandBlock + (yoffset > 0 ? -1 : 1) + 9) % 9; // 9 emplacements dans la hotbar
     glUniform1i(glGetUniformLocation(programID_HUD, "selectLocation"), indexHandBlock);
     handBlock = blockInHotbar[indexHandBlock];
-}
-
-void playRandomMusic();
-
-// Callback pour détecter la fin de la musique, et en lancer une nouvelle
-void soundEndCallback(void* pUserData, ma_sound* pSound) {
-    playRandomMusic();
-}
-
-void playRandomMusic() {
-    // Choisir un son aléatoirement
-    int randomIndex = std::rand() % listSounds.size();
-    ma_sound* randomSound = listSounds[randomIndex];
-
-    ma_result result = ma_sound_start(randomSound);
-    if (result != MA_SUCCESS) {
-        std::cerr << "Erreur lors de la lecture de la musique avec le code d'erreur: " << result << std::endl;
-    }
 }
 
 int main(){
@@ -314,48 +290,6 @@ int main(){
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
-    // ---------------------------------------------------------
-    // Temporaire : Gestion du son (faire la classe Sound)
-
-    // Initialiser le moteur de miniaudio
-    if (ma_engine_init(NULL, &engine) != MA_SUCCESS) {
-        std::cerr << "Erreur lors de l'initialisation du moteur miniaudio" << std::endl;
-        return -1;
-    }
-
-    std::vector<std::string> pathFileMusic = {
-        "../Sound/BackgroundMusic/black1.mp3",
-        "../Sound/BackgroundMusic/black2.mp3",
-        "../Sound/BackgroundMusic/black3.mp3",
-        "../Sound/BackgroundMusic/black4.mp3",
-        "../Sound/BackgroundMusic/black5.mp3"
-    };
-
-    
-    // Charger les fichiers de musique
-    for (int i = 0 ; i < pathFileMusic.size() ; i++) {
-        ma_sound* sound = new ma_sound;
-
-        if (ma_sound_init_from_file(&engine, pathFileMusic[i].c_str(), 0, NULL, NULL, sound) != MA_SUCCESS) {
-            std::cerr << "Erreur lors de l'initialisation de la musique: " << pathFileMusic[i].c_str() << std::endl;
-            delete sound;
-            continue;
-        }
-        ma_sound_set_end_callback(sound, soundEndCallback, nullptr);
-    
-        listSounds.push_back(sound);
-    }
-
-    createBlock = new ma_sound;
-    breakBlock = new ma_sound;
-    ma_sound_init_from_file(&engine, "../Sound/BlockEffect/breaking.mp3", 0, NULL, NULL, breakBlock);
-    ma_sound_init_from_file(&engine, "../Sound/BlockEffect/placing.mp3", 0, NULL, NULL, createBlock);
-
-    // Jouer une première musique
-    playRandomMusic();
-
-    // ---------------------------------------------------------
-
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
@@ -386,14 +320,14 @@ int main(){
     nomStructure.push_back(structureBiome1);
     nomStructure.push_back(structureBiome2);
 
-
-
-
-    terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4, nomStructure);
+    terrainControler = new TerrainControler(12, 12, 1, 3, 1000, 4, nomStructure);
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f), 1.8f, 0.6f, 6.0f, 1.5f); // Le joueur fait 1.8 bloc de haut, et 0.6 bloc de large et de long
     hitboxPlayer = player->getHitbox();
 
     Skybox *skybox = new Skybox();
+
+    soundManager = new Sound();
+    soundManager->playRandomBackground();
 
     glUseProgram(programID_HUD);
     Hud *hud = new Hud(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -450,9 +384,11 @@ int main(){
 
     std::vector<Entity*> listeEntity;
     for (int i = 0 ; i < 1000 ; i++){
-        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*0.05,1.4,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 10.0));
+        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*0.05f,32.0,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 1.0));
         listeEntity[i]->loadEntity();
     }
+
+    bool playerDie = false;
 
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -508,7 +444,7 @@ int main(){
         terrainControler->drawTerrain();
 
         if (terrainControler->checkHoldLeftClick(camera_position, camera_target, deltaTime, modeJeu, programID)){
-            ma_sound_start(breakBlock);
+            soundManager->playBreakSound();
         }
 
         // Affichage de la skybox
@@ -519,12 +455,14 @@ int main(){
             hasUpdate = false;
             hitboxPlayer->checkJump(&hasUpdate, deltaTime);
             float damagePlayer = hitboxPlayer->checkTopAndBottomCollision(hasUpdate, deltaTime, terrainControler);
-            if (!modeJeu && damagePlayer != 0.0f){ // En mode survie uniquement
+            if (damagePlayer == -1.0){
+                playerDie = true;
+            }else if (!modeJeu && damagePlayer > 0.0f){ // En mode survie uniquement
                 player->takeDamage(damagePlayer);
                 hud->updateLife(player->getLife());
                 if (player->getLife() <= 0.0){
                     std::cout << "Vous êtes mort !\n";
-                    break; // Le joueur est mort, le programme s'arrête (en faisant attention à bien nettoyer la mémoire)
+                    playerDie = true; // On va sortir de la boucle de jeu, et correctement nettoyer la mémoire
                 }
             }
         }
@@ -535,16 +473,26 @@ int main(){
             glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
 
             for (int i = 0 ; i < listeEntity.size() ; i++){
-                float damage = listeEntity[i]->drawEntity(programID_Entity, listeEntity[i]->getType(), deltaTime,terrainControler,player);
-                if (!modeJeu && damage != 0.0f){ // En mode survie uniquement
-                    player->takeDamage(damage);
-                    hud->updateLife(player->getLife());
-                    if (player->getLife() <= 0.0){
-                        std::cout << "Vous êtes mort !\n";
-                        break; // Le joueur est mort, le programme s'arrête (en faisant attention à bien nettoyer la mémoire)
+                if (listeEntity[i] != nullptr){
+                    float damage = listeEntity[i]->drawEntity(programID_Entity, listeEntity[i]->getType(), deltaTime,terrainControler,player);
+                    if (!modeJeu && damage != 0.0f){ // En mode survie uniquement
+                        player->takeDamage(damage);
+                        hud->updateLife(player->getLife());
+                        if (player->getLife() <= 0.0){
+                            std::cout << "Vous êtes mort !\n";
+                            playerDie = true; // On va sortir de la boucle de jeu, et correctement nettoyer la mémoire
+                        }
+                    }
+                    if (listeEntity[i]->getLife() <= 0.0){
+                        delete listeEntity[i];
+                        listeEntity[i] = nullptr;
                     }
                 }
             }
+        }
+
+        if (playerDie){
+            break; // On sort de la boucle de jeu
         }
 
         // Affichage de l'hud (Attention : Ca doit être la dernière chose à afficher dans la boucle de rendue, pour que l'hud se retrouve au premier plan)
@@ -570,7 +518,7 @@ int main(){
         }else if (switchToEditor && !(imgui->getInEditor())){
             switchToEditor = false;
             delete terrainControler; // On supprime le terrain du mode éditeur
-            terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4, nomStructure); // On revient au terrain initiale
+            terrainControler = new TerrainControler(12, 12, 1, 3, 1000, 4, nomStructure); // On revient au terrain initiale
             imgui->attachNewTerrain(terrainControler); // TRES IMPORTANT : C'est ça qui causait la segfault qui m'a fait perdre 4 heures
             hitboxPlayer->resetCanTakeDamage(); // Si le joueur tombe de trop haut, il ne faut pas qu'il meurt au moment où on quitte le mode éditeur
         }
@@ -587,17 +535,6 @@ int main(){
     glDeleteProgram(programID_HUD);
     glDeleteVertexArrays(1, &VertexArrayID);
 
-    ma_sound_uninit(breakBlock);
-    delete breakBlock;
-    ma_sound_uninit(createBlock);
-    delete createBlock;
-
-    for (int i = 0 ; i < listSounds.size() ; i++){
-        ma_sound_uninit(listSounds[i]);
-        delete listSounds[i];
-    }
-    ma_engine_uninit(&engine); // Attention à bien nettoyer la mémoire, sinon segfault
-
     delete imgui;
     delete terrainControler;
     delete skybox;
@@ -605,7 +542,9 @@ int main(){
     delete player;
     delete window_object;
     for (int i = 0 ; i < listeEntity.size() ; i++){
-        delete listeEntity[i];
+        if (listeEntity[i] != nullptr){
+            delete listeEntity[i];
+        }
     }
     glfwTerminate();
     return 0;

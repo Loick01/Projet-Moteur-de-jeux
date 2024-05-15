@@ -61,6 +61,7 @@ add_executable(main
     src/TerrainControler.cpp
     src/ParamsWindow.cpp
     src/Agent.cpp
+    src/Sound.cpp
     )
 
 # Include directories for our project

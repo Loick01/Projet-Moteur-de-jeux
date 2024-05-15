@@ -99,7 +99,7 @@ bool Hitbox::getLateralMovePossible(bool axisToCheck,float directionCheck, glm::
     return canMove;
 }
 
-// Retourne les dégâts subis s'il y en a 
+// Retourne les dégâts subit s'il y en a 
 float Hitbox::checkTopAndBottomCollision(bool hasUpdate, float deltaTime, TerrainControler *terrainControler){
     int planeWidth = terrainControler->getPlaneWidth();
     int planeLength = terrainControler->getPlaneLength();
@@ -111,7 +111,9 @@ float Hitbox::checkTopAndBottomCollision(bool hasUpdate, float deltaTime, Terrai
     int numLongueur = floor(pPlayer[0]) + 16*planeWidth;
     int numHauteur = floor(pPlayer[1]-0.001) + 16;
     int numProfondeur = floor(pPlayer[2]) + 16*planeLength;
-    if (numLongueur < 0 || numLongueur > (planeWidth*32)-1 || numProfondeur < 0 || numProfondeur > (planeLength*32)-1 || numHauteur < 0 || numHauteur > 31){
+    if (numHauteur < -5){
+        return -1.0; // Ici on met une valeur spéciale pour identifier le moment où l'entité est tombé dans le vide
+    }else if (numLongueur < 0 || numLongueur > (planeWidth*32)-1 || numProfondeur < 0 || numProfondeur > (planeLength*32)-1 || numHauteur < 0 || numHauteur > 31){
         // C'est contre_intuitif, mais on ne peut pas juste vérifier si le joueur a déjà sauté.
         // On est obligé d'utiliser un nouveau booléen si on veut l'empêcher de sauter + ne pas le faire subir la gravité 2 fois
         if (!hasUpdate){

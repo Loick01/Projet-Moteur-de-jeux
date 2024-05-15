@@ -16,9 +16,11 @@ Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float enti
     if (type==0){
         this->createZombie(this->node,pos);
         this->hitbox = new Hitbox(pos+glm::vec3(0,-0.4,0), entityHeight, entityWidth, 21.0f, 7.5f);
+        this->life = 10.0f; // 10 pv pour le zombie
     }else if (type == 1){
         this->createCochon(this->node,pos);
         this->hitbox = new Hitbox(pos+glm::vec3(0,-0.4,0), entityHeight, entityWidth,entityLenght,21.0f, 7.5f);
+        this->life = 8.0f; // 8 pv pour le zombie
     }
 }
 
@@ -77,7 +79,7 @@ float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime
                 this->agent->setIsMoving(false);
                 this->agent->resetAccumulateur();
                 this->reset(this->node);
-                p->getHitbox()->resetJumpForce(5);
+                p->getHitbox()->resetJumpForce(2);
                 p->getHitbox()->setCanJump(false);
                 damageFromEntity = this->damageEntity;
                 this->agent->setIsAttacking(true);
@@ -94,7 +96,12 @@ float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime
 
     
     glm::vec3 initialPos = this->hitbox->getBottomPoint();
-    this->hitbox->checkTopAndBottomCollision(false,deltaTime,terrainControler);
+    float damage = this->hitbox->checkTopAndBottomCollision(false,deltaTime,terrainControler);
+    if (damage == -1.0f){
+        this->takeDamage(this->getLife() + 1.0f); // On est sûr de tuer l'entité si elle tombe dans le vide
+    }else if (damage > 0.0f){
+        this->takeDamage(damage);
+    }
     glm::vec3 targetPos = this->hitbox->getBottomPoint();
     this->node->transformation->addVelocity(glm::vec3(0.0f,targetPos[1]-initialPos[1],0.0f));
 
@@ -421,6 +428,14 @@ void Entity::die(Node* node, bool *die, float *accumulateurAnimation, float delt
         *die=false;
         *accumulateurAnimation=0.0f;
     }
+}
+
+void Entity::takeDamage(float damage){
+    this->life -= damage;
+}
+
+float Entity::getLife(){
+    return this->life;
 }
 
 void Entity::rotateEntity(float angleRotation){

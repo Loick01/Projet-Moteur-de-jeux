@@ -28,6 +28,7 @@ class Entity{
         float speedEntity;
         Hitbox *hitbox;
         Agent *agent;
+        float life;
         int type; // 0 pour zombie, 1 pour cochon
         float vitesseRotationLeg;
         float vitesseRotation;
@@ -46,9 +47,11 @@ class Entity{
 
         void createZombie(Node* node, glm::vec3 position);
         void createCochon(Node* node, glm::vec3 position);
+
+        void takeDamage(float damage);
+        float getLife();
         
         void rotateEntity(float angleRotation);
-
         void walk(Node* node,float angle, float deltaTime);
         void walkCochon(Node* node,float angle,float deltaTime);
         void reset(Node* node);
