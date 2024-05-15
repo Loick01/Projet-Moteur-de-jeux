@@ -425,7 +425,7 @@ int main(){
     // Temporaire : Création des entités
     Entity *zombie = new Entity(0, 1,glm::vec3(3,1.4,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 10.0);
     zombie->loadEntity();
-    Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f,0.6f,0.4f,0.8f, 4.0, 2.0, 0.0, 0.0); // Revoir les valeurs pour la hitbox du cochon
+    Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f,0.6f,0.4f,0.8f, 4.0, 6.0, 0.0, 0.0); // Revoir les valeurs pour la hitbox du cochon
     cochon->loadEntity();
 
     // Boucle de rendu

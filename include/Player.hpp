@@ -26,4 +26,5 @@ class Player {
         void takeDamage(float damage);
         float getLife();
         Hitbox* getHitbox();
+        void setHitbox(Hitbox *hitbox);
 };

@@ -18,7 +18,7 @@ class Agent{
         float accumulateurAnimation;
         bool isAttacking;
     public :
-        Agent();
+        Agent(float angleOfView);
         ~Agent();
         void resetMouvement();
         void createMouvement(glm::vec3 d);

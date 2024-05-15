@@ -1,8 +1,8 @@
 #include <Agent.hpp>
 
-Agent::Agent(){
+Agent::Agent(float angleOfView){
     this->mouvement.angleForLeg = 0.0f;
-    this->angleOfView = 0;
+    this->angleOfView = angleOfView;
     this->isMoving = false;
     this->isAttacking = false;
     this->accumulateurAnimation=0.0f;

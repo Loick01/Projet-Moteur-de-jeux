@@ -6,7 +6,8 @@ Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float enti
     this->node->transformation = new Transform();
     this->speedEntity = speedEntity;
     this->type=type;
-    this->agent = new Agent();
+    if(this->type==0)this->agent = new Agent(0.0f);
+    else if (this->type==1)this->agent = new Agent(M_PI/2);
     this->vitesseRotationLeg = vitesseRotationLeg;
     this->vitesseRotation = vitesseRotation;
     this->damageEntity = damageEntity;
@@ -17,7 +18,7 @@ Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float enti
         this->hitbox = new Hitbox(pos+glm::vec3(0,-0.4,0), entityHeight, entityWidth, 21.0f, 7.5f);
     }else if (type == 1){
         this->createCochon(this->node,pos);
-        this->hitbox = new Hitbox(pos, entityHeight, entityWidth,entityLenght,21.0f, 7.5f);
+        this->hitbox = new Hitbox(pos+glm::vec3(0,-0.4,0), entityHeight, entityWidth,entityLenght,21.0f, 7.5f);
     }
 }
 
@@ -327,8 +328,10 @@ void Entity::walkCochon(Node* node,float angle,float deltaTime){
     matTransfoLeg2 = glm::translate(glm::mat4(1.0f),node->fils[2]->center+glm::vec3(0.24,0.12f,0.24f));
     matTransfoLeg2 = glm::rotate(matTransfoLeg2, angle2,glm::vec3(0.f,0.0f,1.0f));
     matTransfoLeg2 = glm::translate(matTransfoLeg2,-node->fils[2]->center-glm::vec3(0.24,0.12f,0.24f));
-
-    node->transformation->addVelocity(glm::vec3(this->speedEntity*deltaTime,0,0.0f));
+    this->hitbox->move(this->agent->getDirection()*deltaTime*this->speedEntity);
+    printf("pose hitbox %f %f %f\n",this->hitbox->getBottomPoint()[0],this->hitbox->getBottomPoint()[1],this->hitbox->getBottomPoint()[2]);
+    printf("direction %f %f %f\n",this->agent->getDirection()[0],this->agent->getDirection()[1],this->agent->getDirection()[2]);
+    node->transformation->addVelocity(this->agent->getDirection()*deltaTime*this->speedEntity);
     node->fils[4]->transformation = new Transform(matTransfoLeg2);
     node->fils[5]->transformation = new Transform(matTransfoLeg1);
     node->fils[3]->transformation = new Transform(matTransfoArm2);

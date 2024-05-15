@@ -33,6 +33,10 @@ Hitbox* Player::getHitbox(){
     return this->hitbox;
 }
 
+void Player::setHitbox(Hitbox *hitbox){
+    this->hitbox=hitbox;
+}
+
 float Player::getPlayerSpeed(){
     return this->playerSpeed;
 }
