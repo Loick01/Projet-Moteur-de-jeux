@@ -74,7 +74,7 @@ void ParamsWindow::draw(){
 
     ImGui::Spacing();
 
-    ImGui::SliderInt("Vitesse caméra", &speedCam, 5, 100);
+    ImGui::SliderInt("Vitesse caméra", &speedCam, 5, 200);
 
     ImGui::Spacing();
 

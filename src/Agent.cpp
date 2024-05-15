@@ -17,7 +17,7 @@ bool Agent::getIsMoving(){
 }
 
 void Agent::createMouvement(glm::vec3 d){
-    this->mouvement.timeMotion = 1.0f + rand()%4;
+    this->mouvement.timeMotion = 1.0f + rand()%2;
     this->mouvement.direction = d;
     this->mouvement.direction=glm::normalize(this->mouvement.direction);
     this->mouvement.angleViewToReach = atan2(this->mouvement.direction[0],this->mouvement.direction[2]);

@@ -29,11 +29,12 @@ class Entity{
         Hitbox *hitbox;
         Agent *agent;
         int type; // 0 pour zombie, 1 pour cochon
-        int vitesseRotationLeg;
+        float vitesseRotationLeg;
         float vitesseRotation;
         float damageEntity;
+        float areaDetection;
     public:
-        Entity(int type, int ID,glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth, float entityLenght, int vitesseRotationLeg, float vitesseRotation, float damageEntity);
+        Entity(int type, int ID,glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth, float entityLenght, float vitesseRotationLeg, float vitesseRotation, float damageEntity, float areaDetection);
         ~Entity();
         void loadEntity();
         float drawEntity(GLuint programID_Entity, int numEntity,float deltaTime,TerrainControler *terrainControler, Player *p);

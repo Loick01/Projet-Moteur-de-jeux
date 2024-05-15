@@ -1,6 +1,6 @@
 #include <Entity.hpp>
 
-Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth,float entityLenght, int vitesseRotationLeg, float vitesseRotation, float damageEntity){ // type = 0 pour zombie, 1 pour cochon
+Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth,float entityLenght, float vitesseRotationLeg, float vitesseRotation, float damageEntity, float areaDetection){ // type = 0 pour zombie, 1 pour cochon
     this->node = new Node;
     this->node->nodeID = nodeID;
     this->node->transformation = new Transform();
@@ -10,6 +10,7 @@ Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float enti
     this->vitesseRotationLeg = vitesseRotationLeg;
     this->vitesseRotation = vitesseRotation;
     this->damageEntity = damageEntity;
+    this->areaDetection = areaDetection;
 
     if (type==0){
         this->createZombie(this->node,pos);
@@ -44,7 +45,7 @@ float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime
     if(!(this->agent->getIsAttacking())){
         float distanceToPlayer = sqrt(pow((this->hitbox->getBottomPoint()[0]-p->getHitbox()->getBottomPoint()[0]),2) + pow((this->hitbox->getBottomPoint()[1]-p->getHitbox()->getBottomPoint()[1]),2) +pow((this->hitbox->getBottomPoint()[2]-p->getHitbox()->getBottomPoint()[2]),2));
 
-        if(!(this->agent->getIsMoving()) && rand()%100==0){
+        if(!(this->agent->getIsMoving()) && rand()%300==0){
             this->agent->createMouvement(glm::vec3(-1.0f + ((rand()%21)/10.0f),0,-1.0f + ((rand()%21)/10.0f)));
         }else if(this->agent->getIsMoving()){
             glm::vec3 cross_point;
@@ -70,7 +71,7 @@ float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime
         }
 
         // Seul le zombie peut attaquer
-        if(distanceToPlayer < 5.0f && this->type == 0){
+        if(distanceToPlayer < this->areaDetection && this->type == 0){
             if(distanceToPlayer < 1.0f){
                 this->agent->setIsMoving(false);
                 this->agent->resetAccumulateur();

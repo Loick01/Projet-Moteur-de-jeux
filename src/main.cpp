@@ -26,7 +26,7 @@ bool cameraOrbitale = false;
 bool cameraLibre = false; // Caméra libre par défaut
 bool cameraMouseLibre = false;
 bool cameraMousePlayer = true;
-int speedCam = 50;
+int speedCam = 60;
 double previousX = SCREEN_WIDTH / 2;
 double previousY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
@@ -42,7 +42,7 @@ bool hasUpdate; // A rentrer dans la classe Hitbox plus tard
 bool isRunning = false;
 bool isHoldingShift = false;
 
-int blockInHotbar[9] = {23,11,12,16,9,13,20,34,33}; // Blocs qui sont dans la hotbar
+int blockInHotbar[9] = {0,1,2,3,4,5,6,7,8}; // Blocs qui sont dans la hotbar
 int indexHandBlock = 0;
 int handBlock = blockInHotbar[indexHandBlock]; // ID du block que le joueur est en train de poser (se modifie à la molette de la souris)
 
@@ -74,7 +74,27 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         isHoldingShift = false;
         isRunning = false;
     }
-    // Pour sortir de la caméra à la souris (plus tard ce sera la touche qui ouvre l'inventaire, et donc affiche la souris dans la fenêtre)
+
+    if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS){
+        if (blockInHotbar[8]<36){
+            for (int i = 0 ; i < 9 ; i++){
+                blockInHotbar[i] += 1;
+            }
+        }
+        handBlock = blockInHotbar[indexHandBlock];
+        glUniform1iv(glGetUniformLocation(programID_HUD, "blockHotbar"), 9, blockInHotbar); // On envoie la nouvelle hotbar aux shaders
+    }
+    if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS){
+        if (blockInHotbar[0]>0){
+            for (int i = 0 ; i < 9 ; i++){
+                blockInHotbar[i] -= 1;
+            }
+        }
+        handBlock = blockInHotbar[indexHandBlock];
+        glUniform1iv(glGetUniformLocation(programID_HUD, "blockHotbar"), 9, blockInHotbar); // On envoie la nouvelle hotbar aux shaders
+    }
+
+    // Pour sortir de la caméra à la souris et avoir le curseur
     if (key == GLFW_KEY_E && action == GLFW_PRESS){
         if (!switchToEditor){ 
             if (cameraMousePlayer){
@@ -403,9 +423,9 @@ int main(){
     lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
 
     // Temporaire : Création des entités
-    Entity *zombie = new Entity(0, 1,glm::vec3(3,1.4,3), 3.0f,2.1f,0.5f,0.5f, 6, 6.0, 10.0);
+    Entity *zombie = new Entity(0, 1,glm::vec3(3,1.4,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 10.0);
     zombie->loadEntity();
-    Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f,0.6f,0.4f,0.8f, 4, 2.0, 0.0); // Revoir les valeurs pour la hitbox du cochon
+    Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f,0.6f,0.4f,0.8f, 4.0, 2.0, 0.0, 0.0); // Revoir les valeurs pour la hitbox du cochon
     cochon->loadEntity();
 
     // Boucle de rendu
@@ -448,6 +468,7 @@ int main(){
 
         if (cameraOrbitale){
             camera_target = -1.0f * camera_position;
+            camera_target = glm::normalize(camera_target);
         }else if (cameraMousePlayer){
             camera_position = bottomPointPlayer + glm::vec3(0.0f,1.7f,0.f); // Positionne la caméra sur le joueur (du coup attention à la taille qu'on donne à la hitbox)
         }
