@@ -1,5 +1,8 @@
 #include <Headers.hpp>
 
+//#define MINIAUDIO_IMPLEMENTATION // Attention à ne pas oublier cette ligne, sinon miniaudio n'est pas correctement inclus
+#include "miniaudio.h"
+
 // Variables partagées avec la fenêtre ImGui
 #include "variables.h"
 
@@ -49,6 +52,8 @@ bool modeJeu = false; // true pour créatif, false pour survie
 
 // Cette objet permet de lancer tous les sons qui seront nécéssaire
 Sound *soundManager;
+
+std::vector<ma_sound*> backgroundMusicList;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){ 
     glViewport(0,0,width,height);
@@ -256,6 +261,26 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     handBlock = blockInHotbar[indexHandBlock];
 }
 
+// --------------------------------------------------------------------------
+void playRandomMusic();
+
+// Callback pour détecter la fin de la musique, et en lancer une nouvelle
+void soundEndCallback(void* pUserData, ma_sound* pSound) {
+    playRandomMusic();
+}
+
+void playRandomMusic() { // On a pas géré le cas où la nouvelle musique jouée est identique à la précédente, mais ça pas grave on laisse comme ça
+    // Choisir un son aléatoirement
+    int randomIndex = std::rand() % backgroundMusicList.size();
+    ma_sound* randomSound = backgroundMusicList[randomIndex];
+
+    ma_result result = ma_sound_start(randomSound);
+    if (result != MA_SUCCESS) {
+        std::cerr << "Erreur lors de la lecture de la musique avec le code d'erreur: " << result << std::endl;
+    }
+}
+// --------------------------------------------------------------------------
+
 int main(){
     if( !glfwInit()){
         fprintf( stderr, "Failed to initialize GLFW\n" );
@@ -289,6 +314,37 @@ int main(){
     glfwSetCursorPosCallback(window, mouse_cursor_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    
+    // --------------------------------------------------------------------------
+    soundManager = new Sound();
+    
+    std::vector<std::string> pathFileMusic = {
+        "../Sound/BackgroundMusic/black1.mp3",
+        "../Sound/BackgroundMusic/black2.mp3",
+        "../Sound/BackgroundMusic/black3.mp3",
+        "../Sound/BackgroundMusic/black4.mp3",
+        "../Sound/BackgroundMusic/black5.mp3"
+    };
+
+    
+    // Charger les fichiers de musique
+    for (int i = 0 ; i < pathFileMusic.size() ; i++) {
+        ma_sound* sound = new ma_sound;
+
+        if (ma_sound_init_from_file(soundManager->getRefToEngine(), pathFileMusic[i].c_str(), 0, NULL, NULL, sound) != MA_SUCCESS) {
+            std::cerr << "Erreur lors de l'initialisation de la musique: " << pathFileMusic[i].c_str() << std::endl;
+            delete sound;
+            continue;
+        }
+        ma_sound_set_end_callback(sound, soundEndCallback, nullptr);
+    
+        backgroundMusicList.push_back(sound);
+    }
+
+    // Jouer une première musique (ensuite à la fin de chaque musique, le callback est appelé et lance une nouvelle musique)
+    playRandomMusic();
+    // --------------------------------------------------------------------------
+    
 
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
@@ -320,14 +376,11 @@ int main(){
     nomStructure.push_back(structureBiome1);
     nomStructure.push_back(structureBiome2);
 
-    terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4, nomStructure);
+    terrainControler = new TerrainControler(5, 5, 1, 3, 1000, 4, nomStructure);
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f), 1.8f, 0.6f, 6.0f, 1.5f); // Le joueur fait 1.8 bloc de haut, et 0.6 bloc de large et de long
     hitboxPlayer = player->getHitbox();
 
     Skybox *skybox = new Skybox();
-
-    soundManager = new Sound();
-    soundManager->playRandomBackground();
 
     glUseProgram(programID_HUD);
     Hud *hud = new Hud(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -384,7 +437,8 @@ int main(){
 
     std::vector<Entity*> listeEntity;
     for (int i = 0 ; i < 10 ; i++){
-        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*0.05f,32.0,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 10.0));
+    	// Ici le 3è paramètre modifie le point d'apparition de chacunes des entités
+        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*1.0f,32.0,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 10.0));
         listeEntity[i]->loadEntity();
     }
 
@@ -459,6 +513,7 @@ int main(){
                 playerDie = true;
             }else if (!modeJeu && damagePlayer > 0.0f){ // En mode survie uniquement
                 player->takeDamage(damagePlayer);
+                soundManager->playPlayerDamage();
                 hud->updateLife(player->getLife());
                 if (player->getLife() <= 0.0){
                     std::cout << "Vous êtes mort !\n";
@@ -477,6 +532,7 @@ int main(){
                     float damage = listeEntity[i]->drawEntity(programID_Entity, listeEntity[i]->getType(), deltaTime,terrainControler,player);
                     if (!modeJeu && damage != 0.0f){ // En mode survie uniquement
                         player->takeDamage(damage);
+                        soundManager->playPlayerDamage();
                         hud->updateLife(player->getLife());
                         if (player->getLife() <= 0.0){
                             std::cout << "Vous êtes mort !\n";
@@ -518,7 +574,7 @@ int main(){
         }else if (switchToEditor && !(imgui->getInEditor())){
             switchToEditor = false;
             delete terrainControler; // On supprime le terrain du mode éditeur
-            terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4, nomStructure); // On revient au terrain initiale
+            terrainControler = new TerrainControler(5, 5, 1, 3, 1000, 4, nomStructure); // On revient au terrain initiale
             imgui->attachNewTerrain(terrainControler); // TRES IMPORTANT : C'est ça qui causait la segfault qui m'a fait perdre 4 heures
             hitboxPlayer->resetCanTakeDamage(); // Si le joueur tombe de trop haut, il ne faut pas qu'il meurt au moment où on quitte le mode éditeur
         }
@@ -535,6 +591,11 @@ int main(){
     glDeleteProgram(programID_HUD);
     glDeleteVertexArrays(1, &VertexArrayID);
 
+	for (int i = 0 ; i < backgroundMusicList.size() ; i++){
+        ma_sound_uninit(backgroundMusicList[i]);
+        delete backgroundMusicList[i];
+    }
+	delete soundManager;
     delete imgui;
     delete terrainControler;
     delete skybox;

@@ -52,14 +52,15 @@ float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime
             this->agent->createMouvement(glm::vec3(-1.0f + ((rand()%21)/10.0f),0,-1.0f + ((rand()%21)/10.0f)));
         }else if(this->agent->getIsMoving()){
             glm::vec3 cross_point;
-            // if(this->hitbox->getLateralMovePossible(true,this->agent->getDirection()[0]>0? 1:-1,this->agent->getDirection(),glm::vec3(0,1,0),terrainControler,&cross_point) && (this->hitbox->getLateralMovePossible(false,this->agent->getDirection()[2]>0? 1:-1,this->agent->getDirection(),glm::vec3(0,1,0),terrainControler,&cross_point))){
+            // Pour vérifier la collision latérale, on ne regarde que dans la direction vers laquelle l'entité essaie d'aller (c'est pas très précis, mais ça facilite grandement la chose, et c'est plutôt satisfaisant)
+            if(this->hitbox->getLateralMovePossible(false,1,this->agent->getDirection(),glm::vec3(0,1,0),terrainControler,&cross_point)){
                 if(this->type==0){
                     this->walk(this->node,this->agent->getAngleForLeg(),deltaTime);
                 }   
                 if(this->type==1){
                     this->walkCochon(this->node,this->agent->getAngleForLeg(),deltaTime);
                 }   
-            //}
+            }
                 if(this->agent->getAngleOfView() < this->agent->getAngleToReach() - 0.1){
                     this->rotateEntity(this->vitesseRotation*deltaTime);
                 }else if(this->agent->getAngleOfView() > this->agent->getAngleToReach() + 0.1){
@@ -79,7 +80,7 @@ float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime
                 this->agent->setIsMoving(false);
                 this->agent->resetAccumulateur();
                 this->reset(this->node);
-                p->getHitbox()->resetJumpForce(2);
+                p->getHitbox()->resetJumpForce(1); // Ici on peut choisir à quel point l'entité éjecte le joueur lorsqu'elle lui fait des dégâts
                 p->getHitbox()->setCanJump(false);
                 damageFromEntity = this->damageEntity;
                 this->agent->setIsAttacking(true);
