@@ -383,7 +383,7 @@ int main(){
     lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
 
     std::vector<Entity*> listeEntity;
-    for (int i = 0 ; i < 1000 ; i++){
+    for (int i = 0 ; i < 0 ; i++){
         listeEntity.push_back(new Entity(0, 1,glm::vec3(i*0.05f,32.0,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 1.0));
         listeEntity[i]->loadEntity();
     }

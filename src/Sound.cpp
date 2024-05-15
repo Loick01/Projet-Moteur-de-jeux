@@ -3,7 +3,7 @@
 
 void Sound::playRandomBackground() {
     // Choisir un son aléatoirement
-    int randomIndex = std::rand() % backgroundSoundList.size();
+    int randomIndex = std::rand() % this->backgroundSoundList.size();
     ma_sound* randomSound = backgroundSoundList[randomIndex];
 
     ma_result result = ma_sound_start(randomSound);
@@ -14,8 +14,11 @@ void Sound::playRandomBackground() {
 
 // Callback pour détecter la fin de la musique, et en lancer une nouvelle
 void Sound::soundEndCallback(void* pUserData, ma_sound* pSound) {
+    std::cout << "ICICICICIIC\n";
     Sound* self = static_cast<Sound*>(pUserData);
-    self->playRandomBackground();
+    std::cout << "LALALALALALALALLAL\n";
+    //self->playRandomBackground();
+    std::cout << "MAMAMAMAMAMAMAMAMAMAM\n";
 }
 
 Sound::Sound(){
@@ -27,11 +30,8 @@ Sound::Sound(){
     }
 
     std::vector<std::string> pathFileMusic = { // Ici on donne le chemin vers les musiques de fond que l'on souhaite utiliser
-        "../Sound/BackgroundMusic/black1.mp3",
-        "../Sound/BackgroundMusic/black2.mp3",
-        "../Sound/BackgroundMusic/black3.mp3",
-        "../Sound/BackgroundMusic/black4.mp3",
-        "../Sound/BackgroundMusic/black5.mp3"
+        "../Sound/BlockEffect/breaking.mp3",
+        "../Sound/BlockEffect/placing.mp3"
     };
     
     // Charger les fichiers de musique
