@@ -320,7 +320,7 @@ int main(){
     nomStructure.push_back(structureBiome1);
     nomStructure.push_back(structureBiome2);
 
-    terrainControler = new TerrainControler(12, 12, 1, 3, 1000, 4, nomStructure);
+    terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4, nomStructure);
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f), 1.8f, 0.6f, 6.0f, 1.5f); // Le joueur fait 1.8 bloc de haut, et 0.6 bloc de large et de long
     hitboxPlayer = player->getHitbox();
 
@@ -383,8 +383,8 @@ int main(){
     lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
 
     std::vector<Entity*> listeEntity;
-    for (int i = 0 ; i < 0 ; i++){
-        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*0.05f,32.0,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 1.0));
+    for (int i = 0 ; i < 10 ; i++){
+        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*0.05f,32.0,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 10.0));
         listeEntity[i]->loadEntity();
     }
 
@@ -518,7 +518,7 @@ int main(){
         }else if (switchToEditor && !(imgui->getInEditor())){
             switchToEditor = false;
             delete terrainControler; // On supprime le terrain du mode éditeur
-            terrainControler = new TerrainControler(12, 12, 1, 3, 1000, 4, nomStructure); // On revient au terrain initiale
+            terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4, nomStructure); // On revient au terrain initiale
             imgui->attachNewTerrain(terrainControler); // TRES IMPORTANT : C'est ça qui causait la segfault qui m'a fait perdre 4 heures
             hitboxPlayer->resetCanTakeDamage(); // Si le joueur tombe de trop haut, il ne faut pas qu'il meurt au moment où on quitte le mode éditeur
         }
