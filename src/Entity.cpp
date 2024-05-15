@@ -77,7 +77,7 @@ float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime
                 this->agent->setIsMoving(false);
                 this->agent->resetAccumulateur();
                 this->reset(this->node);
-                p->getHitbox()->resetJumpForce();
+                p->getHitbox()->resetJumpForce(5);
                 p->getHitbox()->setCanJump(false);
                 damageFromEntity = this->damageEntity;
                 this->agent->setIsAttacking(true);
@@ -329,8 +329,6 @@ void Entity::walkCochon(Node* node,float angle,float deltaTime){
     matTransfoLeg2 = glm::rotate(matTransfoLeg2, angle2,glm::vec3(0.f,0.0f,1.0f));
     matTransfoLeg2 = glm::translate(matTransfoLeg2,-node->fils[2]->center-glm::vec3(0.24,0.12f,0.24f));
     this->hitbox->move(this->agent->getDirection()*deltaTime*this->speedEntity);
-    printf("pose hitbox %f %f %f\n",this->hitbox->getBottomPoint()[0],this->hitbox->getBottomPoint()[1],this->hitbox->getBottomPoint()[2]);
-    printf("direction %f %f %f\n",this->agent->getDirection()[0],this->agent->getDirection()[1],this->agent->getDirection()[2]);
     node->transformation->addVelocity(this->agent->getDirection()*deltaTime*this->speedEntity);
     node->fils[4]->transformation = new Transform(matTransfoLeg2);
     node->fils[5]->transformation = new Transform(matTransfoLeg1);
@@ -434,6 +432,10 @@ void Entity::rotateEntity(float angleRotation){
     matTransfoChest = glm::translate(matTransfoChest,-this->node->fils[1]->center);
 
     this->node->transformation = new Transform(matTransfoChest);
+}
+
+int Entity::getType(){
+    return this->type;
 }
 
 Node* Entity::getRootNode(){

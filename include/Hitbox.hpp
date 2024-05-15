@@ -27,7 +27,7 @@ class Hitbox{
         bool getCanJump();
         void setCanJump(bool canJump);
         void checkJump(bool *hasUpdate, float deltaTime);
-        void resetJumpForce();
+        void resetJumpForce(int amplitude);
         // La fonction ci-dessous vérifie si le déplacement latéral demandé est possible ou non
         bool getLateralMovePossible(bool axisToCheck, float directionCheck, glm::vec3 camera_target, glm::vec3 camera_up, TerrainControler *terrainControler, glm::vec3 *cross_point);
         float checkTopAndBottomCollision(bool hasUpdate, float deltaTime, TerrainControler *terrainControler);

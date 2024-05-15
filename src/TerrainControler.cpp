@@ -166,7 +166,7 @@ void TerrainControler::breakBlock(LocalisationBlock lb){ // Il faut déjà avoir
     //return;
 }
 
-void TerrainControler::tryCreateBlock(glm::vec3 camera_target, glm::vec3 camera_position, int typeBlock){
+bool TerrainControler::tryCreateBlock(glm::vec3 camera_target, glm::vec3 camera_position, int typeBlock){
     glm::vec3 originPoint = camera_position;
     glm::vec3 direction = normalize(camera_target);
     float k = 3.0; // Pour l'instant le joueur ne peut poser un block qu'à cette distance
@@ -175,7 +175,7 @@ void TerrainControler::tryCreateBlock(glm::vec3 camera_target, glm::vec3 camera_
     int numHauteur = floor(target[1]) + 16;
     int numProfondeur = floor(target[2]) + 16*this->planeLength;
     if (numLongueur < 0 || numLongueur > (this->planeWidth*32)-1 || numProfondeur < 0 || numProfondeur > (this->planeLength*32)-1 || numHauteur < 0 || numHauteur > 31){
-        return;
+        return false;
     }else{
         int indiceV = numHauteur *1024 + (numProfondeur%32) * 32 + (numLongueur%32); // Indice du voxel que le joueur est en train de viser
         int indiceChunk = (numLongueur/32) * this->planeLength + numProfondeur/32;
@@ -187,12 +187,14 @@ void TerrainControler::tryCreateBlock(glm::vec3 camera_target, glm::vec3 camera_
             vox->setVisible(true);
             listeVoxels[indiceV] = vox;
 
-            // A voir si ici on ne pourrait pas mettre à jour la visibilité de certains voxels pour faire mieux
-
             this->listeChunks[indiceChunk]->setListeVoxels(listeVoxels);
             this->listeChunks[indiceChunk]->loadChunk();
+
+            return true;
         }
     }
+
+    return false;
 }
 
 void TerrainControler::drawTerrain(){
@@ -222,7 +224,7 @@ void TerrainControler::saveStructure(std::string filePath){
     fileStructure.close();
 }
 
-void TerrainControler::checkHoldLeftClick(glm::vec3 camera_position, glm::vec3 camera_target, float deltaTime, bool modeJeu, GLuint programID){
+bool TerrainControler::checkHoldLeftClick(glm::vec3 camera_position, glm::vec3 camera_target, float deltaTime, bool modeJeu, GLuint programID){
     if (this->mouseLeftClickHold){
         LocalisationBlock lb = this->tryBreakBlock(camera_target, camera_position);
         // On part du principe que c'est impossible pour le joueur de viser un bloc d'un chunk à la frame n, puis le bloc équivalent d'un chunk adjacent à la frame n+1
@@ -246,10 +248,13 @@ void TerrainControler::checkHoldLeftClick(glm::vec3 camera_position, glm::vec3 c
         if ((modeJeu && this->previousIdInChunk != -2)|| this->accumulateurDestructionBlock >= 1.0f){ // En mode créatif, les blocs se cassent directement
             this->breakBlock(lb);
             this->accumulateurDestructionBlock = 0.0f;
+            return true; // Permettra de savoir quand jouer le son de cassage d'un bloc
+            
             // Si on voulait être précis, ici il aurait fallu remettre à jour previousIdInChunk en rappelant tryBreakBlock
             // Mais ce n'est pas nécéssaire, ce sera fait seulement avec une frame de retard (pas trop grave)
         }
     }
+    return false;
 }
 
 void TerrainControler::setMouseLeftClickHold(bool mouseLeftClickHold){

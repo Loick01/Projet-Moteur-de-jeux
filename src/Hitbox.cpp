@@ -56,8 +56,8 @@ void Hitbox::checkJump(bool *hasUpdate, float deltaTime){
     }
 }
 
-void Hitbox::resetJumpForce(){
-    this->forceJump = this->forceJumpInitial;
+void Hitbox::resetJumpForce(int amplitude){
+    this->forceJump = amplitude * this->forceJumpInitial;
 }
 
 // axisToCheck --> true pour Left/Right, false pour Front/Back

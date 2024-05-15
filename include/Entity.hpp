@@ -54,6 +54,8 @@ class Entity{
         void reset(Node* node);
         void attack(Node* node, float deltaTime);
         void die(Node* node, bool *die, float *accumulateurAnimation, float deltaTime);
+
+        int getType();
             
         Node* getRootNode();
 };

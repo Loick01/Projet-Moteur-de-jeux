@@ -50,6 +50,12 @@ bool showHud = true;
 int isShadow = 1; // 1 si on utilise les ombres dans le shader, 0 sinon
 bool modeJeu = false; // true pour créatif, false pour survie
 
+std::vector<ma_sound*> listSounds;
+ma_engine engine;
+
+ma_sound* breakBlock;
+ma_sound* createBlock;
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){ 
     glViewport(0,0,width,height);
 }
@@ -172,7 +178,7 @@ void processInput(GLFWwindow* window){
 
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
             if (hitboxPlayer->getCanJump()){
-                hitboxPlayer->resetJumpForce();
+                hitboxPlayer->resetJumpForce(1);
                 hitboxPlayer->setCanJump(false);
             }
         }
@@ -244,7 +250,9 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         glUseProgram(programID);
         glUniform1i(glGetUniformLocation(programID, "indexBlockToBreak"), terrainControler->getPreviousIdInChunk());
     }else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
-        terrainControler->tryCreateBlock(camera_target, camera_position, handBlock);
+        if (terrainControler->tryCreateBlock(camera_target, camera_position, handBlock)){
+            ma_sound_start(createBlock);
+        }
     }
 }
 
@@ -254,14 +262,23 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     handBlock = blockInHotbar[indexHandBlock];
 }
 
-/*
-// Callback qui permet de jouer en boucle une musique (pour l'instant ne fonctionne pas)
-// Ce n'est peut être pas une si bonne idée d'utiliser un callback (à voir)
-void restart_callback(ma_sound* pSound, void* pUserData) {
-    ma_sound_seek_to_pcm_frame(pSound, 0);
-    ma_sound_start(pSound);
+void playRandomMusic();
+
+// Callback pour détecter la fin de la musique, et en lancer une nouvelle
+void soundEndCallback(void* pUserData, ma_sound* pSound) {
+    playRandomMusic();
 }
-*/
+
+void playRandomMusic() {
+    // Choisir un son aléatoirement
+    int randomIndex = std::rand() % listSounds.size();
+    ma_sound* randomSound = listSounds[randomIndex];
+
+    ma_result result = ma_sound_start(randomSound);
+    if (result != MA_SUCCESS) {
+        std::cerr << "Erreur lors de la lecture de la musique avec le code d'erreur: " << result << std::endl;
+    }
+}
 
 int main(){
     if( !glfwInit()){
@@ -298,35 +315,44 @@ int main(){
     glfwSetScrollCallback(window, scroll_callback);
 
     // ---------------------------------------------------------
-    // Temporaire : Gestion du son (On fera une classe à part)
-    ma_result result;
-    ma_engine engine;
-    ma_sound sound;
-    result = ma_engine_init(NULL, &engine);
-    if (result != MA_SUCCESS){
-        std::cout << "Failed to initialized miniaudio engine\n";
-        ma_engine_uninit(&engine);
-        return -1;
-    }
-    result = ma_sound_init_from_file(&engine, "../Sound/BackgroundMusic/black3.mp3", 0, NULL, NULL, &sound);
-    if (result != MA_SUCCESS){
-        std::cout << "Impossible de charger le son\n";
-        ma_engine_uninit(&engine);
-        return -1;
-    }
-    // Utilisation du callback qui relance la musique une fois terminé
-    // Le callback est bien appelé mais la musique ne veut pas se relancer
-    //ma_sound_set_end_callback(&sound, restart_callback, NULL);
-    ma_sound_set_looping(&sound,true); // Joue la musique en boucle
-    ma_sound_start(&sound);
+    // Temporaire : Gestion du son (faire la classe Sound)
 
-    // Pour jouer une musique en donnant directement le nom du fichier :
-    //ma_engine_play_sound(&engine,"../Sound/BackgroundMusic/black1.mp3",NULL);
-    // Quelques fonctions qui pourrait être utile :
-    // ma_sound_seek_to_pcm_frame(&sound, frameIndex);
-    // ma_sound_get_data_format(&sound, &format, &channels, &sampleRate, pChannelMap, channelMapCapacity);
-    // ma_sound_get_cursor_in_pcm_frames(&sound, &cursor);
-    // ma_sound_get_length_in_pcm_frames(&sound, &length);
+    // Initialiser le moteur de miniaudio
+    if (ma_engine_init(NULL, &engine) != MA_SUCCESS) {
+        std::cerr << "Erreur lors de l'initialisation du moteur miniaudio" << std::endl;
+        return -1;
+    }
+
+    std::vector<std::string> pathFileMusic = {
+        "../Sound/BackgroundMusic/black1.mp3",
+        "../Sound/BackgroundMusic/black2.mp3",
+        "../Sound/BackgroundMusic/black3.mp3",
+        "../Sound/BackgroundMusic/black4.mp3",
+        "../Sound/BackgroundMusic/black5.mp3"
+    };
+
+    
+    // Charger les fichiers de musique
+    for (int i = 0 ; i < pathFileMusic.size() ; i++) {
+        ma_sound* sound = new ma_sound;
+
+        if (ma_sound_init_from_file(&engine, pathFileMusic[i].c_str(), 0, NULL, NULL, sound) != MA_SUCCESS) {
+            std::cerr << "Erreur lors de l'initialisation de la musique: " << pathFileMusic[i].c_str() << std::endl;
+            delete sound;
+            continue;
+        }
+        ma_sound_set_end_callback(sound, soundEndCallback, nullptr);
+    
+        listSounds.push_back(sound);
+    }
+
+    createBlock = new ma_sound;
+    breakBlock = new ma_sound;
+    ma_sound_init_from_file(&engine, "../Sound/BlockEffect/breaking.mp3", 0, NULL, NULL, breakBlock);
+    ma_sound_init_from_file(&engine, "../Sound/BlockEffect/placing.mp3", 0, NULL, NULL, createBlock);
+
+    // Jouer une première musique
+    playRandomMusic();
 
     // ---------------------------------------------------------
 
@@ -422,11 +448,11 @@ int main(){
 
     lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
 
-    // Temporaire : Création des entités
-    Entity *zombie = new Entity(0, 1,glm::vec3(3,1.4,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 10.0);
-    zombie->loadEntity();
-    Entity *cochon = new Entity(1, 1,glm::vec3(5,1.4,3), 1.0f,0.6f,0.4f,0.8f, 4.0, 6.0, 0.0, 0.0); // Revoir les valeurs pour la hitbox du cochon
-    cochon->loadEntity();
+    std::vector<Entity*> listeEntity;
+    for (int i = 0 ; i < 1000 ; i++){
+        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*0.05,1.4,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 10.0));
+        listeEntity[i]->loadEntity();
+    }
 
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
@@ -481,7 +507,9 @@ int main(){
 
         terrainControler->drawTerrain();
 
-        terrainControler->checkHoldLeftClick(camera_position, camera_target, deltaTime, modeJeu, programID);
+        if (terrainControler->checkHoldLeftClick(camera_position, camera_target, deltaTime, modeJeu, programID)){
+            ma_sound_start(breakBlock);
+        }
 
         // Affichage de la skybox
         skybox->drawSkybox(Model, Projection, View);
@@ -506,18 +534,17 @@ int main(){
             glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
             glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
 
-            float damage = zombie->drawEntity(programID_Entity, 0,deltaTime,terrainControler,player); // 0 pour zombie
-            if (!modeJeu && damage != 0.0f){ // En mode survie uniquement
-                player->takeDamage(damage);
-                hud->updateLife(player->getLife());
-                if (player->getLife() <= 0.0){
-                    std::cout << "Vous êtes mort !\n";
-                    break; // Le joueur est mort, le programme s'arrête (en faisant attention à bien nettoyer la mémoire)
+            for (int i = 0 ; i < listeEntity.size() ; i++){
+                float damage = listeEntity[i]->drawEntity(programID_Entity, listeEntity[i]->getType(), deltaTime,terrainControler,player);
+                if (!modeJeu && damage != 0.0f){ // En mode survie uniquement
+                    player->takeDamage(damage);
+                    hud->updateLife(player->getLife());
+                    if (player->getLife() <= 0.0){
+                        std::cout << "Vous êtes mort !\n";
+                        break; // Le joueur est mort, le programme s'arrête (en faisant attention à bien nettoyer la mémoire)
+                    }
                 }
             }
-
-            cochon->drawEntity(programID_Entity, 1,deltaTime,terrainControler,player); // 1 pour cochon
-            
         }
 
         // Affichage de l'hud (Attention : Ca doit être la dernière chose à afficher dans la boucle de rendue, pour que l'hud se retrouve au premier plan)
@@ -560,7 +587,15 @@ int main(){
     glDeleteProgram(programID_HUD);
     glDeleteVertexArrays(1, &VertexArrayID);
 
-    ma_sound_uninit(&sound);
+    ma_sound_uninit(breakBlock);
+    delete breakBlock;
+    ma_sound_uninit(createBlock);
+    delete createBlock;
+
+    for (int i = 0 ; i < listSounds.size() ; i++){
+        ma_sound_uninit(listSounds[i]);
+        delete listSounds[i];
+    }
     ma_engine_uninit(&engine); // Attention à bien nettoyer la mémoire, sinon segfault
 
     delete imgui;
@@ -569,8 +604,9 @@ int main(){
     delete hud;
     delete player;
     delete window_object;
-    delete zombie;
-    delete cochon;
+    for (int i = 0 ; i < listeEntity.size() ; i++){
+        delete listeEntity[i];
+    }
     glfwTerminate();
     return 0;
 }

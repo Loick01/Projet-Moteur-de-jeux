@@ -43,10 +43,10 @@ class TerrainControler{
         int* getRefToOctave();
         LocalisationBlock tryBreakBlock(glm::vec3 camera_target, glm::vec3 camera_position);
         void breakBlock(LocalisationBlock lb);
-        void tryCreateBlock(glm::vec3 camera_target, glm::vec3 camera_position, int typeBlock);
+        bool tryCreateBlock(glm::vec3 camera_target, glm::vec3 camera_position, int typeBlock);
         void drawTerrain();
         void saveStructure(std::string filePath);
-        void checkHoldLeftClick(glm::vec3 camera_position, glm::vec3 camera_target, float deltaTime, bool modeJeu, GLuint programID);
+        bool checkHoldLeftClick(glm::vec3 camera_position, glm::vec3 camera_target, float deltaTime, bool modeJeu, GLuint programID);
         void setMouseLeftClickHold(bool mouseLeftClickHold);
         int getPreviousIdInChunk();
         void setPreviousIdInChunk(int previousIdInChunk);
