@@ -8,6 +8,7 @@ ParamsWindow::ParamsWindow(GLFWwindow* window, int style, TerrainControler *terr
     this->terrainControler = terrainControler;
     this->mg = terrainControler->getMapGenerator();
     this->inEditor = false;
+    this->clearEntity = false;
     this->speedPlayer = player->getRefToSpeed();
     this->posJoueur = player->getHitbox()->getRefToBottomPoint();
     this->planeWidth = terrainControler->getRefToPlaneWidth();
@@ -50,7 +51,16 @@ bool ParamsWindow::getInEditor(){
     return this->inEditor;
 }
 
+bool ParamsWindow::getClearEntity(){
+	return this->clearEntity;
+}
+
+void ParamsWindow::resetClearEntity(){
+	this->clearEntity = false;
+}
+
 void ParamsWindow::modifTerrain(){
+	this->clearEntity = true; // On fera disparaître les entités au moment où on change le terrain
     this->mg->generateImage();
     int widthHeightmap, heightHeightmap, channels;
     unsigned char* dataPixels = stbi_load("../Textures/terrain.png", &widthHeightmap, &heightHeightmap, &channels, 4);

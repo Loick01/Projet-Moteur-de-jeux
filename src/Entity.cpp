@@ -87,7 +87,7 @@ float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime
                 this->agent->resetAccumulateur();
                 this->reset(this->node);
                 // Ici on modifie la force avec laquelle les entités (ici les zombies) éjectent le joueur
-                p->getHitbox()->resetJumpForce(5); // Ici on peut choisir à quel point l'entité éjecte le joueur lorsqu'elle lui fait des dégâts
+                p->getHitbox()->resetJumpForce(1); // Ici on peut choisir à quel point l'entité éjecte le joueur lorsqu'elle lui fait des dégâts
                 p->getHitbox()->setCanJump(false);
                 damageFromEntity = this->damageEntity;
                 this->agent->setIsAttacking(true);

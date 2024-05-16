@@ -51,6 +51,8 @@ int isShadow = 1; // 1 si on utilise les ombres dans le shader, 0 sinon
 bool modeJeu = false; // true pour créatif, false pour survie
 bool playerDie;
 
+std::vector<Entity*> listeEntity;
+
 // Cette objet permet de lancer tous les sons qui seront nécéssaire
 Sound *soundManager;
 
@@ -282,6 +284,22 @@ void playRandomMusic() { // On a pas géré le cas où la nouvelle musique joué
 }
 // --------------------------------------------------------------------------
 
+void spawnEntity(int m, int n){
+	// Génération des entités : m zombies et n cochons 
+	listeEntity.clear();
+    for (int i = 0 ; i < m ; i++){
+    	// Ici le 3è paramètre modifie le point d'apparition de chacunes des entités
+        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*0.5f,32.0,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 10.0)); // Génére un zombie
+        listeEntity[i]->loadEntity();
+    }
+
+    for (int j = 0 ; j < n ; j++){
+    	// Ici le 3è paramètre modifie le point d'apparition de chacunes des entités
+        listeEntity.push_back(new Entity(1, 1,glm::vec3(4.0f,32.0,0.5*j), 1.0f,0.9f,0.7f,1.0f, 3.0, 6.0, 10.0, 0.0)); // Génére un cochon
+        listeEntity[m+j]->loadEntity();
+    }
+}
+
 int main(){
     if( !glfwInit()){
         fprintf( stderr, "Failed to initialize GLFW\n" );
@@ -377,7 +395,8 @@ int main(){
     nomStructure.push_back(structureBiome1);
     nomStructure.push_back(structureBiome2);
 
-    terrainControler = new TerrainControler(8, 8, 1, 3, 1000, 4, nomStructure);
+	// Les 2 premiers paramètres du constructeur de TerrainControleur sont la taille du terrain (en nombre de chunk), en longueur et en profondeur (ici 3x3)
+    terrainControler = new TerrainControler(3, 3, 1, 3, 1000, 4, nomStructure);
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f), 1.8f, 0.6f, 6.0f, 1.5f); // Le joueur fait 1.8 bloc de haut, et 0.6 bloc de large et de long
     hitboxPlayer = player->getHitbox();
 
@@ -435,19 +454,8 @@ int main(){
     skybox->bindCubemap(GL_TEXTURE3, 3); 
 
     lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
-
-    std::vector<Entity*> listeEntity;
-    for (int i = 0 ; i < 500 ; i++){
-    	// Ici le 3è paramètre modifie le point d'apparition de chacunes des entités
-        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*0.05f,32.0,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 5.0)); // Génére un zombie
-        listeEntity[i]->loadEntity();
-    }
-
-    for (int j = 0 ; j < 20 ; j++){
-    	// Ici le 3è paramètre modifie le point d'apparition de chacunes des entités
-        listeEntity.push_back(new Entity(1, 1,glm::vec3(4.0f,32.0,1.0*j), 1.0f,0.9f,0.7f,1.0f, 3.0, 6.0, 10.0, 10.0)); // Génére un cochon
-        listeEntity[500+j]->loadEntity();
-    }
+    
+    spawnEntity(10,10);
 
     playerDie = false;
 
@@ -461,6 +469,11 @@ int main(){
             lastFrame = currentFrame;
 
             processInput(window);
+            
+            if (imgui->getClearEntity()){ // Fais réapparaître les entités quand on regénère un terrain dans la fenêtre ImGui
+            	imgui->resetClearEntity();
+            	spawnEntity(10,10);
+            }
 
             glm::vec3 bottomPointPlayer = hitboxPlayer->getBottomPoint();
 
@@ -589,6 +602,13 @@ int main(){
                 cameraMousePlayer = false;
                 cameraOrbitale = false;
                 cameraLibre = false;
+                
+                for (int i = 0 ; i < listeEntity.size() ; i++){
+                	if (listeEntity[i] != nullptr){
+                		delete listeEntity[i];
+                	}
+                }
+                listeEntity.clear();
 
                 switchToEditor = true;
                 delete terrainControler; // On supprime l'ancien terrain (on perd donc les modfications faites dessus)
@@ -600,6 +620,13 @@ int main(){
             
             if (isImGuiShow){
                 imgui->draw();
+                if (imgui->getClearEntity()){
+                	for (int i = 0 ; i < listeEntity.size() ; i++){
+                		if (listeEntity[i] != nullptr){
+		            		delete listeEntity[i];
+		            	}
+                	}
+                }
             }
         }
         glfwSwapBuffers(window);
