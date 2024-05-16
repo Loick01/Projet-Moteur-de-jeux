@@ -11,6 +11,7 @@ struct LocalisationBlock {
     int indiceVoxel, indiceChunk, numLongueur, numProfondeur, numHauteur, idInChunk;
 };
 
+class Entity;
 
 class TerrainControler{
     private :
@@ -48,6 +49,7 @@ class TerrainControler{
         void saveStructure(std::string filePath);
         bool checkHoldLeftClick(glm::vec3 camera_position, glm::vec3 camera_target, float deltaTime, bool modeJeu, GLuint programID);
         void setMouseLeftClickHold(bool mouseLeftClickHold);
+        bool getMouseLeftClickHold();
         int getPreviousIdInChunk();
         void setPreviousIdInChunk(int previousIdInChunk);
         void setAccumulation(float accumulation);

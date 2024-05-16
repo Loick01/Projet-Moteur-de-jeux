@@ -34,6 +34,7 @@ class Entity{
         float vitesseRotation;
         float damageEntity;
         float areaDetection;
+        bool nearPlayer;
     public:
         Entity(int type, int ID,glm::vec3 pos, float speedEntity,float entityHeight,float entityWidth, float entityLenght, float vitesseRotationLeg, float vitesseRotation, float damageEntity, float areaDetection);
         ~Entity();
@@ -59,6 +60,7 @@ class Entity{
         void die(Node* node, bool *die, float *accumulateurAnimation, float deltaTime);
 
         int getType();
+        bool getNearPlayer();
             
         Node* getRootNode();
 };

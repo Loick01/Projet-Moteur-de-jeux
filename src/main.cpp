@@ -377,7 +377,7 @@ int main(){
     nomStructure.push_back(structureBiome1);
     nomStructure.push_back(structureBiome2);
 
-    terrainControler = new TerrainControler(1, 1, 1, 3, 1000, 4, nomStructure);
+    terrainControler = new TerrainControler(8, 8, 1, 3, 1000, 4, nomStructure);
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f), 1.8f, 0.6f, 6.0f, 1.5f); // Le joueur fait 1.8 bloc de haut, et 0.6 bloc de large et de long
     hitboxPlayer = player->getHitbox();
 
@@ -439,9 +439,14 @@ int main(){
     std::vector<Entity*> listeEntity;
     for (int i = 0 ; i < 500 ; i++){
     	// Ici le 3è paramètre modifie le point d'apparition de chacunes des entités
-        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*1.0f,32.0,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 10.0)); // Génére un zombie
-        //listeEntity.push_back(new Entity(1, 1,glm::vec3(i*0.05f,32.0,3), 1.0f,0.9f,0.7f,1.0f, 3.0, 6.0, 10.0, 10.0)); // Génére un cochon
+        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*0.05f,32.0,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 5.0)); // Génére un zombie
         listeEntity[i]->loadEntity();
+    }
+
+    for (int j = 0 ; j < 20 ; j++){
+    	// Ici le 3è paramètre modifie le point d'apparition de chacunes des entités
+        listeEntity.push_back(new Entity(1, 1,glm::vec3(4.0f,32.0,1.0*j), 1.0f,0.9f,0.7f,1.0f, 3.0, 6.0, 10.0, 10.0)); // Génére un cochon
+        listeEntity[500+j]->loadEntity();
     }
 
     playerDie = false;
@@ -504,6 +509,16 @@ int main(){
 
             if (terrainControler->checkHoldLeftClick(camera_position, camera_target, deltaTime, modeJeu, programID)){
                 soundManager->playBreakSound();
+            }else if (terrainControler->getMouseLeftClickHold()){
+                std::vector<Entity*> entityNearPlayer; // Récupère les entités prochent du joueur
+                for (int i = 0 ; i  < listeEntity.size() ; i++){
+                    if (listeEntity[i] != nullptr){
+                        if (listeEntity[i]->getNearPlayer()){
+                            delete listeEntity[i];
+                            listeEntity[i] = nullptr;
+                        }
+                    }
+                }         
             }
 
             // Affichage de la skybox

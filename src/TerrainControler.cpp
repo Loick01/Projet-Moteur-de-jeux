@@ -105,7 +105,7 @@ LocalisationBlock TerrainControler::tryBreakBlock(glm::vec3 camera_target, glm::
     glm::vec3 originPoint = camera_position;
     glm::vec3 direction = normalize(camera_target);
     //for (int k = 1 ; k < RANGE+1 ; k++){ // Trouver une meilleure manière pour détecter le bloc à casser
-    for (float k = 0.1 ; k < RANGE+1. ; k+=0.1){
+    for (float k = 0.1 ; k < RANGE+1. ; k+=0.1){ // C'est mieux mais pas parfait
         glm::vec3 target = originPoint + (float)k*direction;
         int numLongueur = floor(target[0]) + 16*this->planeWidth;
         int numHauteur = floor(target[1]) + 16;
@@ -259,6 +259,10 @@ bool TerrainControler::checkHoldLeftClick(glm::vec3 camera_position, glm::vec3 c
 
 void TerrainControler::setMouseLeftClickHold(bool mouseLeftClickHold){
     this->mouseLeftClickHold = mouseLeftClickHold;
+}
+
+bool TerrainControler::getMouseLeftClickHold(){
+    return mouseLeftClickHold;
 }
 
 int TerrainControler::getPreviousIdInChunk(){

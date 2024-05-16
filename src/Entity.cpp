@@ -12,6 +12,7 @@ Entity::Entity(int type, int nodeID, glm::vec3 pos, float speedEntity,float enti
     this->vitesseRotation = vitesseRotation;
     this->damageEntity = damageEntity;
     this->areaDetection = areaDetection;
+    this->nearPlayer = false;
 
     if (type==0){
         this->createZombie(this->node,pos);
@@ -45,9 +46,14 @@ void Entity::loadEntity(){
 float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime,TerrainControler *terrainControler, Player *p){
     float damageFromEntity = 0.0f;
 
-    if(!(this->agent->getIsAttacking())){
-        float distanceToPlayer = sqrt(pow((this->hitbox->getBottomPoint()[0]-p->getHitbox()->getBottomPoint()[0]),2) + pow((this->hitbox->getBottomPoint()[1]-p->getHitbox()->getBottomPoint()[1]),2) +pow((this->hitbox->getBottomPoint()[2]-p->getHitbox()->getBottomPoint()[2]),2));
+    float distanceToPlayer = sqrt(pow((this->hitbox->getBottomPoint()[0]-p->getHitbox()->getBottomPoint()[0]),2) + pow((this->hitbox->getBottomPoint()[1]-p->getHitbox()->getBottomPoint()[1]),2) +pow((this->hitbox->getBottomPoint()[2]-p->getHitbox()->getBottomPoint()[2]),2));
+    if (distanceToPlayer < 3.0){
+        this->nearPlayer = true;
+    }else{
+        this->nearPlayer = false;
+    }
 
+    if(!(this->agent->getIsAttacking())){
         if(!(this->agent->getIsMoving()) && rand()%300==0){
             this->agent->createMouvement(glm::vec3(-1.0f + ((rand()%21)/10.0f),0,-1.0f + ((rand()%21)/10.0f)));
         }else if(this->agent->getIsMoving()){
@@ -80,7 +86,8 @@ float Entity::drawEntity(GLuint programID_Entity, int numEntity, float deltaTime
                 this->agent->setIsMoving(false);
                 this->agent->resetAccumulateur();
                 this->reset(this->node);
-                p->getHitbox()->resetJumpForce(1); // Ici on peut choisir à quel point l'entité éjecte le joueur lorsqu'elle lui fait des dégâts
+                // Ici on modifie la force avec laquelle les entités (ici les zombies) éjectent le joueur
+                p->getHitbox()->resetJumpForce(5); // Ici on peut choisir à quel point l'entité éjecte le joueur lorsqu'elle lui fait des dégâts
                 p->getHitbox()->setCanJump(false);
                 damageFromEntity = this->damageEntity;
                 this->agent->setIsAttacking(true);
@@ -452,6 +459,10 @@ void Entity::rotateEntity(float angleRotation){
 
 int Entity::getType(){
     return this->type;
+}
+
+bool Entity::getNearPlayer(){
+    return this->nearPlayer;
 }
 
 Node* Entity::getRootNode(){
