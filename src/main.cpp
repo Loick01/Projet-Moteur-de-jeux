@@ -49,6 +49,7 @@ int handBlock = blockInHotbar[indexHandBlock]; // ID du block que le joueur est 
 bool showHud = true;
 int isShadow = 1; // 1 si on utilise les ombres dans le shader, 0 sinon
 bool modeJeu = false; // true pour créatif, false pour survie
+bool playerDie;
 
 // Cette objet permet de lancer tous les sons qui seront nécéssaire
 Sound *soundManager;
@@ -80,7 +81,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         isRunning = false;
     }
 
-    if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS){
+    if ((key == GLFW_KEY_KP_ADD || key == GLFW_KEY_N) && action == GLFW_PRESS ){
         if (blockInHotbar[8]<36){
             for (int i = 0 ; i < 9 ; i++){
                 blockInHotbar[i] += 1;
@@ -89,7 +90,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         handBlock = blockInHotbar[indexHandBlock];
         glUniform1iv(glGetUniformLocation(programID_HUD, "blockHotbar"), 9, blockInHotbar); // On envoie la nouvelle hotbar aux shaders
     }
-    if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS){
+    if ((key == GLFW_KEY_KP_SUBTRACT || key == GLFW_KEY_B) && action == GLFW_PRESS){
         if (blockInHotbar[0]>0){
             for (int i = 0 ; i < 9 ; i++){
                 blockInHotbar[i] -= 1;
@@ -376,7 +377,7 @@ int main(){
     nomStructure.push_back(structureBiome1);
     nomStructure.push_back(structureBiome2);
 
-    terrainControler = new TerrainControler(5, 5, 1, 3, 1000, 4, nomStructure);
+    terrainControler = new TerrainControler(1, 1, 1, 3, 1000, 4, nomStructure);
     player = new Player(glm::vec3(-0.5f,10.0f,-0.5f), 1.8f, 0.6f, 6.0f, 1.5f); // Le joueur fait 1.8 bloc de haut, et 0.6 bloc de large et de long
     hitboxPlayer = player->getHitbox();
 
@@ -436,153 +437,156 @@ int main(){
     lastFrame = glfwGetTime(); // Si on ne fait pas ça, le joueur tombe beaucoup trop vite à la première frame
 
     std::vector<Entity*> listeEntity;
-    for (int i = 0 ; i < 10 ; i++){
+    for (int i = 0 ; i < 500 ; i++){
     	// Ici le 3è paramètre modifie le point d'apparition de chacunes des entités
-        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*1.0f,32.0,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 10.0));
+        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*1.0f,32.0,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 10.0)); // Génére un zombie
+        //listeEntity.push_back(new Entity(1, 1,glm::vec3(i*0.05f,32.0,3), 1.0f,0.9f,0.7f,1.0f, 3.0, 6.0, 10.0, 10.0)); // Génére un cochon
         listeEntity[i]->loadEntity();
     }
 
-    bool playerDie = false;
+    playerDie = false;
 
     // Boucle de rendu
     while(!glfwWindowShouldClose(window)){
-        float currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        if (playerDie){
+            processInput(window);
+        }else{
+            float currentFrame = glfwGetTime();
+            deltaTime = currentFrame - lastFrame;
+            lastFrame = currentFrame;
 
-        processInput(window);
+            processInput(window);
 
-        glm::vec3 bottomPointPlayer = hitboxPlayer->getBottomPoint();
+            glm::vec3 bottomPointPlayer = hitboxPlayer->getBottomPoint();
 
-        // Courir consomme de l'endurance
-        if (isRunning){
-            if (player->getStamina() > 0.0){
-                if (!modeJeu){ // En mode survie seulement
-                    player->addStamina(-30.0*deltaTime);
+            // Courir consomme de l'endurance
+            if (isRunning){
+                if (player->getStamina() > 0.0){
+                    if (!modeJeu){ // En mode survie seulement
+                        player->addStamina(-30.0*deltaTime);
+                        hud->updateStamina(player->getStamina());
+                    }
+                    FoV = FoV_running;
+                }else{
+                    player->applyAcceleration(false);
+                    isRunning = false;
+                    isHoldingShift = true;
+                }
+            }else if (modeJeu || player->getStamina() < 100.0f){ // On teste si on est en mode créatif, pour pouvoir revenir à la FoV normale si on ne court plus
+                if (!modeJeu && !isHoldingShift){ // En mode survie seulement
+                    player->addStamina(30.0*deltaTime);
                     hud->updateStamina(player->getStamina());
                 }
-                FoV = FoV_running;
-            }else{
-                player->applyAcceleration(false);
-                isRunning = false;
-                isHoldingShift = true;
+                FoV = 75.0f;
             }
-        }else if (modeJeu || player->getStamina() < 100.0f){ // On teste si on est en mode créatif, pour pouvoir revenir à la FoV normale si on ne court plus
-            if (!modeJeu && !isHoldingShift){ // En mode survie seulement
-                player->addStamina(30.0*deltaTime);
-                hud->updateStamina(player->getStamina());
+
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            glUseProgram(programID);
+
+            glm::mat4 Model = glm::mat4(1.0f);
+            glm::mat4 Projection = glm::perspective(glm::radians(FoV), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,2000.0f);
+
+            if (cameraOrbitale){
+                camera_target = -1.0f * camera_position;
+                camera_target = glm::normalize(camera_target);
+            }else if (cameraMousePlayer){
+                camera_position = bottomPointPlayer + glm::vec3(0.0f,1.7f,0.f); // Positionne la caméra sur le joueur (du coup attention à la taille qu'on donne à la hitbox)
             }
-            FoV = 75.0f;
-        }
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glm::mat4 View = glm::lookAt(camera_position, camera_position + camera_target, camera_up);
 
-        glUseProgram(programID);
+            glUniformMatrix4fv(ModelMatrix,1,GL_FALSE,&Model[0][0]);
+            glUniformMatrix4fv(ViewMatrix,1,GL_FALSE,&View[0][0]);
+            glUniformMatrix4fv(ProjectionMatrix,1,GL_FALSE,&Projection[0][0]);
 
-        glm::mat4 Model = glm::mat4(1.0f);
-        glm::mat4 Projection = glm::perspective(glm::radians(FoV), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT,0.1f,2000.0f);
+            terrainControler->drawTerrain();
 
-        if (cameraOrbitale){
-            camera_target = -1.0f * camera_position;
-            camera_target = glm::normalize(camera_target);
-        }else if (cameraMousePlayer){
-            camera_position = bottomPointPlayer + glm::vec3(0.0f,1.7f,0.f); // Positionne la caméra sur le joueur (du coup attention à la taille qu'on donne à la hitbox)
-        }
+            if (terrainControler->checkHoldLeftClick(camera_position, camera_target, deltaTime, modeJeu, programID)){
+                soundManager->playBreakSound();
+            }
 
-        glm::mat4 View = glm::lookAt(camera_position, camera_position + camera_target, camera_up);
+            // Affichage de la skybox
+            skybox->drawSkybox(Model, Projection, View);
 
-        glUniformMatrix4fv(ModelMatrix,1,GL_FALSE,&Model[0][0]);
-        glUniformMatrix4fv(ViewMatrix,1,GL_FALSE,&View[0][0]);
-        glUniformMatrix4fv(ProjectionMatrix,1,GL_FALSE,&Projection[0][0]);
-
-        terrainControler->drawTerrain();
-
-        if (terrainControler->checkHoldLeftClick(camera_position, camera_target, deltaTime, modeJeu, programID)){
-            soundManager->playBreakSound();
-        }
-
-        // Affichage de la skybox
-        skybox->drawSkybox(Model, Projection, View);
-
-        if (!switchToEditor){
-            // Gestion des collisions
-            hasUpdate = false;
-            hitboxPlayer->checkJump(&hasUpdate, deltaTime);
-            float damagePlayer = hitboxPlayer->checkTopAndBottomCollision(hasUpdate, deltaTime, terrainControler);
-            if (damagePlayer == -1.0){
-                playerDie = true;
-            }else if (!modeJeu && damagePlayer > 0.0f){ // En mode survie uniquement
-                player->takeDamage(damagePlayer);
-                soundManager->playPlayerDamage();
-                hud->updateLife(player->getLife());
-                if (player->getLife() <= 0.0){
-                    std::cout << "Vous êtes mort !\n";
-                    playerDie = true; // On va sortir de la boucle de jeu, et correctement nettoyer la mémoire
+            if (!switchToEditor){
+                // Gestion des collisions
+                hasUpdate = false;
+                hitboxPlayer->checkJump(&hasUpdate, deltaTime);
+                float damagePlayer = hitboxPlayer->checkTopAndBottomCollision(hasUpdate, deltaTime, terrainControler);
+                if (damagePlayer == -1.0){
+                    playerDie = true;
+                }else if (!modeJeu && damagePlayer > 0.0f){ // En mode survie uniquement
+                    player->takeDamage(damagePlayer);
+                    soundManager->playPlayerDamage();
+                    hud->updateLife(player->getLife());
+                    if (player->getLife() <= 0.0){
+                        std::cout << "Vous êtes mort !\n";
+                        playerDie = true; // On va sortir de la boucle de jeu, et correctement nettoyer la mémoire
+                    }
                 }
             }
-        }
 
-        if (!switchToEditor){
-            glUseProgram(programID_Entity);
-            glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
-            glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
+            if (!switchToEditor){
+                glUseProgram(programID_Entity);
+                glUniformMatrix4fv(ViewEntity,1,GL_FALSE,&View[0][0]);
+                glUniformMatrix4fv(ProjectionEntity,1,GL_FALSE,&Projection[0][0]);
 
-            for (int i = 0 ; i < listeEntity.size() ; i++){
-                if (listeEntity[i] != nullptr){
-                    float damage = listeEntity[i]->drawEntity(programID_Entity, listeEntity[i]->getType(), deltaTime,terrainControler,player);
-                    if (!modeJeu && damage != 0.0f){ // En mode survie uniquement
-                        player->takeDamage(damage);
-                        soundManager->playPlayerDamage();
-                        hud->updateLife(player->getLife());
-                        if (player->getLife() <= 0.0){
-                            std::cout << "Vous êtes mort !\n";
-                            playerDie = true; // On va sortir de la boucle de jeu, et correctement nettoyer la mémoire
+                for (int i = 0 ; i < listeEntity.size() ; i++){
+                    if (listeEntity[i] != nullptr){
+                        float damage = listeEntity[i]->drawEntity(programID_Entity, listeEntity[i]->getType(), deltaTime,terrainControler,player);
+                        if (!modeJeu && damage != 0.0f){ // En mode survie uniquement
+                            player->takeDamage(damage);
+                            soundManager->playPlayerDamage();
+                            hud->updateLife(player->getLife());
+                            if (player->getLife() <= 0.0){
+                                std::cout << "Vous êtes mort !\n";
+                                playerDie = true; // On va sortir de la boucle de jeu, et correctement nettoyer la mémoire
+                            }
+                        }
+                        if (listeEntity[i]->getLife() <= 0.0){
+                            delete listeEntity[i];
+                            listeEntity[i] = nullptr;
                         }
                     }
-                    if (listeEntity[i]->getLife() <= 0.0){
-                        delete listeEntity[i];
-                        listeEntity[i] = nullptr;
-                    }
                 }
             }
-        }
 
-        if (playerDie){
-            break; // On sort de la boucle de jeu
-        }
+            if (playerDie){
+                for (int i = 0 ; i < backgroundMusicList.size() ; i++){ // On arrête toutes les musiques de fond
+                    ma_sound_stop(backgroundMusicList[i]);
+                }
+                soundManager->playDeadSound();
+                showHud = false; // On désactive l'affichage de l'HUD
+                continue; // On passe directement à la prochaine frame
+            }
 
-        // Affichage de l'hud (Attention : Ca doit être la dernière chose à afficher dans la boucle de rendue, pour que l'hud se retrouve au premier plan)
-        if (showHud){
-            glDisable(GL_DEPTH_TEST);
-            glUseProgram(programID_HUD);
-            hud->drawHud();
-            glEnable(GL_DEPTH_TEST);
-        }
+            // Affichage de l'hud (Attention : Ca doit être la dernière chose à afficher dans la boucle de rendue, pour que l'hud se retrouve au premier plan)
+            if (showHud){
+                glDisable(GL_DEPTH_TEST);
+                glUseProgram(programID_HUD);
+                hud->drawHud();
+                glEnable(GL_DEPTH_TEST);
+            }
 
-        if (!switchToEditor && imgui->getInEditor()){
-            cameraMouseLibre = true;
-            cameraMousePlayer = false;
-            cameraOrbitale = false;
-            cameraLibre = false;
+            if (!switchToEditor && imgui->getInEditor()){
+                cameraMouseLibre = true;
+                cameraMousePlayer = false;
+                cameraOrbitale = false;
+                cameraLibre = false;
 
-            switchToEditor = true;
-            delete terrainControler; // On supprime l'ancien terrain (on perd donc les modfications faites dessus)
-            terrainControler = new TerrainControler(); // On génère un unique chunk     
-            // TRES IMPORTANT : C'est ça qui causait la segfault qui m'a fait perdre 4 heures
-            // Comme l'instance de TerrainControler est delete, il faut faire attention à bien utiliser la nouvelle instance pour l'instance de ParamsWindow 
-            imgui->attachNewTerrain(terrainControler); 
-        }else if (switchToEditor && !(imgui->getInEditor())){
-            switchToEditor = false;
-            delete terrainControler; // On supprime le terrain du mode éditeur
-            terrainControler = new TerrainControler(5, 5, 1, 3, 1000, 4, nomStructure); // On revient au terrain initiale
-            imgui->attachNewTerrain(terrainControler); // TRES IMPORTANT : C'est ça qui causait la segfault qui m'a fait perdre 4 heures
-            hitboxPlayer->resetCanTakeDamage(); // Si le joueur tombe de trop haut, il ne faut pas qu'il meurt au moment où on quitte le mode éditeur
+                switchToEditor = true;
+                delete terrainControler; // On supprime l'ancien terrain (on perd donc les modfications faites dessus)
+                terrainControler = new TerrainControler(); // On génère un unique chunk     
+                // TRES IMPORTANT : C'est ça qui causait la segfault qui m'a fait perdre 4 heures
+                // Comme l'instance de TerrainControler est delete, il faut faire attention à bien utiliser la nouvelle instance pour l'instance de ParamsWindow 
+                imgui->attachNewTerrain(terrainControler); 
+            }
+            
+            if (isImGuiShow){
+                imgui->draw();
+            }
         }
-        
-        if (isImGuiShow){
-            imgui->draw();
-        }
-
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

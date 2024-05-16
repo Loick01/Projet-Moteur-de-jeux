@@ -173,6 +173,13 @@ void Chunk::buildProceduralChunk(unsigned char* dataPixels, int widthHeightmap, 
         }
     }
 
+    // On place de la bedrock à la dernière couche
+    for (int j=0;j<CHUNK_SIZE;j++){     
+        for (int i=0;i<CHUNK_SIZE;i++){
+            this->listeVoxels[j*CHUNK_SIZE+i]->setId(5);
+        }
+    }
+
     // On complète les trous de la génération (quand la différence de hauteur entre 2 blocs adjacents est > 1)
     for (int j=0;j<CHUNK_SIZE;j++){     
         for (int i=0;i<CHUNK_SIZE;i++){ 

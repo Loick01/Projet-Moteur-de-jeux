@@ -119,7 +119,7 @@ LocalisationBlock TerrainControler::tryBreakBlock(glm::vec3 camera_target, glm::
 
             if (listeVoxels[indiceV] == nullptr){
                 continue;
-            }else{
+            }else if (listeVoxels[indiceV]->getID() != 5){ // Le bloc de bedrock est incassable (donc attention si on en place un)
                 return {indiceV, indiceChunk, numLongueur, numProfondeur, numHauteur, listeVoxels[indiceV]->getIdInChunk()};
             }
         }

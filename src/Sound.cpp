@@ -10,9 +10,11 @@ Sound::Sound(){
     this->createBlock = new ma_sound;
     this->breakBlock = new ma_sound;
     this->playerDamage = new ma_sound;
+    this->playerDie = new ma_sound;
     ma_sound_init_from_file(&(this->engine), "../Sound/BlockEffect/breaking.mp3", 0, NULL, NULL, this->breakBlock); // On donne ici le chemin des fichiers audio pour les effets sonores
     ma_sound_init_from_file(&(this->engine), "../Sound/BlockEffect/placing.mp3", 0, NULL, NULL, this->createBlock);
     ma_sound_init_from_file(&(this->engine), "../Sound/PlayerEffect/damage.mp3", 0, NULL, NULL, this->playerDamage);
+    ma_sound_init_from_file(&(this->engine), "../Sound/PlayerEffect/playerDie.mp3", 0, NULL, NULL, this->playerDie);
 }
 
 Sound::~Sound(){
@@ -23,6 +25,8 @@ Sound::~Sound(){
     delete this->createBlock;
     ma_sound_uninit(this->playerDamage);
     delete this->playerDamage;
+    ma_sound_uninit(this->playerDie);
+    delete this->playerDie;
 
     ma_engine_uninit(&(this->engine)); // Attention à bien nettoyer la mémoire pour l'engine à la fin de miniaudio, sinon segfault
 }
@@ -38,6 +42,11 @@ void Sound::playCreateSound(){
 void Sound::playPlayerDamage(){
     ma_sound_start(this->playerDamage);
 }
+
+void Sound::playDeadSound(){
+    ma_sound_start(this->playerDie);
+}
+
 
 ma_engine* Sound::getRefToEngine(){
 	return &(this->engine);

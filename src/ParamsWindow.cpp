@@ -142,7 +142,9 @@ void ParamsWindow::draw(){
 
     ImGui::Spacing();
 
-    ImGui::Checkbox("Mode éditeur", &(this->inEditor));
+    if(!(this->inEditor)){
+        ImGui::Checkbox("Mode éditeur", &(this->inEditor));
+    }
 
     ImGui::Spacing();
 

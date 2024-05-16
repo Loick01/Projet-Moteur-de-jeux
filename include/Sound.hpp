@@ -11,11 +11,13 @@ class Sound{
         ma_sound* breakBlock;
         ma_sound* createBlock;
 		ma_sound* playerDamage;
+        ma_sound* playerDie;
     public : 
         Sound();
         ~Sound();
         void playBreakSound();
         void playCreateSound();
         void playPlayerDamage();
+        void playDeadSound();
         ma_engine* getRefToEngine();
 };
