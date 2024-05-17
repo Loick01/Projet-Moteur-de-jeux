@@ -6,7 +6,8 @@ std::vector<std::vector<Structure>> Chunk::structures; // Permet d'éviter les e
 
 Chunk::Chunk(glm::vec3 position, int typeChunk, unsigned char* dataPixels, int widthHeightmap, int heightHeightmap, int posWidthChunk, int posLengthChunk, int seed){
     this->position = position;
-    this->ID=rand()%3;
+    //this->ID=rand()%3;
+    this->ID=0;
     if (typeChunk==0){
         this->buildFullChunk();
     }else if (typeChunk==1){

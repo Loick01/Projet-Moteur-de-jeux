@@ -225,8 +225,7 @@ void mouse_cursor_callback(GLFWwindow* window, double xpos, double ypos){
 
         phi += deltaX*0.05f;
         theta += deltaY*0.05f;
-        // On empêche la caméra de s'inverser
-        theta = std::max(std::min(theta, 89.99f), -89.99f);
+        theta = glm::clamp(theta, -89.0f, 89.0f);
 
         float x = cos(glm::radians(phi)) * cos(glm::radians(theta));
         float y = sin(glm::radians(theta));
@@ -289,7 +288,7 @@ void spawnEntity(int m, int n){
 	listeEntity.clear();
     for (int i = 0 ; i < m ; i++){
     	// Ici le 3è paramètre modifie le point d'apparition de chacunes des entités
-        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*0.5f,32.0,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 10.0)); // Génére un zombie
+        listeEntity.push_back(new Entity(0, 1,glm::vec3(i*0.1f,32.0,3), 3.0f,2.1f,0.5f,0.5f, 6.0, 6.0, 10.0, 10.0)); // Génére un zombie
         listeEntity[i]->loadEntity();
     }
 
@@ -463,6 +462,7 @@ int main(){
     while(!glfwWindowShouldClose(window)){
         if (playerDie){
             processInput(window);
+            terrainControler->drawTerrain();
         }else{
             float currentFrame = glfwGetTime();
             deltaTime = currentFrame - lastFrame;
@@ -586,6 +586,8 @@ int main(){
                 }
                 soundManager->playDeadSound();
                 showHud = false; // On désactive l'affichage de l'HUD
+                isImGuiShow = false;
+                glUseProgram(programID);
                 continue; // On passe directement à la prochaine frame
             }
 
@@ -612,7 +614,8 @@ int main(){
 
                 switchToEditor = true;
                 delete terrainControler; // On supprime l'ancien terrain (on perd donc les modfications faites dessus)
-                terrainControler = new TerrainControler(); // On génère un unique chunk     
+                terrainControler = new TerrainControler(); // On génère un unique chunk 
+                terrainControler->setMouseLeftClickHold(false);    
                 // TRES IMPORTANT : C'est ça qui causait la segfault qui m'a fait perdre 4 heures
                 // Comme l'instance de TerrainControler est delete, il faut faire attention à bien utiliser la nouvelle instance pour l'instance de ParamsWindow 
                 imgui->attachNewTerrain(terrainControler); 
